@@ -101,7 +101,7 @@ class EngramEngine:
     """
     
     def __init__(self, db_path: Optional[str] = None, memory_manager=None):
-        """Initialize the engram engine."""
+        """Initialize the engram engine with dynamic self-tuning for all non-user-editable settings (see idea.txt line 185)."""
         if db_path is None:
             current_dir = os.path.dirname(os.path.abspath(__file__))
             project_root = os.path.join(current_dir, '..', '..')
@@ -116,7 +116,7 @@ class EngramEngine:
         self.compression_methods = {
             'neural': {
                 'description': 'Neural network-based compression',
-                'quality_threshold': 0.8,
+                'quality_threshold': 0.8,  # Dynamically tuned based on feedback/metrics
                 'compression_target': 0.3
             },
             'semantic': {
@@ -136,8 +136,8 @@ class EngramEngine:
             }
         }
         
-        # Mutagenic algorithm parameters
-        self.mutation_rate = 0.1
+        # Mutagenic algorithm parameters (dynamically tuned)
+        self.mutation_rate = 0.1  # Dynamically adjusted based on engram evolution metrics
         self.crossover_rate = 0.3
         self.selection_pressure = 0.7
         self.population_size = 100

@@ -244,9 +244,12 @@ class EnhancedReminderEngine:
         conn.close()
         return due_reminders
     
-    def process_reminder_feedback(self, reminder_id: int, feedback_score: int, 
-                                response_time_seconds: int = None) -> bool:
-        """Process feedback for a reminder and update scheduling."""
+    def process_reminder_feedback(self, reminder_id: int, feedback_score: int, response_time_seconds: int = 0) -> bool:
+        """
+        Process feedback for a reminder and update scheduling.
+        Implements dynamic self-tuning of reminder intervals and effectiveness scores based on user feedback and performance metrics.
+        See idea.txt line 185: all non-user-editable settings should be dynamically adjusting with all useful metrics.
+        """
         # feedback_score: 1-5 (1=forgot, 5=remembered perfectly)
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -271,7 +274,7 @@ class EnhancedReminderEngine:
         feedback_entry = {
             'timestamp': datetime.now().isoformat(),
             'score': feedback_score,
-            'response_time': response_time_seconds
+            'response_time': response_time_seconds or 0
         }
         feedback_history.append(feedback_entry)
         
@@ -349,10 +352,10 @@ class EnhancedReminderEngine:
                                    easiness_factor: float, trigger_conditions: str) -> int:
         """Calculate adaptive interval based on user performance."""
         try:
-            conditions = json.loads(trigger_conditions)
+            conditions = json.loads(trigger_conditions) if trigger_conditions else {}
             base_interval = conditions.get('base_interval_hours', 24)
             adaptation_factor = conditions.get('adaptation_factor', 1.0)
-        except (json.JSONDecodeError, KeyError):
+        except (json.JSONDecodeError, KeyError, TypeError):
             base_interval = 24
             adaptation_factor = 1.0
         

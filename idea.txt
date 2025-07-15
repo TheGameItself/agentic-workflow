@@ -226,16 +226,18 @@ FIX LINTER ERRORS
 IF THE TODO IS EMPTY FILL IT WITH THESE ITEMS
 1. Please keep planning the further development of this mcp server project based on my ideals as stated in "@idea.txt" (expand into further todos as needed)
 2. Oncle the plan is done and in sequential atomic order you should use the todo tool native to cursor, that you have access to as a cursor agent, to keep track of and/or update your todolist. (expand into further todos as needed)
-3. If thats done, work through you todo list by interpreting the IDEA.txt then Researching then Comparing methods then assessing the project in its currect state by carefuly reading files. (expand into further todos as needed)
-4. Carefuly and thouroughly assess the project and clean up code if nessisary (never change or remove idea.txt) (expand into further todos as needed) while doing this you should compare the implementation with the wording in "idea.txt"
-5. apply ALL recomended and planned code changes. (expand into further todos as needed)
-6. When given the opertunity you should rewrite already finished files to be improved based on new research. (expand into further todos as needed)
-7. You may use the cli to execute bash when nessisary. (expand into further todos as needed)
-8. If you create any temporary files, changes, or comments, please make future plans to roll them back. (expand into further todos as needed)
-9. Document research sources internally in a compact way, check for duplicates (expand into further todos as needed)
-10. check your work and recently implemented files for unfinished implementation or missing optional features (expand into further todos as needed)
-11. research every aspect of idea.txt online and check all latest relevant research, then check every aspect of the project for improvemets, then add them to the todo (expand into further todos as needed)
-12. REPEAT THE ENTIRE TODO AS IT WAS AND DO NOT STOP DEVELOPMENT UNLESS PROJECT IS IMPOSSIBLE TO IMPROVE
+3. Regularly review and prune speculative and experimental tasks, focusing on those that yield the most meaningful emergent properties or system improvements.
+4. If thats done, work through you todo list by interpreting the IDEA.txt then Researching then Comparing methods then assessing the project in its currect state by carefuly reading files. (expand into further todos as needed)
+5. Carefuly and thouroughly assess the project and clean up code if nessisary (never change or remove idea.txt) (expand into further todos as needed) while doing this you should compare the implementation with the wording in "idea.txt"
+6. apply ALL recomended and planned code changes. (expand into further todos as needed)
+7. When given the opertunity you should rewrite already finished files to be improved based on new research. (expand into further todos as needed)
+8. You may use the cli to execute bash when nessisary. (expand into further todos as needed)
+9. If you create any temporary files, changes, or comments, please make future plans to roll them back. (expand into further todos as needed)
+10. Document research sources internally in a compact way, check for duplicates (expand into further todos as needed)
+11. check your work and recently implemented files for unfinished implementation or missing optional features (expand into further todos as needed)
+12. research every aspect of idea.txt online and check all latest relevant research, then check every aspect of the project for improvemets, then add them to the todo (expand into further todos as needed)
+13. REPEAT THE ENTIRE TODO AS IT WAS AND DO NOT STOP DEVELOPMENT UNLESS PROJECT IS IMPOSSIBLE TO IMPROVE
+14. ensure the MCP system remains at the cutting edge of continual, adaptive, and robust learning
 
 If stuck just focus on getting the project to a functioning state by shifting your focus somewhere else.
 If thats not enough search the web for inspiration.

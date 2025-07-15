@@ -497,7 +497,7 @@ class ResearchIntegrator:
         self.implementation_queue = []
     
     async def analyze_paper(self, paper_url: str) -> Dict[str, Any]:
-        """Analyze a research paper and extract findings. TODO: Implement full pipeline for paper analysis."""
+        """Analyze a research paper and extract findings. TODO: Implement full pipeline for paper analysis. See idea.txt for requirements and TODO_DEVELOPMENT_PLAN.md for roadmap."""
         try:
             # This would typically involve:
             # 1. Downloading the paper
@@ -505,8 +505,10 @@ class ResearchIntegrator:
             # 3. Using NLP to identify key findings
             # 4. Categorizing findings
             # TODO: Implement full paper analysis pipeline
+            import logging
+            logging.warning("[ResearchIntegrator] analyze_paper not fully implemented. See idea.txt and TODO_DEVELOPMENT_PLAN.md.")
             return {
-                "status": "success",
+                "status": "not_implemented",
                 "findings": [],
                 "summary": "Paper analysis not yet implemented",
                 "recommendations": []

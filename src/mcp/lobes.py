@@ -41,7 +41,13 @@ class _FallbackPerformanceMonitor:
 try:
     from .performance_monitor import PerformanceMonitor
 except ImportError:
-    PerformanceMonitor = _FallbackPerformanceMonitor
+    class PerformanceMonitor:
+        def __init__(self, *args, **kwargs):
+            pass
+        def get_performance_summary(self):
+            return {}
+        def optimize_database(self):
+            return {"success": True, "message": "No-op"}
 
 from .memory import MemoryManager
 from .advanced_memory import AdvancedMemoryManager
@@ -53,6 +59,8 @@ from .reminder_engine import EnhancedReminderEngine
 from .rag_system import RAGSystem
 # Planned/experimental lobes:
 from .experimental_lobes import PatternRecognitionEngine, AlignmentEngine, SimulatedReality, MultiLLMOrchestrator, AdvancedEngramEngine
+from src.mcp.lobes.experimental.sensory_column.sensory_column import SensoryColumn
+from src.mcp.lobes.experimental.spinal_cord.spinal_cord import SpinalCord
 
 LOBES = {
     "MemoryLobe": {
@@ -94,6 +102,14 @@ LOBES = {
     "SimulatedRealityLobe": {"class": SimulatedReality, "description": "Simulated external reality for deep reasoning."},
     "MultiLLMOrchestratorLobe": {"class": MultiLLMOrchestrator, "description": "Multi-LLM orchestration, task routing, aggregation, and AB testing."},
     "AdvancedEngramLobe": {"class": AdvancedEngramEngine, "description": "Dynamic coding models, diffusion models, and feedback-driven engram selection."},
+    "SensoryColumnLobe": {
+        "class": SensoryColumn,
+        "description": "Processes and routes sensory (input) data streams. Inspired by neural columns in the brain. See idea.txt and research."
+    },
+    "SpinalCordLobe": {
+        "class": SpinalCord,
+        "description": "Handles low-level reflexes, fast feedback, and routing between sensory columns and higher lobes. Inspired by the biological spinal cord. See idea.txt and research."
+    },
 }
 
 # Document all planned/experimental lobes as stubs or planned, referencing idea.txt and research

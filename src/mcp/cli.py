@@ -846,6 +846,9 @@ def list_context_packs(context_type, project_id):
         click.echo("[MCP] SimulatedReality is a planned/experimental feature. Enable the feature flag and implement the backend to use this command.")
         return
     context_manager = ContextManager()
+    # Fix: never pass None, always pass str
+    context_type = context_type if context_type is not None else ''
+    project_id = project_id if project_id is not None else ''
     packs = context_manager.list_context_packs(context_type, project_id)
     
     if packs:

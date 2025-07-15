@@ -11,11 +11,65 @@ import sqlite3
 import os
 from typing import Dict, List, Any, Optional
 from datetime import datetime
+from src.mcp.lobes.experimental.advanced_engram.advanced_engram_engine import WorkingMemory
+import logging
+from src.mcp.lobes.experimental.vesicle_pool import VesiclePool
+
+
+class PreferenceBuffer:
+    """
+    PreferenceBuffer: Domain-specific working memory for recent user preferences with decay.
+    Inspired by neuroscience (short-term preference memory, adaptive alignment). See idea.txt.
+    """
+    def __init__(self, capacity=50, decay=0.98):
+        self.capacity = capacity
+        self.decay = decay
+        self.buffer = []
+    def add(self, preference):
+        self.buffer.append({'preference': preference, 'strength': 1.0})
+        if len(self.buffer) > self.capacity:
+            self.buffer.pop(0)
+    def decay_buffer(self):
+        for entry in self.buffer:
+            entry['strength'] *= self.decay
+        self.buffer = [e for e in self.buffer if e['strength'] > 0.1]
+    def get_recent(self, n=5):
+        return [e['preference'] for e in self.buffer[-n:]]
+
+
+class AssociativePreferenceMemory:
+    """
+    AssociativePreferenceMemory: Context-aware, feedback-driven memory for user preferences.
+    Links preferences to context, feedback, and event metadata for rapid, relevant recall and adaptation.
+    Inspired by associative memory and adaptive alignment in the brain (see idea.txt, neuroscience).
+    """
+    def __init__(self, capacity=100, decay=0.97):
+        self.capacity = capacity
+        self.decay = decay
+        self.memory = []  # Each entry: {'preference': ..., 'context': ..., 'feedback': ..., 'strength': ...}
+        self.logger = logging.getLogger("AssociativePreferenceMemory")
+    def add(self, preference, context=None, feedback=None):
+        entry = {'preference': preference, 'context': context, 'feedback': feedback, 'strength': 1.0}
+        self.memory.append(entry)
+        if len(self.memory) > self.capacity:
+            self.memory.pop(0)
+        self.logger.info(f"[AssociativePreferenceMemory] Added preference: {preference} (context={context}, feedback={feedback})")
+    def decay_memory(self):
+        for entry in self.memory:
+            entry['strength'] *= self.decay
+        self.memory = [e for e in self.memory if e['strength'] > 0.1]
+    def get_by_context(self, context, n=5):
+        context_str = str(context) if context is not None else ""
+        matches = [e for e in self.memory if context_str and context_str in str(e['context'])]
+        return [e['preference'] for e in matches[-n:]]
+    def get_recent(self, n=5):
+        return [e['preference'] for e in self.memory[-n:]]
 
 
 class AlignmentEngine:
     """Alignment engine for user/LLM alignment and related features.
     Implements LLM-based preference alignment with feedback-driven adaptation.
+    Each instance has its own working memory for short-term, context-sensitive storage (see idea.txt and research).
     """
     def __init__(self, db_path: Optional[str] = None) -> None:
         if db_path is None:
@@ -24,11 +78,16 @@ class AlignmentEngine:
             data_dir = os.path.join(project_root, 'data')
             os.makedirs(data_dir, exist_ok=True)
             db_path = os.path.join(data_dir, 'alignment_engine.db')
-        
         self.db_path = db_path
         self.alignment_history = []
         self.user_preferences = {}
         self.feedback_scores = []
+        self.working_memory = WorkingMemory()
+        self.preference_buffer = PreferenceBuffer()
+        self.associative_memory = AssociativePreferenceMemory()
+        self.logger = logging.getLogger("AlignmentEngine")
+        self.vesicle_pool = VesiclePool()  # Synaptic vesicle pool model
+        self.logger.info("[AlignmentEngine] VesiclePool initialized: %s", self.vesicle_pool.get_state())
         self._init_database()
     
     def _init_database(self):
@@ -77,6 +136,12 @@ class AlignmentEngine:
         """Align LLM output with user preferences using multiple alignment methods."""
         if user_preferences is None:
             user_preferences = self._get_user_preferences()
+        
+        if user_preferences is not None:
+            self.preference_buffer.add(user_preferences)
+            self.associative_memory.add(user_preferences)
+        self.preference_buffer.decay_buffer()
+        self.associative_memory.decay_memory()
         
         # Apply multiple alignment methods
         aligned_output = llm_output
@@ -382,4 +447,12 @@ class AlignmentEngine:
         cursor.execute("DELETE FROM alignment_history")
         
         conn.commit()
-        conn.close() 
+        conn.close()
+
+    def add_preference(self, preference, context=None, feedback=None):
+        self.preference_buffer.add(preference)
+        self.associative_memory.add(preference, context=context, feedback=feedback)
+        self.associative_memory.decay_memory()
+
+    def recall_preferences_by_context(self, context=None, n=5):
+        return self.associative_memory.get_by_context(context, n=n) 

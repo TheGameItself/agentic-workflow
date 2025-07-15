@@ -15,7 +15,7 @@ from typing import Dict, Any, List
 from unittest.mock import Mock, patch, MagicMock
 
 # Import all core modules
-from .workflow import WorkflowManager
+from .workflow import WorkflowManager, WorkflowStep
 from .task_manager import TaskManager
 from .memory import MemoryManager
 from .experimental_lobes import (
@@ -90,6 +90,43 @@ class TestWorkflowManager(unittest.TestCase):
         self.workflow_manager.add_step_feedback("init", "Test feedback", impact=5)
         # Verify feedback was added (would need to check database or add getter method)
         pass
+
+    def test_workflow_meta_partial_and_failstate(self):
+        """Test meta/partial tasks, feedback-driven reorg, failstate handling, and advanced dependencies in WorkflowManager. Covers edge cases and integration with memory/experimental lobes. References idea.txt and research."""
+        workflow_manager = WorkflowManager()
+        task_manager = TaskManager()
+        memory = MemoryManager()
+        # Add meta step
+        meta_step = "meta_step"
+        workflow_manager.register_step(meta_step, WorkflowStep(name=meta_step, description="Meta step", is_meta=True))
+        workflow_manager.steps[meta_step].set_partial_progress(0.5)
+        self.assertEqual(workflow_manager.steps[meta_step].get_partial_progress(), 0.5)
+        # Add failstate feedback
+        workflow_manager.add_step_feedback(meta_step, "Simulated failstate", impact=-10, principle="failstate")
+        failstates = [n for n in workflow_manager.steps if any(fb.get('impact', 0) < -5 for fb in getattr(workflow_manager.steps[n], 'feedback', []))]
+        self.assertIn(meta_step, failstates)
+        # Add advanced dependency step
+        dep_step = "dep_step"
+        workflow_manager.register_step(dep_step, WorkflowStep(name=dep_step, description="Dependent step", dependencies=[meta_step]))
+        self.assertFalse(workflow_manager.start_step(dep_step))
+        workflow_manager.complete_step(meta_step)
+        self.assertTrue(workflow_manager.start_step(dep_step))
+        # Test engram integration (stub)
+        engram_id = memory.add_memory(text="Test Engram", memory_type="engram", tags=["test"])
+        workflow_manager.steps[meta_step].engram_ids = [engram_id]
+        self.assertIn(engram_id, workflow_manager.steps[meta_step].engram_ids)
+        # Test feedback-driven reorg (stub)
+        workflow_manager.autonomous_reorganize()
+        # Test error condition: start non-existent step
+        self.assertFalse(workflow_manager.start_step("nonexistent"))
+        # Test error condition: complete non-existent step
+        self.assertFalse(workflow_manager.complete_step("nonexistent"))
+        # Test error condition: add feedback to non-existent step
+        try:
+            workflow_manager.add_step_feedback("nonexistent", "feedback")
+            self.fail("Should raise exception for non-existent step")
+        except Exception:
+            pass
 
 
 class TestTaskManager(unittest.TestCase):
@@ -271,12 +308,8 @@ class TestExperimentalLobes(unittest.TestCase):
     def test_dreaming_engine(self):
         """Test DreamingEngine functionality."""
         engine = DreamingEngine(db_path=self.db_path)
-        
-        # Test dream simulation
-        dream = engine.simulate_dream(
-            context="Test context",
-            dream_type="scenario"
-        )
+        # Test dream simulation with correct parameters (context and scenario)
+        dream = engine.simulate_dream("Test context", "scenario")
         self.assertIsInstance(dream, dict)
         self.assertIn('scenario', dream)
     
@@ -315,7 +348,7 @@ class TestExperimentalLobes(unittest.TestCase):
         
         # Test AB testing
         ab_test = SplitBrainABTest(
-            DummyLobe,
+            lobe_class=DummyLobe,
             left_config={"strategy": "conservative"},
             right_config={"strategy": "aggressive"},
             db_path=self.db_path
@@ -328,12 +361,11 @@ class TestExperimentalLobes(unittest.TestCase):
     def test_multi_llm_orchestrator(self):
         """Test MultiLLMOrchestrator functionality."""
         orchestrator = MultiLLMOrchestrator(db_path=self.db_path)
-        
-        # Test query routing
-        with patch.object(orchestrator, '_call_llm', return_value="Mock response"):
-            result = orchestrator.route_query("test query")
-            self.assertIsInstance(result, dict)
-            self.assertIn('response', result)
+        # Test query routing with correct parameter type (list of dicts)
+        tasks = [{"prompt": "test query"}]
+        result = orchestrator.route_query(tasks)
+        self.assertIsInstance(result, dict)
+        self.assertIn('results', result)
     
     def test_advanced_engram_engine(self):
         """Test AdvancedEngramEngine functionality."""

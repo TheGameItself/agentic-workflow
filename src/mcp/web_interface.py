@@ -13,6 +13,7 @@ import webbrowser
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import urllib.parse
 import base64
+import logging
 
 class MCPWebInterface:
     """Web interface for MCP server with config editor, engine controls, and knowledgebase browser."""
@@ -179,6 +180,11 @@ class MCPWebInterface:
             return {"query": query, "results": formatted, "total_results": len(formatted)}
         except Exception as e:
             return {"error": str(e)}
+
+    def some_web_method(self):
+        """Minimal fallback for web interface. TODO: Expand with research-driven logic per idea.txt."""
+        logging.warning('[WebInterface] This method is a placeholder. See idea.txt for future improvements.')
+        return {'status': 'not_implemented', 'web': {}}
 
 
 class MCPRequestHandler(BaseHTTPRequestHandler):

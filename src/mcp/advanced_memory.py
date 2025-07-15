@@ -14,7 +14,6 @@ import math
 from typing import List, Dict, Any, Optional
 from collections import Counter
 from .vector_memory import get_vector_backend
-import numpy as np
 
 # Optional numpy import with fallback
 try:
@@ -22,7 +21,8 @@ try:
     NUMPY_AVAILABLE = True
 except ImportError:
     NUMPY_AVAILABLE = False
-    # Fallback implementations for when numpy is not available
+    np = None  # Optional dependency for advanced memory operations
+    # Fallback: raise clear error if numpy-dependent features are used
     class np:
         @staticmethod
         def array(data, dtype=None):

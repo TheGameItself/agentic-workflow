@@ -16,6 +16,11 @@
 - Multi-LLM orchestration (experimental_lobes.py)
 - Deep research, dreaming/simulation, scientific process, alignment engine
 - Periodic reporting, dynamic tagging, bulk action safety, centralized config UI
+- **Task Proposal Lobe (TaskProposalLobe):**
+  - Proposes new tasks, tests, and evaluation steps based on project state, feedback, and research-driven heuristics.
+  - Can be queried by other lobes or the main server for next actions.
+  - Includes robust fallback logic and clear docstrings referencing idea.txt.
+  - TODO: Expand with advanced heuristics, LLM-driven task generation, and integration with feedback loops.
 
 ### Research & References
 - [WAIT/Hermes prompt queueing](https://arxiv.org/abs/2504.11320), [arXiv:2506.14851](https://arxiv.org/abs/2506.14851)
@@ -368,4 +373,59 @@ See TODOs and stubs in workflow.py and related modules for integration points.
 - **CompilerDream**: Compiler world model for general code optimization and self-improvement ([arXiv:2404.16077](https://arxiv.org/abs/2404.16077))
 - **Survey**: See [Enhancing Code LLMs with RL: A Survey](https://arxiv.org/abs/2412.20367) for a comprehensive review of RL-driven code optimization and failstate handling
 
-All RL-based optimization and self-improvement features are planned to be modular, supporting both SLMs and LLMs, and leveraging test-based feedback and reward design for robust, adaptive agentic workflows. 
+All RL-based optimization and self-improvement features are planned to be modular, supporting both SLMs and LLMs, and leveraging test-based feedback and reward design for robust, adaptive agentic workflows.
+
+### July 2024: Robust Fallbacks and Research-Driven Stubs
+
+- All major stubs in core modules (workflow, experimental lobes, unified memory, vector memory, research integration) now include:
+  - Robust fallback logic (logging, clear error/minimal result, no crashes)
+  - Docstrings referencing idea.txt, TODO_DEVELOPMENT_PLAN.md, and relevant research
+  - TODOs for future expansion and research-driven extensibility
+- This approach ensures the codebase is robust, extensible, and ready for rapid research-driven iteration.
+- See `idea.txt` and `TODO_DEVELOPMENT_PLAN.md` for the guiding vision and roadmap.
+- For details, see code comments and docstrings in each module.
+
+## Internal Neural Network Management Flow
+
+The MCP system implements a robust, research-driven, and brain-inspired neural network (NN) management flow, designed for reliability, extensibility, and continuous self-improvement. This flow is aligned with the principles in `idea.txt` and best practices from leading research, including [Karpathy's Recipe for Training Neural Networks](https://karpathy.github.io/2019/04/25/recipe/).
+
+### 1. Data-First Approach
+- **Thorough Data Inspection:** Before any NN code is run, the system inspects and visualizes data distributions, outliers, and label quality. Scripts are provided for filtering, sorting, and analyzing data characteristics. All findings and assumptions are logged in working memory and experiment logs.
+
+### 2. Experiment Tracking and Baselines
+- **Experiment Registry:** Every training run, configuration, and result is logged in a robust, queryable format (e.g., SQLite, JSON, or the engram engine).
+- **Baseline Models:** The system starts with a simple, trustworthy baseline (e.g., linear classifier or tiny ConvNet) to verify the pipeline. Random seeds are fixed for reproducibility. All unnecessary complexity (augmentation, regularization) is disabled at this stage.
+- **Metric Visualization:** Loss, accuracy, and predictions are visualized and checked for sanity at every step.
+
+### 3. Incremental Complexity and Hypothesis-Driven Development
+- **One Change at a Time:** Complexity is added incrementally—only one new feature, layer, or trick at a time. Each change is accompanied by a hypothesis and validated with experiments.
+- **No Unverified Complexity:** The system never introduces untested complexity. Each change is tested and documented.
+
+### 4. Regularization and Generalization
+- **Overfitting First:** Once the model can overfit the training set, regularization is introduced: more real data, data augmentation, dropout, weight decay, early stopping, etc.
+- **Feature Visualization:** First-layer weights and activations are visualized to ensure meaningful learning.
+
+### 5. Hyperparameter Tuning
+- **Random Search Preferred:** Hyperparameters (learning rate, batch size, regularization, model size) are tuned using random search or Bayesian optimization. All settings and results are logged.
+
+### 6. Feedback Integration and AB Testing
+- **Feedback Loops:** The MCP's working memory and task system propose, track, and review all NN training experiments. User and LLM feedback is integrated into the training and evaluation process.
+- **AB Testing and Split-Brain:** The system supports AB testing and split-brain architectures to compare different training strategies and select the best.
+
+### 7. Self-Improvement and Continuous Refactoring
+- **Periodic Review:** The training pipeline is periodically reviewed and refactored based on new research and project needs.
+- **Automated Sanity Checks:** The system automates checks for common pitfalls (label leakage, data imbalance, overfitting).
+- **Documentation and Knowledge Base:** All assumptions, failures, and learnings are documented in the project's knowledge base and experiment logs.
+
+### 8. Finalization and Production Readiness
+- **Ensembling and Distillation:** Ensembles are used for final accuracy boosts, and distilled into single models for efficiency if needed.
+- **Long Training Runs:** Models are allowed to train for extended periods to maximize performance.
+- **Comprehensive Testing:** All features, scripts, and methods are tested for robustness and alignment with `idea.txt`.
+
+---
+
+**References:**
+- [A Recipe for Training Neural Networks – Andrej Karpathy](https://karpathy.github.io/2019/04/25/recipe/)
+- `idea.txt` and `TODO_DEVELOPMENT_PLAN.md`
+
+This flow ensures that all neural network training and management in MCP is transparent, reproducible, and continuously improving, with every step logged, reviewed, and aligned with the project's research-driven vision. 

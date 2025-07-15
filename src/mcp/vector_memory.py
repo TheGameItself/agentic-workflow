@@ -10,6 +10,7 @@ from typing import Dict, Any, List, TYPE_CHECKING
 import json
 import sqlite3
 import math
+import logging
 
 # Optional dependency flags for type safety (see: https://adamj.eu/tech/2021/12/29/python-type-hints-optional-imports/)
 try:
@@ -165,53 +166,75 @@ class MilvusBackend(VectorBackend):
         self.dim = config.get("dim", 128)
         self.pymilvus_available = HAVE_MILVUS
         self._init_collection()
+
     def _init_collection(self):
         if not HAVE_MILVUS:
             return
-        from pymilvus import connections, Collection, FieldSchema, CollectionSchema, DataType  # type: ignore[import]
-        connections.connect("default", host=self.config.get("host", "localhost"), port=self.config.get("port", "19530"))
-        fields = [
-            FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),
-            FieldSchema(name="vector", dtype=DataType.FLOAT_VECTOR, dim=self.dim),
-            FieldSchema(name="metadata", dtype=DataType.VARCHAR, max_length=1024)
-        ]
-        schema = CollectionSchema(fields, description="MCP vector collection")
-        if self.collection_name in Collection.list_collections():
-            self.collection = Collection(self.collection_name)
-        else:
-            self.collection = Collection(self.collection_name, schema)
+        try:
+            from pymilvus import connections, Collection, FieldSchema, CollectionSchema, DataType  # type: ignore[import]
+            connections.connect("default", host=self.config.get("host", "localhost"), port=self.config.get("port", "19530"))
+            fields = [
+                FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),
+                FieldSchema(name="vector", dtype=DataType.FLOAT_VECTOR, dim=self.dim),
+                FieldSchema(name="metadata", dtype=DataType.VARCHAR, max_length=1024)
+            ]
+            schema = CollectionSchema(fields, description="MCP vector collection")
+            if self.collection_name in Collection.list_collections():
+                self.collection = Collection(self.collection_name)
+            else:
+                self.collection = Collection(self.collection_name, schema)
+        except ImportError:
+            raise ImportError("pymilvus is required for MilvusBackend. Please install it if you want to use this backend.")
+
     def add_vector(self, vector: dict, metadata: dict) -> int:
         if not HAVE_MILVUS:
             return 0
-        from pymilvus import Collection  # type: ignore[import]
-        vec = [float(v) for v in vector.values()] if isinstance(vector, dict) else list(vector)
-        meta = json.dumps(metadata)
-        data = [[vec], [meta]]
-        res = self.collection.insert([data[0], data[1]])
-        return int(res.primary_keys[0]) if hasattr(res, 'primary_keys') and res.primary_keys else 0
+        try:
+            from pymilvus import Collection  # type: ignore[import]
+            vec = [float(v) for v in vector.values()] if isinstance(vector, dict) else list(vector)
+            meta = json.dumps(metadata)
+            data = [[vec], [meta]]
+            res = self.collection.insert([data[0], data[1]])
+            return int(res.primary_keys[0]) if hasattr(res, 'primary_keys') and res.primary_keys else 0
+        except ImportError:
+            raise ImportError("pymilvus is required for MilvusBackend. Please install it if you want to use this backend.")
+
     def search_vector(self, query_vector: dict, limit: int = 10, min_similarity: float = 0.1) -> list:
         if not HAVE_MILVUS:
             return []
-        vec = [float(v) for v in query_vector.values()] if isinstance(query_vector, dict) else list(query_vector)
-        search_params = {"metric_type": "L2", "params": {"nprobe": 10}}
-        res = self.collection.search([vec], "vector", search_params, limit)
-        results = []
-        for hits in res:
-            for hit in hits:
-                if hit.distance <= (1 - min_similarity):
-                    results.append({"id": hit.id, "similarity": 1 - hit.distance, "metadata": json.loads(hit.entity.get("metadata", "{}"))})
-        return results[:limit]
+        try:
+            vec = [float(v) for v in query_vector.values()] if isinstance(query_vector, dict) else list(query_vector)
+            search_params = {"metric_type": "L2", "params": {"nprobe": 10}}
+            res = self.collection.search([vec], "vector", search_params, limit)
+            results = []
+            for hits in res:
+                for hit in hits:
+                    if hit.distance <= (1 - min_similarity):
+                        results.append({"id": hit.id, "similarity": 1 - hit.distance, "metadata": json.loads(hit.entity.get("metadata", "{}"))})
+            return results[:limit]
+        except ImportError:
+            raise ImportError("pymilvus is required for MilvusBackend. Please install it if you want to use this backend.")
+
     def batch_search(self, query_vectors: list, limit: int = 10, min_similarity: float = 0.1) -> list:
         return [self.search_vector(qv, limit, min_similarity) for qv in query_vectors]
+
     def create_index(self):
         if not HAVE_MILVUS:
             return
-        index_params = {"index_type": "IVF_FLAT", "metric_type": "L2", "params": {"nlist": 128}}
-        self.collection.create_index("vector", index_params)
+        try:
+            index_params = {"index_type": "IVF_FLAT", "metric_type": "L2", "params": {"nlist": 128}}
+            self.collection.create_index("vector", index_params)
+        except ImportError:
+            raise ImportError("pymilvus is required for MilvusBackend. Please install it if you want to use this backend.")
+
     def load_index(self):
         if not HAVE_MILVUS:
             return
-        self.collection.load()
+        try:
+            self.collection.load()
+        except ImportError:
+            raise ImportError("pymilvus is required for MilvusBackend. Please install it if you want to use this backend.")
+
     def get_stats(self) -> dict:
         if not HAVE_MILVUS:
             return {"backend": "Milvus", "status": "unavailable"}
@@ -228,50 +251,69 @@ class AnnoyBackend(VectorBackend):
         self.vectors = []
         self.metadata = []
         self._init_index()
+
     def _init_index(self):
         if not HAVE_ANNOY:
             return
-        from annoy import AnnoyIndex  # type: ignore[import]
-        self.index = AnnoyIndex(self.dim, "angular")
         try:
+            from annoy import AnnoyIndex  # type: ignore[import]
+            self.index = AnnoyIndex(self.dim, "angular")
             self.index.load(self.index_path)
-        except Exception:
-            pass
+        except ImportError:
+            raise ImportError("annoy is required for AnnoyBackend. Please install it if you want to use this backend.")
+
     def add_vector(self, vector: dict, metadata: dict) -> int:
         if not HAVE_ANNOY:
             return 0
-        from annoy import AnnoyIndex  # type: ignore[import]
-        vec = [float(v) for v in vector.values()] if isinstance(vector, dict) else list(vector)
-        idx = len(self.vectors)
-        if self.index is not None:
-            self.index.add_item(idx, vec)
-        self.vectors.append(vec)
-        self.metadata.append(metadata)
-        return idx
+        try:
+            from annoy import AnnoyIndex  # type: ignore[import]
+            vec = [float(v) for v in vector.values()] if isinstance(vector, dict) else list(vector)
+            idx = len(self.vectors)
+            if self.index is not None:
+                self.index.add_item(idx, vec)
+            self.vectors.append(vec)
+            self.metadata.append(metadata)
+            return idx
+        except ImportError:
+            raise ImportError("annoy is required for AnnoyBackend. Please install it if you want to use this backend.")
+
     def search_vector(self, query_vector: dict, limit: int = 10, min_similarity: float = 0.1) -> list:
         if not HAVE_ANNOY or self.index is None:
             return []
-        vec = [float(v) for v in query_vector.values()] if isinstance(query_vector, dict) else list(query_vector)
-        idxs = self.index.get_nns_by_vector(vec, limit, include_distances=True) if self.index is not None else ([], [])
-        results = []
-        for i, dist in zip(idxs[0], idxs[1]):
-            sim = 1 - dist  # Annoy returns distance, convert to similarity
-            if sim >= min_similarity:
-                results.append({"id": i, "similarity": sim, "metadata": self.metadata[i] if i < len(self.metadata) else {}})
-        return results[:limit]
+        try:
+            vec = [float(v) for v in query_vector.values()] if isinstance(query_vector, dict) else list(query_vector)
+            idxs = self.index.get_nns_by_vector(vec, limit, include_distances=True) if self.index is not None else ([], [])
+            results = []
+            for i, dist in zip(idxs[0], idxs[1]):
+                sim = 1 - dist  # Annoy returns distance, convert to similarity
+                if sim >= min_similarity:
+                    results.append({"id": i, "similarity": sim, "metadata": self.metadata[i] if i < len(self.metadata) else {}})
+            return results[:limit]
+        except ImportError:
+            raise ImportError("annoy is required for AnnoyBackend. Please install it if you want to use this backend.")
+
     def batch_search(self, query_vectors: list, limit: int = 10, min_similarity: float = 0.1) -> list:
         return [self.search_vector(qv, limit, min_similarity) for qv in query_vectors]
+
     def create_index(self):
         if not HAVE_ANNOY or self.index is None:
             return
-        self.index.build(10)
-        self.index.save(self.index_path)
+        try:
+            self.index.build(10)
+            self.index.save(self.index_path)
+        except ImportError:
+            raise ImportError("annoy is required for AnnoyBackend. Please install it if you want to use this backend.")
+
     def load_index(self):
         if not HAVE_ANNOY:
             return
-        from annoy import AnnoyIndex  # type: ignore[import]
-        self.index = AnnoyIndex(self.dim, "angular")
-        self.index.load(self.index_path)
+        try:
+            from annoy import AnnoyIndex  # type: ignore[import]
+            self.index = AnnoyIndex(self.dim, "angular")
+            self.index.load(self.index_path)
+        except ImportError:
+            raise ImportError("annoy is required for AnnoyBackend. Please install it if you want to use this backend.")
+
     def get_stats(self) -> dict:
         if not HAVE_ANNOY:
             return {"backend": "Annoy", "status": "unavailable"}
@@ -285,49 +327,62 @@ class QdrantBackend(VectorBackend):
         self.dim = config.get("dim", 128)
         self.qdrant_available = HAVE_QDRANT
         self._init_collection()
+
     def _init_collection(self):
         if not HAVE_QDRANT:
             return
-        from qdrant_client import QdrantClient  # type: ignore[import]
-        self.client = QdrantClient(host=self.config.get("host", "localhost"), port=self.config.get("port", 6333))
         try:
+            from qdrant_client import QdrantClient  # type: ignore[import]
+            self.client = QdrantClient(host=self.config.get("host", "localhost"), port=self.config.get("port", 6333))
             self.client.get_collection(self.collection_name)
-        except Exception:
-            self.client.recreate_collection(collection_name=self.collection_name, vectors_config={"size": self.dim, "distance": "Cosine"})
+        except ImportError:
+            raise ImportError("qdrant_client is required for QdrantBackend. Please install it if you want to use this backend.")
+
     def add_vector(self, vector: dict, metadata: dict) -> int:
         if not HAVE_QDRANT:
             return 0
-        from qdrant_client.http import models as rest  # type: ignore[import]
-        vec = [float(v) for v in vector.values()] if isinstance(vector, dict) else list(vector)
-        res = self.client.upsert(collection_name=self.collection_name, points=[{
-            "id": None,
-            "vector": vec,
-            "payload": metadata
-        }])
-        return res.result["operation_id"] if hasattr(res, "result") and "operation_id" in res.result else 0
+        try:
+            from qdrant_client.http import models as rest  # type: ignore[import]
+            vec = [float(v) for v in vector.values()] if isinstance(vector, dict) else list(vector)
+            res = self.client.upsert(collection_name=self.collection_name, points=[{
+                "id": None,
+                "vector": vec,
+                "payload": metadata
+            }])
+            return res.result["operation_id"] if hasattr(res, "result") and "operation_id" in res.result else 0
+        except ImportError:
+            raise ImportError("qdrant_client is required for QdrantBackend. Please install it if you want to use this backend.")
+
     def search_vector(self, query_vector: dict, limit: int = 10, min_similarity: float = 0.1) -> list:
         if not HAVE_QDRANT:
             return []
-        vec = [float(v) for v in query_vector.values()] if isinstance(query_vector, dict) else list(query_vector)
-        res = self.client.search(collection_name=self.collection_name, query_vector=vec, limit=limit)
-        results = []
-        for hit in res:
-            sim = hit.score
-            if sim >= min_similarity:
-                results.append({"id": hit.id, "similarity": sim, "metadata": hit.payload})
-        return results[:limit]
+        try:
+            vec = [float(v) for v in query_vector.values()] if isinstance(query_vector, dict) else list(query_vector)
+            res = self.client.search(collection_name=self.collection_name, query_vector=vec, limit=limit)
+            results = []
+            for hit in res:
+                sim = hit.score
+                if sim >= min_similarity:
+                    results.append({"id": hit.id, "similarity": sim, "metadata": hit.payload})
+            return results[:limit]
+        except ImportError:
+            raise ImportError("qdrant_client is required for QdrantBackend. Please install it if you want to use this backend.")
+
     def batch_search(self, query_vectors: list, limit: int = 10, min_similarity: float = 0.1) -> list:
         return [self.search_vector(qv, limit, min_similarity) for qv in query_vectors]
+
     def create_index(self):
         if not HAVE_QDRANT:
             return
         # Qdrant auto-manages indexes
         pass
+
     def load_index(self):
         if not HAVE_QDRANT:
             return
         # Qdrant auto-manages indexes
         pass
+
     def get_stats(self) -> dict:
         if not HAVE_QDRANT:
             return {"backend": "Qdrant", "status": "unavailable"}
@@ -338,24 +393,27 @@ class QdrantBackend(VectorBackend):
 
 class NeuromorphicBackend(VectorBackend):
     """
-    Neuromorphic computing backend (stub).
-    Inspired by spiking neural networks and event-driven processing for energy efficiency.
-    See: Zolfagharinejad et al., 2024; Ren & Xia, 2024.
+    Neuromorphic computing backend (RESEARCH STUB).
+    Not for production use. See idea.txt and Zolfagharinejad et al., 2024; Ren & Xia, 2024.
     """
     def add_vector(self, vector: dict, metadata: dict) -> int:
-        # Stub: would encode as spike trains or event streams
+        logging.warning(f"[{self.__class__.__name__}] add_vector not implemented. See idea.txt and Zolfagharinejad et al., 2024.")
         return 0
     def search_vector(self, query_vector: dict, limit: int = 10, min_similarity: float = 0.1) -> list:
-        # Stub: would use SNN-based similarity
+        logging.warning(f"[{self.__class__.__name__}] search_vector not implemented. See idea.txt and Zolfagharinejad et al., 2024.")
         return []
     def batch_search(self, query_vectors: list, limit: int = 10, min_similarity: float = 0.1) -> list:
+        logging.warning(f"[{self.__class__.__name__}] batch_search not implemented. See idea.txt and Zolfagharinejad et al., 2024.")
         return [[] for _ in query_vectors]
     def create_index(self):
+        logging.warning(f"[{self.__class__.__name__}] create_index not implemented. See idea.txt and Zolfagharinejad et al., 2024.")
         pass
     def load_index(self):
+        logging.warning(f"[{self.__class__.__name__}] load_index not implemented. See idea.txt and Zolfagharinejad et al., 2024.")
         pass
     def get_stats(self) -> dict:
-        return {"backend": "Neuromorphic", "status": "stub"}
+        logging.warning(f"[{self.__class__.__name__}] get_stats not implemented. See idea.txt and Zolfagharinejad et al., 2024.")
+        return {"backend": self.__class__.__name__, "status": "stub"}
 
 class InMemoryBackend(VectorBackend):
     """
@@ -378,9 +436,8 @@ class InMemoryBackend(VectorBackend):
 
 class ReservoirBackend(VectorBackend):
     """
-    Reservoir computing backend (stub).
-    Uses recurrent networks (e.g., echo state networks) for temporal memory and dynamic processing.
-    See: Zolfagharinejad et al., 2024; Ren & Xia, 2024.
+    Reservoir computing backend (RESEARCH STUB).
+    Not for production use. See idea.txt and Zolfagharinejad et al., 2024; Ren & Xia, 2024.
     """
     def add_vector(self, vector: dict, metadata: dict) -> int:
         return 0

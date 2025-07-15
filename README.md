@@ -858,3 +858,50 @@ pip install -r requirements.txt
 ```
 
 The project is designed to be portable and can work with system Python or any virtual environment of the user's choice.
+
+# --- MCP Agentic Workflow: Recent Improvements & Ongoing Work ---
+
+## Recent Improvements (2024-07)
+
+- **Workflow Optimization:**
+  - Autonomous reorganization now includes basic dependency graph optimization, feedback weighting, and context compression for LLMs.
+  - Robust fallback logic and clear error messages for RL/SLM/Compiler optimization stubs, referencing idea.txt and latest research.
+
+- **Experimental Lobes:**
+  - All major stubs (SplitBrainABTest, AdvancedEngramEngine, etc.) now log warnings and provide clear NotImplementedError fallbacks.
+  - ErrorDetectionLobe implements basic static analysis (scans for TODO, pass, NotImplementedError in code/data).
+
+- **Security Audit:**
+  - SecurityAuditor now includes AST-based static analysis for dangerous patterns (eval, exec, etc.).
+  - Audit report includes actionable next steps and a summary of findings.
+
+- **Documentation:**
+  - This README and related docs updated to reflect current state, planned improvements, and how to contribute/extend.
+
+## Ongoing & Planned Improvements
+
+- Expand RL/SLM/Compiler optimization logic with real reward models and rerankers (see idea.txt, arXiv references).
+- Implement advanced static analysis and anomaly detection in ErrorDetectionLobe.
+- Complete all experimental lobes with research-driven logic and robust fallbacks.
+- Continue regular codebase refactoring and documentation updates per idea.txt.
+
+## How to Contribute or Extend
+
+- See `src/mcp/README.md` and `idea.txt` for the vision, requirements, and modular architecture.
+- All stubs and TODOs are clearly marked; contributions should reference idea.txt and latest research.
+- To add a new lobe/engine, follow the modular lobe pattern and document all research and design decisions.
+- For security, run `scripts/security_audit.py` and address all issues, warnings, and recommendations.
+- For workflow/task improvements, see the CLI usage and API docs for extension points.
+- All changes must be fully local, portable, and aligned with the project's agentic, brain-inspired design.
+
+## July 2024: Robust Fallbacks and Research-Driven Stubs
+
+- All major stubs in core modules (workflow, experimental lobes, unified memory, vector memory, research integration) now include:
+  - Robust fallback logic (logging, clear error/minimal result, no crashes)
+  - Docstrings referencing idea.txt, TODO_DEVELOPMENT_PLAN.md, and relevant research
+  - TODOs for future expansion and research-driven extensibility
+- This approach ensures the codebase is robust, extensible, and ready for rapid research-driven iteration.
+- See `idea.txt` and `TODO_DEVELOPMENT_PLAN.md` for the guiding vision and roadmap.
+- For details, see code comments and docstrings in each module.
+
+---

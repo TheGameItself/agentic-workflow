@@ -355,6 +355,44 @@ def test_multi_llm_orchestrator():
         if os.path.exists(db_path):
             os.unlink(db_path)
 
+def test_sensory_column():
+    """Test the SensoryColumn lobe."""
+    print("Testing SensoryColumn...")
+    try:
+        from mcp.lobes.experimental.sensory_column.sensory_column import SensoryColumn
+        sensory = SensoryColumn()
+        # Test process_input
+        result = sensory.process_input("test_input")
+        assert result == "test_input", "SensoryColumn should return input unchanged by default."
+        # Test fallback (disabled)
+        sensory.enabled = False
+        result_disabled = sensory.process_input("bypass_input")
+        assert result_disabled == "bypass_input", "SensoryColumn fallback should return input if disabled."
+        print("✓ SensoryColumn tests passed")
+        return True
+    except Exception as e:
+        print(f"✗ SensoryColumn test failed: {e}")
+        return False
+
+def test_spinal_cord():
+    """Test the SpinalCord lobe."""
+    print("Testing SpinalCord...")
+    try:
+        from mcp.lobes.experimental.spinal_cord.spinal_cord import SpinalCord
+        spinal = SpinalCord()
+        # Test route_signal
+        result = spinal.route_signal("test_signal", target="higher_lobe")
+        assert result == "test_signal", "SpinalCord should return signal unchanged by default."
+        # Test fallback (disabled)
+        spinal.enabled = False
+        result_disabled = spinal.route_signal("bypass_signal", target="higher_lobe")
+        assert result_disabled == "bypass_signal", "SpinalCord fallback should return signal if disabled."
+        print("✓ SpinalCord tests passed")
+        return True
+    except Exception as e:
+        print(f"✗ SpinalCord test failed: {e}")
+        return False
+
 def test_advanced_engram_engine():
     """Test the AdvancedEngramEngine."""
     print("Testing AdvancedEngramEngine...")
@@ -399,6 +437,8 @@ def main():
         test_speculation_engine,
         test_split_brain_abtest,
         test_multi_llm_orchestrator,
+        test_sensory_column,
+        test_spinal_cord,
         test_advanced_engram_engine
     ]
     

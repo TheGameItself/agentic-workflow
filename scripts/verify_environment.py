@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 """
 Environment Verification Script
@@ -107,7 +106,7 @@ def check_portability():
                             issues.append(f"Windows separator in {file_path.relative_to(project_root)}")
                         if '/' in content and platform.system() == 'Windows':
                             # This is actually fine for Python, but note it
-                            pass
+                            print('[verify_environment] Fallback: check not implemented yet. See idea.txt for future improvements.')
                 except Exception:
                     pass
     

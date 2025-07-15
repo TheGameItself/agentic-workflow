@@ -28,7 +28,7 @@ class HelpSystem:
                 with open(help_file, 'r') as f:
                     return json.load(f)
             except (json.JSONDecodeError, IOError):
-                pass
+                print('[help_system] Fallback: help feature not implemented yet. See idea.txt for future improvements.')
                 
         # Default help data
         return {

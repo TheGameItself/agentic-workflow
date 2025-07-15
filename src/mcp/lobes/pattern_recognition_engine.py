@@ -11,13 +11,142 @@ import os
 from typing import Dict, List, Any, Optional, Union
 from datetime import datetime
 import collections
+from src.mcp.lobes.experimental.advanced_engram.advanced_engram_engine import WorkingMemory
+from src.mcp.lobes.experimental.lobe_event_bus import LobeEventBus
+import logging
+import random
+import time
+from src.mcp.lobes.experimental.vesicle_pool import VesiclePool
+
+
+class PatternCache:
+    """
+    PatternCache: Domain-specific working memory for recent patterns with decay.
+    Inspired by neuroscience (short-term memory, pattern buffers). See idea.txt.
+    """
+    def __init__(self, capacity=100, decay=0.95):
+        self.capacity = capacity
+        self.decay = decay
+        self.cache = []
+    def add(self, pattern):
+        self.cache.append({'pattern': pattern, 'strength': 1.0})
+        if len(self.cache) > self.capacity:
+            self.cache.pop(0)
+    def decay_cache(self):
+        for entry in self.cache:
+            entry['strength'] *= self.decay
+        self.cache = [e for e in self.cache if e['strength'] > 0.1]
+    def get_recent(self, n=5):
+        return [e['pattern'] for e in self.cache[-n:]]
+
+
+class PatternExtractorMicroLobe:
+    """
+    Micro-lobe for pattern extraction. Can be dynamically activated/inhibited based on context/feedback.
+    Inspired by sensory cortex feature extraction (see idea.txt, neuroscience).
+    """
+    def __init__(self):
+        self.enabled = True
+        self.logger = logging.getLogger("PatternExtractorMicroLobe")
+    def extract(self, data):
+        if not self.enabled:
+            self.logger.info("[PatternExtractorMicroLobe] Inhibited. Extraction bypassed.")
+            return []
+        # Basic pattern extraction (stub, extend as needed)
+        if isinstance(data, str):
+            return [{"type": "text", "data": data, "confidence": 0.5}]
+        elif isinstance(data, dict):
+            return [{"type": k, "data": v, "confidence": 0.5} for k, v in data.items()]
+        elif isinstance(data, list):
+            return [{"type": "list_item", "data": item, "confidence": 0.5} for item in data]
+        return []
+
+
+class NeuralColumnMicroLobe:
+    """
+    Micro-lobe for neural column processing. Can be dynamically activated/inhibited based on context/feedback.
+    Inspired by cortical columns and batch processing (see idea.txt, neuroscience).
+    """
+    def __init__(self, parent):
+        self.enabled = True
+        self.parent = parent  # Reference to PatternRecognitionEngine for state
+        self.logger = logging.getLogger("NeuralColumnMicroLobe")
+    def process(self, patterns, item_id):
+        if not self.enabled:
+            self.logger.info("[NeuralColumnMicroLobe] Inhibited. Processing bypassed.")
+            return []
+        return self.parent._process_with_columns(patterns, item_id)
+
+
+class FeedbackIntegrationMicroLobe:
+    """
+    Micro-lobe for feedback integration and adaptation. Can be dynamically activated/inhibited.
+    Inspired by feedback loops in cortex and basal ganglia (see idea.txt, neuroscience).
+    """
+    def __init__(self, parent):
+        self.enabled = True
+        self.parent = parent
+        self.logger = logging.getLogger("FeedbackIntegrationMicroLobe")
+    def integrate(self, recognized_patterns):
+        if not self.enabled:
+            self.logger.info("[FeedbackIntegrationMicroLobe] Inhibited. Feedback integration bypassed.")
+            return recognized_patterns
+        # Placeholder: feedback-driven adaptation (stub)
+        # In future, adjust confidence, activation, or routing based on feedback
+        return recognized_patterns
+
+
+class AssociativePatternMemory:
+    """
+    AssociativePatternMemory: Context-aware, feedback-driven memory for patterns.
+    Links patterns to context, feedback, and event metadata for rapid, relevant recall.
+    Inspired by associative memory in the brain (see idea.txt, neuroscience).
+    """
+    def __init__(self, capacity=200, decay=0.96):
+        self.capacity = capacity
+        self.decay = decay
+        self.memory = []  # Each entry: {'pattern': ..., 'context': ..., 'feedback': ..., 'strength': ...}
+        self.logger = logging.getLogger("AssociativePatternMemory")
+    def add(self, pattern, context=None, feedback=None):
+        entry = {'pattern': pattern, 'context': context, 'feedback': feedback, 'strength': 1.0}
+        self.memory.append(entry)
+        if len(self.memory) > self.capacity:
+            self.memory.pop(0)
+        self.logger.info(f"[AssociativePatternMemory] Added pattern: {pattern} (context={context}, feedback={feedback})")
+    def decay_memory(self):
+        for entry in self.memory:
+            entry['strength'] *= self.decay
+        self.memory = [e for e in self.memory if e['strength'] > 0.1]
+    def get_by_context(self, context, n=5):
+        # Return most recent patterns matching context (simple substring match for demo)
+        context_str = str(context) if context is not None else ""
+        matches = [e for e in self.memory if context_str and context_str in str(e['context'])]
+        return [e['pattern'] for e in matches[-n:]]
+    def get_recent(self, n=5):
+        return [e['pattern'] for e in self.memory[-n:]]
+
+
+class QuantalPatternVesicle:
+    """
+    Represents a discrete 'quantum' of pattern information, inspired by quantal neurotransmitter release.
+    Supports both spontaneous (noise/baseline) and evoked (event-driven) release.
+    """
+    def __init__(self, pattern, evoked=True, timestamp=None):
+        self.pattern = pattern
+        self.evoked = evoked
+        self.timestamp = timestamp or time.time()
+    def __repr__(self):
+        mode = 'evoked' if self.evoked else 'spontaneous'
+        return f"<QuantalPatternVesicle mode={mode} pattern={self.pattern}>"
 
 
 class PatternRecognitionEngine:
-    """Pattern recognition, neural column simulation, and related features.
-    Implements basic neural column-inspired processing with batch operations and proactive prompting.
     """
-    def __init__(self, db_path: Optional[str] = None):
+    Pattern recognition, neural column simulation, and related features.
+    Now models discrete, vesicle-like 'quanta' for inter-lobe signaling, supports both spontaneous and evoked release modes.
+    See idea.txt and Wikipedia - Quantal neurotransmitter release.
+    """
+    def __init__(self, db_path: Optional[str] = None, event_bus: Optional[LobeEventBus] = None):
         if db_path is None:
             current_dir = os.path.dirname(os.path.abspath(__file__))
             project_root = os.path.join(current_dir, '..', '..', '..')
@@ -31,6 +160,18 @@ class PatternRecognitionEngine:
         self.prompt_log = []
         self.column_states = {}  # Track column activation states
         self.pattern_confidence = {}  # Track pattern confidence scores
+        self.working_memory = WorkingMemory()
+        self.event_bus = event_bus or LobeEventBus()
+        self.extractor_lobe = PatternExtractorMicroLobe()
+        self.neural_column_lobe = NeuralColumnMicroLobe(self)
+        self.feedback_lobe = FeedbackIntegrationMicroLobe(self)
+        self.logger = logging.getLogger("PatternRecognitionEngine")
+        self.event_bus.subscribe('sensory_input', lambda data: (self.handle_sensory_input(data), None)[1])
+        self.pattern_cache = PatternCache()
+        self.associative_memory = AssociativePatternMemory()
+        self.spontaneous_rate = 0.01  # Probability per call for spontaneous release
+        self.vesicle_pool = VesiclePool()  # Synaptic vesicle pool model
+        self.logger.info("[PatternRecognitionEngine] VesiclePool initialized: %s", self.vesicle_pool.get_state())
         self._init_database()
     
     def _init_database(self):
@@ -80,19 +221,26 @@ class PatternRecognitionEngine:
         conn.commit()
         conn.close()
 
-    def recognize_patterns(self, data_batch: List[Any]) -> List[Dict[str, Any]]:
-        """Recognize patterns in a batch of data using neural column-inspired approach."""
+    def handle_sensory_input(self, data: Any):
+        """Handle sensory input event and trigger pattern recognition as quantal vesicles."""
+        vesicles = self.recognize_patterns([data], emit_quantal=True)
+        self.event_bus.publish('pattern_quantal_release', {'vesicles': [v.__dict__ for v in vesicles]})
+        return vesicles
+
+    def recognize_patterns(self, data_batch: List[Any], context: Optional[str] = None, feedback: Any = None, emit_quantal=False) -> List[Any]:
+        """Recognize patterns in a batch of data and emit quantal vesicles if requested."""
+        context = context if context is not None else ""
+        quantal_vesicles = []
         recognized_patterns = []
-        
         for i, data_item in enumerate(data_batch):
-            # Extract basic patterns from data
-            patterns = self._extract_basic_patterns(data_item)
-            
-            # Apply neural column processing
-            column_processed = self._process_with_columns(patterns, f"item_{i}")
-            
-            # Store recognized patterns
-            for pattern in column_processed:
+            # Use extractor micro-lobe
+            patterns = self.extractor_lobe.extract(data_item)
+            # Use neural column micro-lobe
+            column_processed = self.neural_column_lobe.process(patterns, f"item_{i}")
+            # Use feedback integration micro-lobe
+            integrated = self.feedback_lobe.integrate(column_processed)
+            # Store recognized patterns and add to associative memory
+            for pattern in integrated:
                 pattern_id = self._store_pattern(pattern)
                 recognized_patterns.append({
                     'id': pattern_id,
@@ -101,159 +249,25 @@ class PatternRecognitionEngine:
                     'confidence': pattern['confidence'],
                     'source_item': i
                 })
-        
-        return recognized_patterns
-
-    def _extract_basic_patterns(self, data_item: Any) -> List[Dict[str, Any]]:
-        """Extract basic patterns from a data item."""
-        patterns = []
-        
-        if isinstance(data_item, str):
-            # Text patterns
-            patterns.extend(self._extract_text_patterns(data_item))
-        elif isinstance(data_item, dict):
-            # Dictionary patterns
-            patterns.extend(self._extract_dict_patterns(data_item))
-        elif isinstance(data_item, list):
-            # List patterns
-            patterns.extend(self._extract_list_patterns(data_item))
-        elif isinstance(data_item, (int, float)):
-            # Numeric patterns
-            patterns.extend(self._extract_numeric_patterns(data_item))
-        
-        return patterns
-
-    def _extract_text_patterns(self, text: str) -> List[Dict[str, Any]]:
-        """Extract patterns from text data."""
-        patterns = []
-        
-        # Length pattern
-        patterns.append({
-            'type': 'text_length',
-            'data': len(text),
-            'confidence': 0.8
-        })
-        
-        # Word count pattern
-        word_count = len(text.split())
-        patterns.append({
-            'type': 'word_count',
-            'data': word_count,
-            'confidence': 0.9
-        })
-        
-        # Common word patterns
-        words = text.lower().split()
-        if words:
-            common_words = ['the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of']
-            common_count = sum(1 for word in words if word in common_words)
-            patterns.append({
-                'type': 'common_word_ratio',
-                'data': common_count / len(words),
-                'confidence': 0.7
-            })
-        
-        # Special character patterns
-        special_chars = sum(1 for char in text if not char.isalnum() and char != ' ')
-        patterns.append({
-            'type': 'special_char_ratio',
-            'data': special_chars / len(text) if text else 0,
-            'confidence': 0.6
-        })
-        
-        return patterns
-
-    def _extract_dict_patterns(self, data_dict: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Extract patterns from dictionary data."""
-        patterns = []
-        
-        # Key count pattern
-        patterns.append({
-            'type': 'key_count',
-            'data': len(data_dict),
-            'confidence': 0.9
-        })
-        
-        # Value type patterns
-        type_counts = {}
-        for value in data_dict.values():
-            value_type = type(value).__name__
-            type_counts[value_type] = type_counts.get(value_type, 0) + 1
-        
-        for value_type, count in type_counts.items():
-            patterns.append({
-                'type': f'value_type_{value_type}',
-                'data': count,
-                'confidence': 0.8
-            })
-        
-        # Nested structure pattern
-        nested_count = sum(1 for value in data_dict.values() 
-                          if isinstance(value, (dict, list)))
-        patterns.append({
-            'type': 'nested_structure_ratio',
-            'data': nested_count / len(data_dict) if data_dict else 0,
-            'confidence': 0.7
-        })
-        
-        return patterns
-
-    def _extract_list_patterns(self, data_list: List[Any]) -> List[Dict[str, Any]]:
-        """Extract patterns from list data."""
-        patterns = []
-        
-        # Length pattern
-        patterns.append({
-            'type': 'list_length',
-            'data': len(data_list),
-            'confidence': 0.9
-        })
-        
-        # Element type patterns
-        if data_list:
-            type_counts = {}
-            for item in data_list:
-                item_type = type(item).__name__
-                type_counts[item_type] = type_counts.get(item_type, 0) + 1
-            
-            for item_type, count in type_counts.items():
-                patterns.append({
-                    'type': f'element_type_{item_type}',
-                    'data': count,
-                    'confidence': 0.8
-                })
-        
-        return patterns
-
-    def _extract_numeric_patterns(self, number: Union[int, float]) -> List[Dict[str, Any]]:
-        """Extract patterns from numeric data."""
-        patterns = []
-        
-        # Magnitude pattern
-        magnitude = abs(number)
-        if magnitude > 0:
-            magnitude_order = len(str(int(magnitude)))
-            patterns.append({
-                'type': 'magnitude_order',
-                'data': magnitude_order,
-                'confidence': 0.9
-            })
-        
-        # Sign pattern
-        patterns.append({
-            'type': 'sign',
-            'data': 'positive' if number >= 0 else 'negative',
-            'confidence': 1.0
-        })
-        
-        # Integer vs float pattern
-        patterns.append({
-            'type': 'number_type',
-            'data': 'integer' if isinstance(number, int) else 'float',
-            'confidence': 1.0
-        })
-        
-        return patterns
+                self.pattern_cache.add(pattern)
+                self.associative_memory.add(pattern, context=context, feedback=feedback)
+                # Evoked quantal vesicle
+                if emit_quantal:
+                    vesicle = QuantalPatternVesicle(pattern, evoked=True)
+                    quantal_vesicles.append(vesicle)
+                    self.logger.info(f"[PatternRecognitionEngine] Quantal pattern vesicle (evoked): {vesicle}")
+                # Occasionally emit spontaneous quantal vesicle
+                if emit_quantal and random.random() < self.spontaneous_rate:
+                    noise_pattern = {'type': 'noise', 'data': random.gauss(0, 0.1), 'confidence': 0.1, 'source_item': i}
+                    spont_vesicle = QuantalPatternVesicle(noise_pattern, evoked=False)
+                    quantal_vesicles.append(spont_vesicle)
+                    self.logger.info(f"[PatternRecognitionEngine] Quantal pattern vesicle (spontaneous): {spont_vesicle}")
+        self.pattern_cache.decay_cache()
+        self.associative_memory.decay_memory()
+        # After recognizing patterns, publish event
+        if hasattr(self, 'event_bus') and self.event_bus and not emit_quantal:
+            self.event_bus.publish('pattern_recognized', recognized_patterns)
+        return quantal_vesicles if emit_quantal else recognized_patterns
 
     def _process_with_columns(self, patterns: List[Dict[str, Any]], item_id: str) -> List[Dict[str, Any]]:
         """Process patterns through neural columns."""
@@ -436,8 +450,8 @@ class PatternRecognitionEngine:
         
         # Process each item through columns
         for i, data_item in enumerate(data_batch):
-            patterns = self._extract_basic_patterns(data_item)
-            processed = self._process_with_columns(patterns, f"item_{i}")
+            patterns = self.extractor_lobe.extract(data_item)
+            processed = self.neural_column_lobe.process(patterns, f"item_{i}")
             
             # Create column representation
             column_data = {
@@ -459,7 +473,7 @@ class PatternRecognitionEngine:
         # Analyze batch patterns
         batch_patterns = []
         for data_item in data_batch:
-            patterns = self._extract_basic_patterns(data_item)
+            patterns = self.extractor_lobe.extract(data_item)
             batch_patterns.extend(patterns)
         
         # Generate proactive prompts based on patterns
@@ -618,4 +632,36 @@ class PatternRecognitionEngine:
             'total_columns': total_columns,
             'total_prompts': total_prompts,
             'active_columns': len(self.column_states)
-        } 
+        }
+
+    def receive_feedback(self, feedback: Dict[str, Any]):
+        """
+        Receive feedback on recognized patterns and self-tune internal parameters.
+        Inspired by brain feedback loops and adaptive learning. See idea.txt.
+        """
+        # Example: Adjust confidence of patterns based on feedback
+        for pattern_id, score in feedback.get('pattern_scores', {}).items():
+            # Find and update pattern confidence in cache
+            for entry in self.pattern_cache.cache:
+                if entry['pattern'].get('id') == pattern_id:
+                    entry['pattern']['confidence'] = max(0.0, min(1.0, entry['pattern'].get('confidence', 0.5) + 0.1 * (score - 3)))
+        # Optionally adjust other parameters (e.g., decay, batch size)
+        if 'decay' in feedback:
+            self.pattern_cache.decay = feedback['decay']
+        # Log feedback
+        if hasattr(self, 'event_bus') and self.event_bus:
+            self.event_bus.publish('pattern_feedback_received', feedback)
+        else:
+            logging.info(f"[PatternRecognitionEngine] Feedback received: {feedback}")
+
+    def set_micro_lobe_activation(self, extractor: bool = True, neural_column: bool = True, feedback: bool = True):
+        """Dynamically activate/inhibit micro-lobes based on context or feedback."""
+        self.extractor_lobe.enabled = extractor
+        self.neural_column_lobe.enabled = neural_column
+        self.feedback_lobe.enabled = feedback
+        self.logger.info(f"[PatternRecognitionEngine] Micro-lobe activation set: extractor={self.extractor_lobe.enabled}, neural_column={self.neural_column_lobe.enabled}, feedback={self.feedback_lobe.enabled}")
+
+    def recall_patterns_by_context(self, context: Optional[str] = None, n: int = 5) -> List[Dict[str, Any]]:
+        """Recall most relevant patterns for a given context using associative memory."""
+        context_str = str(context) if context is not None else ""
+        return self.associative_memory.get_by_context(context_str, n=n) 

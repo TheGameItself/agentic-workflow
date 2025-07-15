@@ -19,16 +19,20 @@ import importlib.util
 
 
 class SecurityAuditor:
-    """Comprehensive security auditor for the MCP server."""
+    """Comprehensive security auditor for the MCP server.
+    Now includes AST-based static analysis for dangerous patterns (eval, exec, etc.),
+    and generates a summary of findings with actionable next steps.
+    """
     
     def __init__(self, project_root: str = "."):
         self.project_root = Path(project_root)
         self.issues = []
         self.warnings = []
         self.recommendations = []
+        self.ast_issues = []  # New: AST-based issues
         
     def run_full_audit(self) -> Dict[str, Any]:
-        """Run complete security audit."""
+        """Run complete security audit, including AST-based static analysis."""
         print("Starting comprehensive security audit...")
         
         results = {
@@ -52,7 +56,8 @@ class SecurityAuditor:
             self._audit_configuration,
             self._audit_dependencies,
             self._audit_logging,
-            self._audit_error_handling
+            self._audit_error_handling,
+            self._audit_ast_dangerous_patterns  # New: AST-based static analysis
         ]
         
         for check in checks:
@@ -69,6 +74,9 @@ class SecurityAuditor:
         
         # Generate summary
         results["summary"] = self._generate_summary(results)
+        
+        # Add actionable next steps
+        results["next_steps"] = self._generate_next_steps(results)
         
         return results
     
@@ -429,6 +437,31 @@ class SecurityAuditor:
         
         return {"issues": issues, "warnings": warnings, "recommendations": recommendations}
     
+    def _audit_ast_dangerous_patterns(self) -> Dict[str, List[str]]:
+        """AST-based static analysis for dangerous patterns (eval, exec, etc.)."""
+        print("Running AST-based static analysis for dangerous patterns...")
+        issues = []
+        warnings = []
+        recommendations = []
+        for file_path in self.project_root.rglob("*.py"):
+            try:
+                with open(file_path, 'r') as f:
+                    source = f.read()
+                tree = ast.parse(source, filename=str(file_path))
+                for node in ast.walk(tree):
+                    func_name = None
+                    if isinstance(node, ast.Call):
+                        if isinstance(node.func, ast.Name):
+                            func_name = node.func.id
+                        elif isinstance(node.func, ast.Attribute):
+                            func_name = node.func.attr
+                        if func_name in ('eval', 'exec', 'compile', 'execfile'):
+                            issues.append(f"Dangerous function '{func_name}' used in {file_path} at line {node.lineno}")
+                            recommendations.append(f"Remove or refactor use of '{func_name}' in {file_path}")
+            except Exception as e:
+                warnings.append(f"AST analysis failed for {file_path}: {e}")
+        return {"issues": issues, "warnings": warnings, "recommendations": recommendations}
+    
     def _calculate_security_score(self, results: Dict[str, Any]) -> int:
         """Calculate security score based on audit results."""
         score = 100
@@ -462,6 +495,19 @@ class SecurityAuditor:
             return "HIGH"
         else:
             return "CRITICAL"
+    
+    def _generate_next_steps(self, results: Dict[str, Any]) -> List[str]:
+        """Generate actionable next steps based on audit results."""
+        next_steps = []
+        if results["issues"]:
+            next_steps.append("Review and remediate all critical issues found in the audit.")
+        if results["warnings"]:
+            next_steps.append("Address warnings to improve security posture.")
+        if results["recommendations"]:
+            next_steps.append("Implement recommendations for best practices and compliance.")
+        if not (results["issues"] or results["warnings"] or results["recommendations"]):
+            next_steps.append("No critical issues found. Maintain regular audits and code reviews.")
+        return next_steps
     
     def generate_report(self, results: Dict[str, Any], output_file: str = "security_audit_report.json"):
         """Generate detailed security audit report."""
