@@ -731,29 +731,7 @@ class AlignmentEngine:
         conn.commit()
         conn.close()
 
-class SimulatedReality:
-    """
-    Simulated Reality Engine (Stub)
-    Entity/event/state tracking for agentic workflows. See idea.txt for requirements.
-    TODO: Integrate with other lobes and feedback learning. Research scenario planning and synthetic experience generation. See AutoFlow/AFlow research.
-    Fallback: Returns NotImplementedError if called. This is an intentional stub for future research and extensibility (see idea.txt).
-    """
-    def __init__(self):
-        pass
-    def simulate(self, scenario):
-        raise NotImplementedError("SimulatedReality is a planned stub. See idea.txt and AutoFlow/AFlow research for future implementation.")
 
-class DreamingEngine:
-    """
-    Dreaming Engine (Stub)
-    Alternative scenario simulation and synthetic memory generation. See idea.txt for requirements.
-    TODO: Implement dream filtering, safe learning, and feedback-driven adaptation. Research synthetic memory generation and filtering of non-persistent insights. See AutoFlow/AFlow research.
-    Fallback: Returns NotImplementedError if called. This is an intentional stub for future research and extensibility (see idea.txt).
-    """
-    def __init__(self):
-        pass
-    def dream(self, context):
-        raise NotImplementedError("DreamingEngine is a planned stub. See idea.txt and AutoFlow/AFlow research for future implementation.")
 
 class MindMapEngine:
     """
@@ -2240,98 +2218,7 @@ class DecisionMakingLobe:
         """Stub: Recommend an action from a list of options. TODO: Implement logic."""
         return options[0] if options else None
 
-<<<<<<< HEAD
-    def speculate(self, context: str, topic: str = "") -> dict:
-        """Generate a speculative hypothesis, risk, or opportunity based on context and topic."""
-        import random
-        types = ['hypothesis', 'risk', 'opportunity']
-        spec_type = random.choice(types)
-        content = f"Speculation ({spec_type}): On '{topic or context[:30]}', possible outcome: ..."
-        speculation = {
-            'type': spec_type,
-            'context': context,
-            'topic': topic,
-            'content': content,
-            'created_at': datetime.now().isoformat()
-        }
-        self.speculations.append(speculation)
-        return speculation
-
-    def evaluate_speculation(self, speculation: dict, evidence: str = "") -> dict:
-        """Evaluate a speculation based on provided evidence (stub: could use LLM or rules)."""
-        # For now, randomly assign a confidence score
-        import random
-        confidence = round(random.uniform(0.1, 0.99), 2)
-        evaluation = {
-            'speculation': speculation,
-            'evidence': evidence,
-            'confidence': confidence,
-            'evaluated_at': datetime.now().isoformat()
-        }
-        self.evaluations.append(evaluation)
-        return evaluation
-
-    def list_speculations(self, filter_type: Optional[str] = None) -> list:
-        """List all speculations, optionally filtered by type (hypothesis, risk, opportunity)."""
-        if filter_type is None:
-            return self.speculations
-        return [s for s in self.speculations if s['type'] == filter_type]
-
-    def clear_speculations(self):
-        """Clear all stored speculations (for new project phase or cleanup)."""
-        self.speculations = []
-        self.evaluations = []
-
-class NeuromorphicEngine:
-    """
-    Neuromorphic Engine (Spiking Neural Network stub).
-    Simulates spike-based computation for energy-efficient, brain-inspired processing.
-    See: Zolfagharinejad et al., 2024 (https://doi.org/10.1140/epjb/s10051-024-00703-6), Ren & Xia, 2024 (https://arxiv.org/html/2408.14811v1), README.md, idea.txt
-    """
-    def __init__(self):
-        self.spike_history = []
-    def simulate_spike_train(self, input_data: list) -> list:
-        """Simulate a spike train from input data (stub: returns binary spikes)."""
-        spikes = [1 if x > 0.5 else 0 for x in input_data]
-        self.spike_history.append(spikes)
-        return spikes
-
-class ReservoirComputingEngine:
-    """
-    Reservoir Computing Engine (Echo State Network stub).
-    Processes temporal sequences using a dynamic reservoir for memory and computation.
-    See: Zolfagharinejad et al., 2024 (https://doi.org/10.1140/epjb/s10051-024-00703-6), Ren & Xia, 2024 (https://arxiv.org/html/2408.14811v1), README.md, idea.txt
-    """
-    def __init__(self):
-        self.reservoir_state = 0.0
-    def process_sequence(self, sequence: list) -> float:
-        """Process a sequence and update reservoir state (stub: running average)."""
-        if not sequence:
-            return self.reservoir_state
-        self.reservoir_state = sum(sequence) / len(sequence)
-        return self.reservoir_state
-
-class HyperdimensionalEngine:
-    """
-    Hyperdimensional Computing Engine (Vector Symbolic Architecture stub).
-    Encodes and manipulates information in high-dimensional vectors for robust, brain-like processing.
-    See: Zolfagharinejad et al., 2024 (https://doi.org/10.1140/epjb/s10051-024-00703-6), Ren & Xia, 2024 (https://arxiv.org/html/2408.14811v1), README.md, idea.txt
-    """
-    def __init__(self, dim: int = 10000):
-        self.dim = dim
-    def encode(self, data: str) -> list:
-        """Encode a string into a high-dimensional binary vector (stub: hash-based)."""
-        import hashlib
-        h = int(hashlib.sha256(data.encode()).hexdigest(), 16)
-        return [(h >> i) & 1 for i in range(self.dim)]
-    def bind(self, vec1: list, vec2: list) -> list:
-        """Bind two vectors (stub: XOR)."""
-        return [a ^ b for a, b in zip(vec1, vec2)]
-
-class SplitBrainABTest:
-=======
 class EmotionContextLobe:
->>>>>>> 7cb6de0 (Remove multiple obsolete files and directories related to the MCP project, including CLI scripts, task management, and experimental lobes. Update README.md to include new state-of-the-art optimization libraries and their installation instructions. Enhance requirements.txt with optional dependencies for advanced features. Refactor memory and workflow management to improve functionality and maintainability.)
     """
     Emotional/Context Lobe
     Tracks project sentiment, urgency, and context, influencing prioritization and feedback.

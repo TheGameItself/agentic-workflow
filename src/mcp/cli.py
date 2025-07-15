@@ -1,24 +1,12 @@
 from typing import Final, Literal, Dict
 from pathlib import Path
-
-FEATURE_FLAGS: Final[Dict[str, bool]] = {
-    'experimental_lobes': False,
-    'distributed_mode': False,
-    'visual_workflow_explorer': False,
-    'self_improving_server': False,
-    'simulated_reality': False,
-}
-
-#!/usr/bin/env python3
-"""
-Enhanced MCP CLI Interface
-Command-line interface for the MCP Agentic Workflow Accelerator with advanced features.
-"""
-
 import click
 import os
 import sys
 import asyncio
+import json
+import datetime
+
 from .memory import MemoryManager
 from .workflow import WorkflowManager
 from .project_manager import ProjectManager
@@ -32,8 +20,14 @@ from .performance_monitor import ObjectivePerformanceMonitor
 from .rag_system import RAGSystem
 from .reminder_engine import EnhancedReminderEngine
 from .advanced_memory import TFIDFEncoder, RaBitQEncoder
-import json
-import datetime
+
+FEATURE_FLAGS: Final[Dict[str, bool]] = {
+    'experimental_lobes': False,
+    'distributed_mode': False,
+    'visual_workflow_explorer': False,
+    'self_improving_server': False,
+    'simulated_reality': False,
+}
 
 REALITY_PATH: Final[str] = 'data/simulated_reality.json'
 

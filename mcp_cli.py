@@ -13,5 +13,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 from mcp.cli import cli
 
 if __name__ == '__main__':
-    cli() 
+    # Call the Click CLI group directly - it handles its own context
+    cli.main()
     
