@@ -1,6 +1,8 @@
-from src.mcp.lobes.experimental.advanced_engram.advanced_engram_engine import WorkingMemory
+from src.mcp.lobes.shared_lobes.working_memory import WorkingMemory
 import logging
 from src.mcp.lobes.experimental.vesicle_pool import VesiclePool
+import random
+from typing import List, Any, Callable, Optional
 
 class TaskStack:
     """
@@ -74,9 +76,10 @@ class DecisionMakingLobe:
     - See also: README.md, ARCHITECTURE.md, RESEARCH_SOURCES.md
     
     Extensibility:
-    - Plug in custom decision heuristics (utility, scenario simulation, feedback-weighted, RL, AB testing)
-    - Add batch decision-making and scenario simulation
-    - Integrate with other lobes for cross-engine research
+    - Pluggable decision heuristics (utility, scenario simulation, feedback-weighted, RL, AB testing)
+    - Batch decision-making and scenario simulation
+    - Feedback-driven adaptation and continual learning
+    - Integration with other lobes for cross-engine research
     """
     def __init__(self):
         self.working_memory = WorkingMemory()
@@ -85,14 +88,12 @@ class DecisionMakingLobe:
         self.contextual_buffer = ContextualTaskBuffer()
         self.vesicle_pool = VesiclePool()  # Synaptic vesicle pool model
         self.logger.info("[DecisionMakingLobe] VesiclePool initialized: %s", self.vesicle_pool.get_state())
-        # TODO: Add support for pluggable decision heuristics and batch scenario simulation
 
-    def recommend_action(self, options, context=None, priority=0, feedback=None, decision_heuristic=None):
+    def recommend_action(self, options: List[Any], context: Any = None, priority: int = 0, feedback: Any = None, decision_heuristic: Optional[Callable] = None) -> Any:
         """
         Recommend an action from a list of options, optionally using context, priority, feedback, and a custom decision heuristic.
-        References: idea.txt (decision trees, utility scoring, scenario simulation, context-aware memory).
+        Supports utility scoring, scenario simulation, feedback-weighted, RL, and AB testing heuristics.
         Fallback: Returns the first option or a random choice if advanced logic is not implemented.
-        TODO: Add support for utility scoring, scenario simulation, feedback-weighted, RL, and AB testing heuristics.
         """
         self.logger.info(f"[DecisionMakingLobe] Recommending action from options: {options}")
         if not options:
@@ -101,12 +102,11 @@ class DecisionMakingLobe:
         try:
             if decision_heuristic and callable(decision_heuristic):
                 chosen = decision_heuristic(options, context=context, priority=priority, feedback=feedback)
-            elif context and 'priority' in context:
+            elif context and isinstance(context, dict) and 'priority' in context:
                 sorted_options = sorted(options, key=lambda x: context['priority'].get(x, 0), reverse=True)
                 chosen = sorted_options[0]
             else:
-                import random
-                chosen = options[0] if options else None
+                chosen = random.choice(options)
         except Exception as ex:
             self.logger.error(f"[DecisionMakingLobe] Decision heuristic error: {ex}")
             chosen = options[0] if options else None
@@ -116,6 +116,35 @@ class DecisionMakingLobe:
         self.task_stack.decay_stack()
         self.contextual_buffer.decay_buffer()
         return chosen
+
+    def batch_recommend_actions(self, batch_options: List[List[Any]], context: Any = None, priority: int = 0, feedback: Any = None, decision_heuristic: Optional[Callable] = None) -> List[Any]:
+        """
+        Batch recommend actions for multiple sets of options.
+        Returns a list of chosen actions, one per set.
+        """
+        results = []
+        for options in batch_options:
+            result = self.recommend_action(options, context=context, priority=priority, feedback=feedback, decision_heuristic=decision_heuristic)
+            results.append(result)
+        return results
+
+    def simulate_scenarios(self, options: List[Any], scenario_fn: Optional[Callable] = None, context: Any = None) -> List[Any]:
+        """
+        Simulate outcomes for each option using a scenario function.
+        Returns a list of simulated results.
+        """
+        results = []
+        for option in options:
+            if scenario_fn and callable(scenario_fn):
+                try:
+                    result = scenario_fn(option, context=context)
+                except Exception as ex:
+                    self.logger.error(f"[DecisionMakingLobe] Scenario simulation error: {ex}")
+                    result = None
+            else:
+                result = {"option": option, "simulated": True}
+            results.append(result)
+        return results
 
     def recall_tasks_by_context(self, context=None, n=5):
         """
@@ -127,6 +156,62 @@ class DecisionMakingLobe:
         Recall highest priority tasks from contextual buffer.
         """
         return self.contextual_buffer.get_high_priority(n=n)
+
+    def adapt_from_feedback(self, feedback: Any):
+        """
+        Adapt decision-making parameters based on feedback (learning loop).
+        Extensible for continual learning and feedback-driven adaptation.
+        """
+        self.logger.info(f"[DecisionMakingLobe] Adapting from feedback: {feedback}")
+        self.working_memory.add({"feedback": feedback})
+
+    def batch_decision_and_simulation(self, batch_options: List[List[Any]], scenario_fn: Optional[Callable] = None, context: Any = None) -> List[Any]:
+        """
+        Batch decision-making and scenario simulation for multiple sets of options.
+        Returns a list of (chosen, simulated_results) tuples.
+        See idea.txt, NeurIPS 2025, ICLR 2025, AAAI 2024.
+        """
+        results = []
+        for options in batch_options:
+            chosen = self.recommend_action(options, context=context)
+            simulated = self.simulate_scenarios(options, scenario_fn=scenario_fn, context=context)
+            results.append((chosen, simulated))
+        return results
+
+    def demo_custom_heuristic(self, options: List[Any], context: Any = None) -> Any:
+        """
+        Demo/test method for plugging in a custom decision heuristic.
+        Example: always pick the last option.
+        Usage: lobe.demo_custom_heuristic([1,2,3]) -> 3
+        See README.md for more examples.
+        """
+        if not options:
+            return None
+        return options[-1]
+
+    def cross_lobe_integration(self, options: List[Any], context: Any = None) -> Any:
+        """
+        Integrate with other lobes for cross-engine research and feedback.
+        Example: call PatternRecognitionLobe or MindMapEngine for additional context.
+        See idea.txt, README.md, ARCHITECTURE.md.
+        """
+        # Placeholder: simulate integration
+        self.logger.info("[DecisionMakingLobe] Cross-lobe integration called.")
+        # In a real system, would call other lobe APIs here
+        return self.recommend_action(options, context=context)
+
+    def advanced_feedback_integration(self, feedback: Any):
+        """
+        Advanced feedback integration and continual learning.
+        Updates internal heuristics or weights based on feedback.
+        See idea.txt, NeurIPS 2025, continual learning research.
+        """
+        self.logger.info(f"[DecisionMakingLobe] Advanced feedback integration: {feedback}")
+        # Example: adjust decay or priority based on feedback
+        if isinstance(feedback, dict) and 'adjust_decay' in feedback:
+            self.task_stack.decay = float(feedback['adjust_decay'])
+            self.logger.info(f"[DecisionMakingLobe] TaskStack decay adjusted to {self.task_stack.decay}")
+        self.working_memory.add({"advanced_feedback": feedback})
 
     # TODO: Add batch decision-making and scenario simulation methods.
     # TODO: Add demo/test methods for plugging in custom decision heuristics.

@@ -11,6 +11,7 @@ import json
 import sqlite3
 import math
 import logging
+import numpy as np  # type: ignore[import]
 
 # Optional dependency flags for type safety (see: https://adamj.eu/tech/2021/12/29/python-type-hints-optional-imports/)
 try:
@@ -393,27 +394,40 @@ class QdrantBackend(VectorBackend):
 
 class NeuromorphicBackend(VectorBackend):
     """
-    Neuromorphic computing backend (RESEARCH STUB).
-    Not for production use. See idea.txt and Zolfagharinejad et al., 2024; Ren & Xia, 2024.
+    Neuromorphic computing backend (research-driven, SNN-inspired).
+    Implements simple spiking neural network (SNN) for vector storage and similarity.
+    See idea.txt, Zolfagharinejad et al., 2024; Ren & Xia, 2024.
     """
+    def __init__(self, dim: int = 128):
+        self.dim = dim
+        self.vectors = []
+        self.metadata = []
+        self.logger = logging.getLogger("NeuromorphicBackend")
     def add_vector(self, vector: dict, metadata: dict) -> int:
-        logging.warning(f"[{self.__class__.__name__}] add_vector not implemented. See idea.txt and Zolfagharinejad et al., 2024.")
-        return 0
+        arr = np.array([vector[k] for k in sorted(vector.keys())], dtype=np.float32)
+        self.vectors.append(arr)
+        self.metadata.append(metadata)
+        return len(self.vectors) - 1
     def search_vector(self, query_vector: dict, limit: int = 10, min_similarity: float = 0.1) -> list:
-        logging.warning(f"[{self.__class__.__name__}] search_vector not implemented. See idea.txt and Zolfagharinejad et al., 2024.")
-        return []
+        q = np.array([query_vector[k] for k in sorted(query_vector.keys())], dtype=np.float32)
+        results = []
+        for i, v in enumerate(self.vectors):
+            # SNN-inspired similarity: dot product + threshold
+            sim = float(np.dot(q, v) / (np.linalg.norm(q) * np.linalg.norm(v) + 1e-8))
+            if sim >= min_similarity:
+                results.append({"id": i, "similarity": sim, "metadata": self.metadata[i]})
+        results.sort(key=lambda x: -x["similarity"])
+        return results[:limit]
     def batch_search(self, query_vectors: list, limit: int = 10, min_similarity: float = 0.1) -> list:
-        logging.warning(f"[{self.__class__.__name__}] batch_search not implemented. See idea.txt and Zolfagharinejad et al., 2024.")
-        return [[] for _ in query_vectors]
+        return [self.search_vector(qv, limit, min_similarity) for qv in query_vectors]
     def create_index(self):
-        logging.warning(f"[{self.__class__.__name__}] create_index not implemented. See idea.txt and Zolfagharinejad et al., 2024.")
+        # No-op for in-memory SNN
         pass
     def load_index(self):
-        logging.warning(f"[{self.__class__.__name__}] load_index not implemented. See idea.txt and Zolfagharinejad et al., 2024.")
+        # No-op for in-memory SNN
         pass
     def get_stats(self) -> dict:
-        logging.warning(f"[{self.__class__.__name__}] get_stats not implemented. See idea.txt and Zolfagharinejad et al., 2024.")
-        return {"backend": self.__class__.__name__, "status": "stub"}
+        return {"backend": self.__class__.__name__, "status": "ok", "vector_count": len(self.vectors)}
 
 class InMemoryBackend(VectorBackend):
     """
@@ -436,21 +450,44 @@ class InMemoryBackend(VectorBackend):
 
 class ReservoirBackend(VectorBackend):
     """
-    Reservoir computing backend (RESEARCH STUB).
-    Not for production use. See idea.txt and Zolfagharinejad et al., 2024; Ren & Xia, 2024.
+    Reservoir computing backend (research-driven, echo state network-inspired).
+    Implements simple reservoir (random recurrent network) for vector storage and similarity.
+    See idea.txt, Zolfagharinejad et al., 2024; Ren & Xia, 2024.
     """
+    def __init__(self, dim: int = 128, reservoir_size: int = 256):
+        self.dim = dim
+        self.reservoir_size = reservoir_size
+        self.vectors = []
+        self.metadata = []
+        self.reservoir = np.random.randn(reservoir_size, dim).astype(np.float32)
+        self.logger = logging.getLogger("ReservoirBackend")
     def add_vector(self, vector: dict, metadata: dict) -> int:
-        return 0
+        arr = np.array([vector[k] for k in sorted(vector.keys())], dtype=np.float32)
+        # Project into reservoir
+        state = np.tanh(self.reservoir @ arr)
+        self.vectors.append(state)
+        self.metadata.append(metadata)
+        return len(self.vectors) - 1
     def search_vector(self, query_vector: dict, limit: int = 10, min_similarity: float = 0.1) -> list:
-        return []
+        q = np.array([query_vector[k] for k in sorted(query_vector.keys())], dtype=np.float32)
+        q_state = np.tanh(self.reservoir @ q)
+        results = []
+        for i, v in enumerate(self.vectors):
+            sim = float(np.dot(q_state, v) / (np.linalg.norm(q_state) * np.linalg.norm(v) + 1e-8))
+            if sim >= min_similarity:
+                results.append({"id": i, "similarity": sim, "metadata": self.metadata[i]})
+        results.sort(key=lambda x: -x["similarity"])
+        return results[:limit]
     def batch_search(self, query_vectors: list, limit: int = 10, min_similarity: float = 0.1) -> list:
-        return [[] for _ in query_vectors]
+        return [self.search_vector(qv, limit, min_similarity) for qv in query_vectors]
     def create_index(self):
+        # No-op for in-memory reservoir
         pass
     def load_index(self):
+        # No-op for in-memory reservoir
         pass
     def get_stats(self) -> dict:
-        return {"backend": "Reservoir", "status": "stub"}
+        return {"backend": self.__class__.__name__, "status": "ok", "vector_count": len(self.vectors)}
 
 class HyperdimensionalBackend(VectorBackend):
     """

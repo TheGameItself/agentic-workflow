@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environments
+.venv/
+
+# Logs and reports
+*.log
+*_report.txt
+test_output.log
+todo_backup.log
+CLEANUP_SUMMARY.md
+TODO_BACKUP.txt
+
+# Build artifacts
+*.zip
+*.tar.gz
+*.AppImage
+
+# Tools and temp
+get-pip.py
+eradicate
+vulture
+
+# Databases (except core project data/)
+*.db
+!data/*.db
+
+# Do not exclude core files
+!idea.txt
+!src/
+!frontend/
+!docs/
+!config/
+!scripts/
+!plugins/
+!packages/
+!deployment_packages/
+!usb_templates/
+!README.md
+!requirements.txt
+!pyproject.toml
+!setup.py
+!start_mcp.sh
+!start_mcp.bat
+!start_mcp.ps1 

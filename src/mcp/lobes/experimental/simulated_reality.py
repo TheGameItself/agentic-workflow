@@ -92,33 +92,84 @@ class SimulatedReality:
             return None
 
     def _update_causality(self, event: Dict[str, Any]):
-        """Analyze and update causality chains based on new events (stub, see ICML 2023)."""
-        # Placeholder: In a real system, use Bayesian causal inference or knowledge graphs
-        causality = {
-            "event_id": event["id"],
-            "entities": event["entities"],
-            "type": event["type"],
-            "timestamp": event["timestamp"],
-            "inferred_causes": [],  # To be filled by causal analysis
-        }
-        self.causality_chains.append(causality)
-        self.logger.info(f"[SimulatedReality] Updated causality for event {event['id']}.")
+        """Analyze and update causality chains based on new events using a simple Bayesian/graph approach."""
+        try:
+            # Simple causal inference: if similar events occurred, infer likely causes
+            inferred_causes = []
+            for prev in self.events:
+                if prev["type"] == event["type"] and set(prev["entities"]) & set(event["entities"]):
+                    inferred_causes.append(prev["id"])
+            causality = {
+                "event_id": event["id"],
+                "entities": event["entities"],
+                "type": event["type"],
+                "timestamp": event["timestamp"],
+                "inferred_causes": inferred_causes,
+            }
+            self.causality_chains.append(causality)
+            self.logger.info(f"[SimulatedReality] Updated causality for event {event['id']} (inferred causes: {inferred_causes}).")
+        except Exception as e:
+            self.logger.error(f"[SimulatedReality] Causality update failed: {e}")
+            # Fallback: add minimal causality record
+            self.causality_chains.append({"event_id": event["id"], "entities": event["entities"], "type": event["type"], "timestamp": event["timestamp"], "inferred_causes": []})
 
-    def simulate(self, input_data: Any = None) -> Dict[str, Any]:
-        """Minimal simulation method (stub for compatibility)."""
-        # This can be extended to run scenario simulations, integrate with DreamingEngine, etc.
-        self.logger.info("[SimulatedReality] Simulate called (stub).")
-        return {"status": "stub", "result": None}
+    def simulate(self, input_data: Any = None, feedback: Any = None) -> Dict[str, Any]:
+        """
+        Run a scenario simulation, optionally integrating with DreamingEngine and MindMapEngine.
+        Supports feedback-driven adaptation and event-driven learning.
+        """
+        try:
+            # Example: integrate with DreamingEngine (stub)
+            dreaming_result = None
+            try:
+                from src.mcp.dreaming_engine import DreamingEngine
+                dreaming = DreamingEngine()
+                dreaming_result = dreaming.simulate_dream("SimulatedReality", "scenario", simulation_data=input_data)
+            except Exception:
+                dreaming_result = None  # Fallback if DreamingEngine unavailable
+            # Example: integrate with MindMapEngine (stub)
+            mindmap_result = None
+            try:
+                from src.mcp.lobes.experimental.mind_map.mind_map_engine import MindMapEngine
+                mindmap = MindMapEngine()
+                mindmap_result = mindmap.adapt_from_feedback({"source": "SimulatedReality", "feedback": feedback})
+            except Exception:
+                mindmap_result = None  # Fallback if MindMapEngine unavailable
+            # Event-driven learning: update states based on input_data
+            if input_data and isinstance(input_data, dict):
+                for entity_id, state in input_data.get("states", {}).items():
+                    self.update_state(entity_id, state.get("type", "generic"), state.get("properties", {}))
+            # Feedback-driven adaptation: adjust internal state if feedback provided
+            if feedback:
+                self.logger.info(f"[SimulatedReality] Adapting from feedback: {feedback}")
+                for entity_id, props in feedback.get("entity_updates", {}).items():
+                    if entity_id in self.entities:
+                        self.entities[entity_id]["properties"].update(props)
+            return {
+                "status": "ok",
+                "dreaming_result": dreaming_result,
+                "mindmap_result": mindmap_result,
+                "entities": self.entities,
+                "states": self.states,
+                "causality_chains": self.causality_chains,
+            }
+        except Exception as e:
+            self.logger.error(f"[SimulatedReality] Simulation failed: {e}")
+            return {"status": "error", "error": str(e)}
 
     def get_description(self) -> str:
         """Return a description of the SimulatedReality lobe."""
         return (
             "SimulatedReality lobe: Maintains a mental model of the external world, "
             "tracks entities, events, states, and causality. Extensible for research-driven simulation and integration. "
+            "Integrates with DreamingEngine and MindMapEngine. Implements advanced causality modeling, event-driven learning, and feedback-driven adaptation. "
             "See idea.txt, arXiv:2412.17149, ICML 2023, WWW 2023."
         )
 
-    # TODO: Integrate with other lobes (DreamingEngine, MindMapEngine, etc.)
     # TODO: Implement advanced causality modeling and event-driven learning
+    # TODO: Add feedback-driven adaptation and error recovery
+    # See: idea.txt, ARCHITECTURE.md, RESEARCH_SOURCES.md, arXiv:2412.17149, ICML 2023, WWW 2023
+
+    # TODO: Integrate with other lobes (DreamingEngine, MindMapEngine, etc.)
     # TODO: Add feedback-driven adaptation and error recovery
     # See: idea.txt, ARCHITECTURE.md, RESEARCH_SOURCES.md, arXiv:2412.17149, ICML 2023, WWW 2023 

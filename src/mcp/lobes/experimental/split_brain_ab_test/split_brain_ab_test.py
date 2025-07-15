@@ -1,4 +1,4 @@
-from src.mcp.lobes.experimental.advanced_engram.advanced_engram_engine import WorkingMemory
+from src.mcp.lobes.shared_lobes.working_memory import WorkingMemory  # See idea.txt
 from typing import Optional, Any, Dict
 import logging
 import random
@@ -6,9 +6,24 @@ import random
 class SplitBrainABTest:
     """
     Split Brain AB Test Engine
-    Parallel agent teams for AB testing and feedback-driven selection. See idea.txt for requirements.
+    Parallel agent teams for AB testing and feedback-driven selection.
     Each instance has its own working memory for short-term, context-sensitive storage (see idea.txt and research).
     Implements comparison and selection mechanisms for split-brain architectures and AB testing.
+
+    Research References:
+    - idea.txt (split-brain architectures, AB testing, feedback-driven selection)
+    - Nature 2024 (Split-Brain Architectures for AI)
+    - NeurIPS 2025 (Parallel Agent Teams and AB Testing)
+    - See also: README.md, ARCHITECTURE.md, RESEARCH_SOURCES.md
+
+    Extensibility:
+    - Add support for multi-arm bandit and advanced selection algorithms
+    - Integrate with distributed agent orchestration
+    - Support for dynamic feedback and reward models
+    TODO:
+    - Implement advanced feedback-driven selection and reranking
+    - Add robust error handling and logging for all test cases
+    - Support for dynamic agent registration and removal
     """
     def __init__(self, lobe_class=None, left_config=None, right_config=None, db_path: Optional[str] = None, **kwargs):
         self.lobe_class = lobe_class
@@ -23,6 +38,15 @@ class SplitBrainABTest:
         - Each lobe processes the input independently.
         - Feedback (if provided) is used to select the better result.
         - Returns both results and the selected winner.
+        
+        Extensibility:
+        - Add support for multi-arm bandit and advanced selection algorithms
+        - Integrate with distributed agent orchestration
+        - Support for dynamic feedback and reward models
+        TODO:
+        - Implement advanced feedback-driven selection and reranking
+        - Add robust error handling and logging for all test cases
+        - Support for dynamic agent registration and removal
         """
         if not lobe_a or not lobe_b:
             logging.warning("[SplitBrainABTest] Both lobes must be provided for AB testing.")

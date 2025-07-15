@@ -71,19 +71,32 @@ class DreamingEngine:
     """
     
     def __init__(self, db_path: Optional[str] = None, memory_manager=None):
-        """Initialize the dreaming engine with database and memory integration."""
-        if db_path is None:
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            project_root = os.path.join(current_dir, '..', '..')
-            data_dir = os.path.join(project_root, 'data')
-            os.makedirs(data_dir, exist_ok=True)
-            db_path = os.path.join(data_dir, 'dreaming_engine.db')
-        
-        self.db_path = db_path
+        """Initialize the dreaming engine with database and memory integration. Adds fallbacks for missing directories and in-memory DB."""
+        try:
+            if db_path is None:
+                current_dir = os.path.dirname(os.path.abspath(__file__))
+                project_root = os.path.join(current_dir, '..', '..')
+                data_dir = os.path.join(project_root, 'data')
+                try:
+                    os.makedirs(data_dir, exist_ok=True)
+                except Exception as e:
+                    print(f"[DreamingEngine] Warning: Could not create data directory, using in-memory DB. Error: {e}")
+                    db_path = ':memory:'
+                else:
+                    db_path = os.path.join(data_dir, 'dreaming_engine.db')
+            self.db_path = db_path
+        except Exception as e:
+            print(f"[DreamingEngine] Critical error initializing DB path, using in-memory DB. Error: {e}")
+            self.db_path = ':memory:'
         self.memory_manager = memory_manager
         self.executor = ThreadPoolExecutor(max_workers=2)
-        self.dream_queue = asyncio.Queue()
-        self.insight_queue = asyncio.Queue()
+        try:
+            self.dream_queue = asyncio.Queue()
+            self.insight_queue = asyncio.Queue()
+        except Exception as e:
+            print(f"[DreamingEngine] Warning: Could not initialize asyncio queues, using lists as fallback. Error: {e}")
+            self.dream_queue = []
+            self.insight_queue = []
         
         # Research-based parameters
         self.dream_types = {
@@ -133,8 +146,12 @@ class DreamingEngine:
         self._start_background_processing()
     
     def _init_database(self):
-        """Initialize the dreaming database with comprehensive schema."""
-        conn = sqlite3.connect(self.db_path)
+        """Initialize the dreaming database with comprehensive schema. Fallback: in-memory DB if file DB fails."""
+        try:
+            conn = sqlite3.connect(self.db_path)
+        except Exception as e:
+            print(f"[DreamingEngine] Warning: Could not connect to DB at {self.db_path}, using in-memory DB. Error: {e}")
+            conn = sqlite3.connect(':memory:')
         cursor = conn.cursor()
         
         # Dream scenarios table
@@ -210,46 +227,65 @@ class DreamingEngine:
         conn.commit()
         conn.close()
     
+    def _queue_put(self, queue, item):
+        """Helper to put item in queue or append to list."""
+        if hasattr(queue, 'put'):
+            return queue.put(item)
+        elif isinstance(queue, list):
+            queue.append(item)
+        else:
+            raise TypeError("Unsupported queue type")
+
+    def _queue_get_nowait(self, queue):
+        """Helper to get item from queue or pop from list."""
+        if hasattr(queue, 'get_nowait'):
+            return queue.get_nowait()
+        elif isinstance(queue, list):
+            return queue.pop(0)
+        else:
+            raise TypeError("Unsupported queue type")
+
+    def _queue_empty(self, queue):
+        """Helper to check if queue is empty or list is empty."""
+        if hasattr(queue, 'empty'):
+            return queue.empty()
+        elif isinstance(queue, list):
+            return len(queue) == 0
+        else:
+            raise TypeError("Unsupported queue type")
+
     def _start_background_processing(self):
-        """Start background processing for dream simulation."""
+        """Start background processing for dream simulation. Fallback: restart thread on failure."""
         def background_processor():
             """Background processor for dream scenarios."""
             while True:
                 try:
                     # Process dream queue
-                    if not self.dream_queue.empty():
-                        scenario = self.dream_queue.get_nowait()
+                    if not self._queue_empty(self.dream_queue):
+                        scenario = self._queue_get_nowait(self.dream_queue)
                         self._process_dream_scenario(scenario)
-                    
                     # Process insight queue
-                    if not self.insight_queue.empty():
-                        insight = self.insight_queue.get_nowait()
+                    if not self._queue_empty(self.insight_queue):
+                        insight = self._queue_get_nowait(self.insight_queue)
                         self._process_insight(insight)
-                    
                     time.sleep(1)  # Check every second
                 except Exception as e:
-                    print(f"Background processor error: {e}")
+                    print(f"Background processor error: {e}. Restarting background processor in 5s.")
                     time.sleep(5)
-        
-        thread = threading.Thread(target=background_processor, daemon=True)
-        thread.start()
+        try:
+            thread = threading.Thread(target=background_processor, daemon=True)
+            thread.start()
+        except Exception as e:
+            print(f"[DreamingEngine] Critical: Could not start background thread. Error: {e}")
     
     async def simulate_dream(self, context: str, dream_type: str = "problem_solving", 
                            simulation_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Simulate a dream scenario based on context and type.
-        
-        Args:
-            context: The context or problem to dream about
-            dream_type: Type of dream to simulate
-            simulation_data: Additional data for simulation
-            
-        Returns:
-            Dream scenario with insights and recommendations
+        Fallback: If async queue put fails, append to list synchronously if possible.
         """
         if dream_type not in self.dream_types:
             dream_type = "problem_solving"
-        
         # Create dream scenario
         scenario_id = self._generate_scenario_id(context, dream_type)
         scenario = DreamScenario(
@@ -259,23 +295,49 @@ class DreamingEngine:
             simulation_data=simulation_data or {},
             created_at=datetime.now()
         )
-        
         # Add to processing queue
-        await self.dream_queue.put(scenario)
-        
+        try:
+            if isinstance(self.dream_queue, list):
+                self.dream_queue.append(scenario)
+            else:
+                await self.dream_queue.put(scenario)
+        except Exception as e:
+            print(f"[DreamingEngine] Warning: Could not put scenario in queue, using list fallback. Error: {e}")
+            if isinstance(self.dream_queue, list):
+                self.dream_queue.append(scenario)
         # Simulate dream processing
-        dream_result = await self._simulate_dream_processing(scenario)
-        
+        try:
+            dream_result = await self._simulate_dream_processing(scenario)
+        except Exception as e:
+            print(f"[DreamingEngine] Error in dream processing, using default result. Error: {e}")
+            dream_result = {'error': str(e)}
         # Extract insights
-        insights = await self._extract_insights(scenario, dream_result)
-        
+        try:
+            insights = await self._extract_insights(scenario, dream_result)
+        except Exception as e:
+            print(f"[DreamingEngine] Error extracting insights, using empty list. Error: {e}")
+            insights = []
         # Assess quality and learning value
-        quality_score = self._assess_dream_quality(scenario, dream_result, insights)
-        learning_value = self._assess_learning_value(insights)
-        
+        try:
+            quality_score = self._assess_dream_quality(scenario, dream_result, insights)
+        except Exception as e:
+            print(f"[DreamingEngine] Error assessing dream quality, using 0.0. Error: {e}")
+            quality_score = 0.0
+        try:
+            learning_value = self._assess_learning_value(insights)
+        except Exception as e:
+            print(f"[DreamingEngine] Error assessing learning value, using 0.0. Error: {e}")
+            learning_value = 0.0
         # Store results
-        self._store_dream_scenario(scenario, dream_result, insights, quality_score, learning_value)
-        
+        try:
+            self._store_dream_scenario(scenario, dream_result, insights, quality_score, learning_value)
+        except Exception as e:
+            print(f"[DreamingEngine] Error storing dream scenario. Error: {e}")
+        try:
+            recommendations = self._generate_recommendations(insights)
+        except Exception as e:
+            print(f"[DreamingEngine] Error generating recommendations, using empty list. Error: {e}")
+            recommendations = []
         return {
             'scenario_id': scenario_id,
             'dream_type': dream_type,
@@ -284,29 +346,28 @@ class DreamingEngine:
             'insights': insights,
             'quality_score': quality_score,
             'learning_value': learning_value,
-            'recommendations': self._generate_recommendations(insights)
+            'recommendations': recommendations
         }
     
     async def _simulate_dream_processing(self, scenario: DreamScenario) -> Dict[str, Any]:
-        """Simulate the unconscious processing that occurs during dreaming."""
-        dream_config = self.dream_types[scenario.dream_type]
-        
-        # Simulate different aspects of dreaming
-        result = {
-            'scenario_exploration': self._explore_scenario_variations(scenario),
-            'problem_reformulation': self._reformulate_problems(scenario),
-            'creative_associations': self._generate_creative_associations(scenario),
-            'emotional_processing': self._process_emotions(scenario),
-            'memory_integration': self._integrate_memories(scenario),
-            'threat_assessment': self._assess_threats(scenario),
-            'solution_generation': self._generate_solutions(scenario)
-        }
-        
-        # Add randomness and unconscious processing characteristics
-        result['unconscious_patterns'] = self._simulate_unconscious_patterns(scenario)
-        result['associative_links'] = self._generate_associative_links(scenario)
-        
-        return result
+        """Simulate the unconscious processing that occurs during dreaming. Fallback: default result if any step fails."""
+        try:
+            dream_config = self.dream_types[scenario.dream_type]
+            result = {
+                'scenario_exploration': self._explore_scenario_variations(scenario),
+                'problem_reformulation': self._reformulate_problems(scenario),
+                'creative_associations': self._generate_creative_associations(scenario),
+                'emotional_processing': self._process_emotions(scenario),
+                'memory_integration': self._integrate_memories(scenario),
+                'threat_assessment': self._assess_threats(scenario),
+                'solution_generation': self._generate_solutions(scenario)
+            }
+            result['unconscious_patterns'] = self._simulate_unconscious_patterns(scenario)
+            result['associative_links'] = self._generate_associative_links(scenario)
+            return result
+        except Exception as e:
+            print(f"[DreamingEngine] Error in _simulate_dream_processing, returning default result. Error: {e}")
+            return {'error': str(e)}
     
     def _explore_scenario_variations(self, scenario: DreamScenario) -> List[Dict[str, Any]]:
         """Explore variations of the scenario through unconscious processing."""
@@ -378,24 +439,24 @@ class DreamingEngine:
         }
     
     def _integrate_memories(self, scenario: DreamScenario) -> List[Dict[str, Any]]:
-        """Integrate relevant memories with the current scenario."""
+        """Integrate relevant memories with the current scenario. Fallback: empty list if memory_manager fails or returns None."""
         if not self.memory_manager:
             return []
-        
-        # Simulate memory integration
-        memory_integrations = []
-        
-        # Generate simulated memory connections
-        for _ in range(random.randint(2, 6)):
-            integration = {
-                'memory_type': random.choice(['episodic', 'semantic', 'procedural']),
-                'relevance_score': random.uniform(0.3, 1.0),
-                'integration_strength': random.uniform(0.1, 1.0),
-                'insight_generated': random.choice([True, False])
-            }
-            memory_integrations.append(integration)
-        
-        return memory_integrations
+        try:
+            memory_integrations = []
+            # Generate simulated memory connections
+            for _ in range(random.randint(2, 6)):
+                integration = {
+                    'memory_type': random.choice(['episodic', 'semantic', 'procedural']),
+                    'relevance_score': random.uniform(0.3, 1.0),
+                    'integration_strength': random.uniform(0.1, 1.0),
+                    'insight_generated': random.choice([True, False])
+                }
+                memory_integrations.append(integration)
+            return memory_integrations if memory_integrations is not None else []
+        except Exception as e:
+            print(f"[DreamingEngine] Error integrating memories, returning empty list. Error: {e}")
+            return []
     
     def _assess_threats(self, scenario: DreamScenario) -> List[Dict[str, Any]]:
         """Assess potential threats and risks."""
@@ -754,17 +815,17 @@ class DreamingEngine:
         """Mark an insight as applied and store application context."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
+        # Ensure application_context is a string
+        if application_context is None:
+            application_context = ""
         cursor.execute("""
             UPDATE dream_insights 
             SET applied = TRUE, application_context = ?
             WHERE id = ?
         """, (application_context, insight_id))
-        
         success = cursor.rowcount > 0
         conn.commit()
         conn.close()
-        
         return success
     
     def provide_feedback(self, scenario_id: str = None, insight_id: str = None, 
@@ -772,13 +833,16 @@ class DreamingEngine:
         """Provide feedback on dream scenarios or insights."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
+        # Ensure scenario_id and insight_id are strings
+        if scenario_id is None:
+            scenario_id = ""
+        if insight_id is None:
+            insight_id = ""
         cursor.execute("""
             INSERT INTO dream_feedback 
             (scenario_id, insight_id, feedback_type, feedback_score, feedback_text)
             VALUES (?, ?, ?, ?, ?)
         """, (scenario_id, insight_id, 'user_feedback', feedback_score, feedback_text))
-        
         # Update insight feedback score if applicable
         if insight_id:
             cursor.execute("""
@@ -786,11 +850,9 @@ class DreamingEngine:
                 SET feedback_score = ?
                 WHERE id = ?
             """, (feedback_score, insight_id))
-        
         success = cursor.rowcount > 0
         conn.commit()
         conn.close()
-        
         return success
     
     def clear_dreams(self, older_than_days: int = 30):

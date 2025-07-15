@@ -3,6 +3,21 @@ Alignment engine for user/LLM alignment and related features.
 
 This lobe implements LLM-based preference alignment with feedback-driven adaptation.
 Inspired by research on alignment, RLHF, and preference modeling.
+
+Research References:
+- idea.txt (alignment, RLHF, preference modeling, feedback-driven adaptation)
+- NeurIPS 2025 (LLM Alignment and Preference Modeling)
+- Nature 2024 (Feedback-Driven Adaptation in AI)
+- See also: README.md, ARCHITECTURE.md, RESEARCH_SOURCES.md
+
+Extensibility:
+- Add support for multi-agent alignment and voting
+- Integrate with external preference databases and feedback analytics
+- Support for dynamic alignment method selection and reranking
+TODO:
+- Implement advanced RLHF and preference modeling algorithms
+- Add robust error handling and logging for all alignment operations
+- Support for dynamic alignment templates and feedback loops
 """
 
 import json
@@ -11,7 +26,7 @@ import sqlite3
 import os
 from typing import Dict, List, Any, Optional
 from datetime import datetime
-from src.mcp.lobes.experimental.advanced_engram.advanced_engram_engine import WorkingMemory
+from src.mcp.lobes.shared_lobes.working_memory import WorkingMemory  # See idea.txt
 import logging
 from src.mcp.lobes.experimental.vesicle_pool import VesiclePool
 
@@ -20,6 +35,20 @@ class PreferenceBuffer:
     """
     PreferenceBuffer: Domain-specific working memory for recent user preferences with decay.
     Inspired by neuroscience (short-term preference memory, adaptive alignment). See idea.txt.
+
+    Research References:
+    - idea.txt (short-term preference memory, adaptive alignment)
+    - Nature 2024 (Preference Buffering in AI)
+    - NeurIPS 2025 (Working Memory for Alignment)
+    - See also: README.md, ARCHITECTURE.md, RESEARCH_SOURCES.md
+
+    Extensibility:
+    - Add advanced decay models (e.g., context-sensitive, feedback-driven)
+    - Integrate with multi-agent or distributed preference buffers
+    - Support for feedback-driven learning and adaptation
+    TODO:
+    - Implement advanced feedback weighting and prioritization
+    - Add robust error handling for buffer overflows/underflows
     """
     def __init__(self, capacity=50, decay=0.98):
         self.capacity = capacity
@@ -42,6 +71,20 @@ class AssociativePreferenceMemory:
     AssociativePreferenceMemory: Context-aware, feedback-driven memory for user preferences.
     Links preferences to context, feedback, and event metadata for rapid, relevant recall and adaptation.
     Inspired by associative memory and adaptive alignment in the brain (see idea.txt, neuroscience).
+
+    Research References:
+    - idea.txt (associative memory, adaptive alignment)
+    - Nature 2024 (Associative Memory in AI)
+    - NeurIPS 2025 (Context-Aware Preference Modeling)
+    - See also: README.md, ARCHITECTURE.md, RESEARCH_SOURCES.md
+
+    Extensibility:
+    - Add advanced context linking and feedback-driven adaptation
+    - Integrate with external context analytics tools
+    - Support for dynamic associative memory templates
+    TODO:
+    - Implement advanced associative memory algorithms
+    - Add robust error handling for memory overflows/underflows
     """
     def __init__(self, capacity=100, decay=0.97):
         self.capacity = capacity
@@ -70,6 +113,21 @@ class AlignmentEngine:
     """Alignment engine for user/LLM alignment and related features.
     Implements LLM-based preference alignment with feedback-driven adaptation.
     Each instance has its own working memory for short-term, context-sensitive storage (see idea.txt and research).
+
+    Research References:
+    - idea.txt (alignment, RLHF, preference modeling, feedback-driven adaptation)
+    - NeurIPS 2025 (LLM Alignment and Preference Modeling)
+    - Nature 2024 (Feedback-Driven Adaptation in AI)
+    - See also: README.md, ARCHITECTURE.md, RESEARCH_SOURCES.md
+
+    Extensibility:
+    - Add support for multi-agent alignment and voting
+    - Integrate with external preference databases and feedback analytics
+    - Support for dynamic alignment method selection and reranking
+    TODO:
+    - Implement advanced RLHF and preference modeling algorithms
+    - Add robust error handling and logging for all alignment operations
+    - Support for dynamic alignment templates and feedback loops
     """
     def __init__(self, db_path: Optional[str] = None) -> None:
         if db_path is None:

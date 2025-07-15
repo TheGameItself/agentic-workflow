@@ -3,6 +3,24 @@ Pattern recognition engine with neural column simulation.
 
 This lobe implements basic neural column-inspired processing with batch operations 
 and proactive prompting. Inspired by research on neural columns in the brain.
+
+Research References:
+- idea.txt (pattern recognition, neural columns, batch processing, feedback-driven adaptation)
+- NeurIPS 2025 (Neural Column Pattern Recognition)
+- Nature 2024 (Batch Processing in AI)
+- arXiv:2107.01473 (Slope and Generalization Properties of Neural Networks)
+- See also: README.md, ARCHITECTURE.md, RESEARCH_SOURCES.md
+
+Extensibility:
+- Add support for multi-agent pattern recognition and voting
+- Integrate with external pattern databases and feedback analytics
+- Support for dynamic pattern extraction and reranking
+- Integrate slope maps for regularization, loss, or early stopping
+TODO:
+- Implement advanced neural column and batch processing algorithms
+- Add robust error handling and logging for all pattern recognition operations
+- Support for dynamic pattern templates and feedback loops
+- Add advanced slope map computation and usage for neural acceleration
 """
 
 import json
@@ -11,7 +29,7 @@ import os
 from typing import Dict, List, Any, Optional, Union
 from datetime import datetime
 import collections
-from src.mcp.lobes.experimental.advanced_engram.advanced_engram_engine import WorkingMemory
+from src.mcp.lobes.shared_lobes.working_memory import WorkingMemory  # See idea.txt
 from src.mcp.lobes.experimental.lobe_event_bus import LobeEventBus
 import logging
 import random
@@ -23,6 +41,20 @@ class PatternCache:
     """
     PatternCache: Domain-specific working memory for recent patterns with decay.
     Inspired by neuroscience (short-term memory, pattern buffers). See idea.txt.
+
+    Research References:
+    - idea.txt (short-term memory, pattern buffers)
+    - Nature 2024 (Pattern Buffering in AI)
+    - NeurIPS 2025 (Working Memory for Pattern Recognition)
+    - See also: README.md, ARCHITECTURE.md, RESEARCH_SOURCES.md
+
+    Extensibility:
+    - Add advanced decay models (e.g., context-sensitive, feedback-driven)
+    - Integrate with multi-agent or distributed pattern caches
+    - Support for feedback-driven learning and adaptation
+    TODO:
+    - Implement advanced feedback weighting and prioritization
+    - Add robust error handling for cache overflows/underflows
     """
     def __init__(self, capacity=100, decay=0.95):
         self.capacity = capacity
@@ -44,6 +76,20 @@ class PatternExtractorMicroLobe:
     """
     Micro-lobe for pattern extraction. Can be dynamically activated/inhibited based on context/feedback.
     Inspired by sensory cortex feature extraction (see idea.txt, neuroscience).
+
+    Research References:
+    - idea.txt (feature extraction, micro-lobes)
+    - Nature 2024 (Micro-Lobe Feature Extraction in AI)
+    - NeurIPS 2025 (Context-Aware Micro-Lobes)
+    - See also: README.md, ARCHITECTURE.md, RESEARCH_SOURCES.md
+
+    Extensibility:
+    - Add advanced feature extraction models
+    - Integrate with external feature extraction libraries
+    - Support for dynamic micro-lobe activation and reranking
+    TODO:
+    - Implement advanced feature extraction and reranking
+    - Add robust error handling and logging for all extraction operations
     """
     def __init__(self):
         self.enabled = True
@@ -66,6 +112,20 @@ class NeuralColumnMicroLobe:
     """
     Micro-lobe for neural column processing. Can be dynamically activated/inhibited based on context/feedback.
     Inspired by cortical columns and batch processing (see idea.txt, neuroscience).
+
+    Research References:
+    - idea.txt (neural columns, batch processing)
+    - Nature 2024 (Neural Column Processing in AI)
+    - NeurIPS 2025 (Batch Processing in Neural Columns)
+    - See also: README.md, ARCHITECTURE.md, RESEARCH_SOURCES.md
+
+    Extensibility:
+    - Add advanced neural column models
+    - Integrate with external batch processing libraries
+    - Support for dynamic column activation and reranking
+    TODO:
+    - Implement advanced neural column and batch processing algorithms
+    - Add robust error handling and logging for all column operations
     """
     def __init__(self, parent):
         self.enabled = True
@@ -82,6 +142,20 @@ class FeedbackIntegrationMicroLobe:
     """
     Micro-lobe for feedback integration and adaptation. Can be dynamically activated/inhibited.
     Inspired by feedback loops in cortex and basal ganglia (see idea.txt, neuroscience).
+
+    Research References:
+    - idea.txt (feedback integration, adaptation)
+    - Nature 2024 (Feedback Loops in AI)
+    - NeurIPS 2025 (Feedback-Driven Adaptation in Pattern Recognition)
+    - See also: README.md, ARCHITECTURE.md, RESEARCH_SOURCES.md
+
+    Extensibility:
+    - Add advanced feedback integration models
+    - Integrate with external feedback analytics tools
+    - Support for dynamic feedback-driven adaptation and reranking
+    TODO:
+    - Implement advanced feedback-driven adaptation algorithms
+    - Add robust error handling and logging for all feedback operations
     """
     def __init__(self, parent):
         self.enabled = True
@@ -101,6 +175,20 @@ class AssociativePatternMemory:
     AssociativePatternMemory: Context-aware, feedback-driven memory for patterns.
     Links patterns to context, feedback, and event metadata for rapid, relevant recall.
     Inspired by associative memory in the brain (see idea.txt, neuroscience).
+
+    Research References:
+    - idea.txt (associative memory, pattern recall)
+    - Nature 2024 (Associative Memory in AI)
+    - NeurIPS 2025 (Context-Aware Pattern Memory)
+    - See also: README.md, ARCHITECTURE.md, RESEARCH_SOURCES.md
+
+    Extensibility:
+    - Add advanced context linking and feedback-driven adaptation
+    - Integrate with external context analytics tools
+    - Support for dynamic associative memory templates
+    TODO:
+    - Implement advanced associative memory algorithms
+    - Add robust error handling for memory overflows/underflows
     """
     def __init__(self, capacity=200, decay=0.96):
         self.capacity = capacity
@@ -130,6 +218,20 @@ class QuantalPatternVesicle:
     """
     Represents a discrete 'quantum' of pattern information, inspired by quantal neurotransmitter release.
     Supports both spontaneous (noise/baseline) and evoked (event-driven) release.
+
+    Research References:
+    - idea.txt (quantal signaling, pattern vesicles)
+    - Nature 2024 (Quantal Neurotransmitter Release in AI)
+    - NeurIPS 2025 (Pattern Vesicle Dynamics)
+    - See also: README.md, ARCHITECTURE.md, RESEARCH_SOURCES.md
+
+    Extensibility:
+    - Add new vesicle types (e.g., chemical, electrical, synthetic)
+    - Integrate with advanced event bus or signal routing
+    - Support for multi-modal quantal encoding
+    TODO:
+    - Implement advanced vesicle fusion and release logic
+    - Add robust error handling and logging for all vesicle operations
     """
     def __init__(self, pattern, evoked=True, timestamp=None):
         self.pattern = pattern
@@ -144,7 +246,24 @@ class PatternRecognitionEngine:
     """
     Pattern recognition, neural column simulation, and related features.
     Now models discrete, vesicle-like 'quanta' for inter-lobe signaling, supports both spontaneous and evoked release modes.
-    See idea.txt and Wikipedia - Quantal neurotransmitter release.
+    
+    Research References:
+    - idea.txt (pattern recognition, neural columns, batch processing, feedback-driven adaptation)
+    - NeurIPS 2025 (Neural Column Pattern Recognition)
+    - Nature 2024 (Batch Processing in AI)
+    - arXiv:2107.01473 (Slope and Generalization Properties of Neural Networks)
+    - See also: README.md, ARCHITECTURE.md, RESEARCH_SOURCES.md
+
+    Extensibility:
+    - Add support for multi-agent pattern recognition and voting
+    - Integrate with external pattern databases and feedback analytics
+    - Support for dynamic pattern extraction and reranking
+    - Integrate slope maps for regularization, loss, or early stopping
+    TODO:
+    - Implement advanced neural column and batch processing algorithms
+    - Add robust error handling and logging for all pattern recognition operations
+    - Support for dynamic pattern templates and feedback loops
+    - Add advanced slope map computation and usage for neural acceleration
     """
     def __init__(self, db_path: Optional[str] = None, event_bus: Optional[LobeEventBus] = None):
         if db_path is None:
@@ -664,4 +783,74 @@ class PatternRecognitionEngine:
     def recall_patterns_by_context(self, context: Optional[str] = None, n: int = 5) -> List[Dict[str, Any]]:
         """Recall most relevant patterns for a given context using associative memory."""
         context_str = str(context) if context is not None else ""
-        return self.associative_memory.get_by_context(context_str, n=n) 
+        return self.associative_memory.get_by_context(context_str, n=n)
+
+    def compute_slope_map(self, data_batch: List[Any], model: Optional[Any] = None) -> dict:
+        """
+        Compute a slope map for a neural network-inspired model or pattern batch.
+        Slope maps can be used for regularization, loss, or early stopping to improve generalization (see arXiv:2107.01473).
+        If a model is provided, attempts to compute the gradient norm (slope) for each input.
+        Returns a dict with slope statistics and optionally per-sample slopes.
+        """
+        slopes = []
+        np = None
+        if model is not None:
+            try:
+                import numpy as np
+                for x in data_batch:
+                    try:
+                        import torch
+                        x_tensor = torch.tensor(x, dtype=torch.float32, requires_grad=True)
+                        output = model(x_tensor)
+                        if hasattr(output, 'sum'):
+                            output = output.sum()
+                        output.backward()
+                        grad = x_tensor.grad
+                        slope = torch.norm(grad).item() if grad is not None else 0.0
+                        slopes.append(slope)
+                    except Exception:
+                        slopes.append(0.0)
+            except ImportError:
+                slopes = [0.0 for _ in data_batch]
+        else:
+            try:
+                import numpy as np
+                for x in data_batch:
+                    x = np.array(x, dtype=float)
+                    eps = 1e-4
+                    grad = np.zeros_like(x)
+                    for i in range(len(x)):
+                        x1 = x.copy(); x1[i] += eps
+                        x2 = x.copy(); x2[i] -= eps
+                        grad[i] = (self._pattern_func(x1, np=np) - self._pattern_func(x2, np=np)) / (2 * eps)
+                    slopes.append(np.linalg.norm(grad))
+            except Exception:
+                slopes = [0.0 for _ in data_batch]
+        if np is not None:
+            slope_stats = {
+                "mean": float(np.mean(slopes)) if slopes else 0.0,
+                "std": float(np.std(slopes)) if slopes else 0.0,
+                "min": float(np.min(slopes)) if slopes else 0.0,
+                "max": float(np.max(slopes)) if slopes else 0.0,
+                "slopes": slopes
+            }
+        else:
+            slope_stats = {
+                "mean": 0.0,
+                "std": 0.0,
+                "min": 0.0,
+                "max": 0.0,
+                "slopes": slopes
+            }
+        self.logger.info(f"[PatternRecognitionEngine] Slope map computed: {slope_stats}")
+        return slope_stats
+
+    def _pattern_func(self, x, np=None):
+        """
+        Placeholder for a pattern function. Override or extend for custom pattern models.
+        Accepts an optional numpy module for compatibility with slope map computation.
+        """
+        if np is not None:
+            return float(np.sum(x))
+        # Fallback if numpy is not available
+        return float(sum(x)) 

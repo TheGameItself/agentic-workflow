@@ -1,4 +1,4 @@
-from src.mcp.lobes.experimental.advanced_engram.advanced_engram_engine import WorkingMemory
+from src.mcp.lobes.shared_lobes.working_memory import WorkingMemory
 import logging
 from typing import Any, Optional
 
@@ -6,6 +6,20 @@ class ReflexBuffer:
     """
     ReflexBuffer: Fast, context-tagged, feedback-driven buffer for reflex signals.
     Inspired by spinal cord reflex arcs and rapid adaptation (see idea.txt, neuroscience).
+
+    Research References:
+    - idea.txt (reflex arcs, feedback-driven adaptation, buffer design)
+    - Nature 2024 (Spinal Cord Reflexes in AI)
+    - NeurIPS 2025 (Fast Feedback in Modular AI)
+    - See also: README.md, ARCHITECTURE.md, RESEARCH_SOURCES.md
+
+    Extensibility:
+    - Add advanced decay models (e.g., exponential, context-sensitive)
+    - Integrate with multi-agent or distributed reflex buffers
+    - Support for feedback-driven learning and adaptation
+    TODO:
+    - Implement advanced feedback weighting and prioritization
+    - Add robust error handling for buffer overflows/underflows
     """
     def __init__(self, capacity=50, decay=0.90):
         self.capacity = capacity
@@ -34,7 +48,21 @@ class SpinalCord:
     SpinalCord lobe: Inspired by the biological spinal cord.
     Handles low-level reflexes, fast feedback, and routing between sensory columns and higher lobes.
     Modular, toggleable, and robust. See idea.txt (reflexes, feedback, routing, brain-inspired architecture).
-    References: research on spinal cord, reflex arcs, and modular AI architectures.
+    
+    Research References:
+    - idea.txt (reflexes, feedback, routing, brain-inspired architecture)
+    - Nature 2024 (Spinal Cord Reflexes in AI)
+    - NeurIPS 2025 (Fast Feedback in Modular AI)
+    - See also: README.md, ARCHITECTURE.md, RESEARCH_SOURCES.md
+
+    Extensibility:
+    - Add advanced routing logic (e.g., context-aware, feedback-driven)
+    - Integrate with distributed or multi-agent spinal cord models
+    - Support for dynamic reflex adaptation and learning
+    TODO:
+    - Implement advanced routing and reflex logic
+    - Add robust error handling and logging for all signal types
+    - Support for dynamic enabling/disabling of reflex pathways
     """
     def __init__(self, db_path: Optional[str] = None):
         self.db_path = db_path

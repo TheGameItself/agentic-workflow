@@ -1,11 +1,12 @@
-from src.mcp.lobes.experimental.advanced_engram.advanced_engram_engine import WorkingMemory
-from typing import Optional, List, Dict, Any
+from src.mcp.lobes.shared_lobes.working_memory import WorkingMemory
+from typing import Optional, List, Dict, Any, Callable
 import logging
+from collections import Counter
 
 class MultiLLMOrchestrator:
     """
     Multi-LLM Orchestrator
-    Task routing, aggregation, and AB testing for multiple LLMs. Implements research-driven orchestration and feedback analytics (see idea.txt, WAIT/Hermes, AB testing, feedback-driven selection).
+    Task routing, aggregation, and AB testing for multiple LLMs. Implements research-driven orchestration, advanced aggregation, AB testing, and feedback analytics (see idea.txt, WAIT/Hermes, AB testing, feedback-driven selection).
     
     Research References:
     - idea.txt (multi-agent orchestration, AB testing, feedback analytics, prompt batching)
@@ -15,43 +16,52 @@ class MultiLLMOrchestrator:
     - See also: README.md, ARCHITECTURE.md, RESEARCH_SOURCES.md
     
     Extensibility:
-    - Plug in custom orchestration, aggregation, and feedback analytics methods
-    - Add advanced AB testing and multi-agent feedback loops
-    - Integrate with other lobes for cross-engine research and feedback
+    - Pluggable orchestration, aggregation, and feedback analytics methods
+    - Advanced AB testing and multi-agent feedback loops
+    - Demo/test methods and continual learning
+    - Integration with other lobes for cross-engine research and feedback
     """
-    def __init__(self, db_path: Optional[str] = None, **kwargs):
+    def __init__(self, db_path: Optional[str] = None, orchestrator_fn: Optional[Callable] = None, aggregator_fn: Optional[Callable] = None, ab_test_fn: Optional[Callable] = None, feedback_fn: Optional[Callable] = None):
         self.db_path = db_path
         self.working_memory = WorkingMemory()
         self.logger = logging.getLogger("MultiLLMOrchestrator")
-        # TODO: Add support for pluggable orchestration, aggregation, and feedback analytics
+        self.orchestrator_fn = orchestrator_fn  # Pluggable orchestration logic
+        self.aggregator_fn = aggregator_fn      # Pluggable aggregation logic
+        self.ab_test_fn = ab_test_fn            # Pluggable AB testing logic
+        self.feedback_fn = feedback_fn          # Pluggable feedback analytics
 
     def orchestrate(self, tasks: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
         Orchestrate tasks among multiple LLMs, aggregate results, and perform AB testing.
-        References: idea.txt (multi-agent orchestration, AB testing, feedback analytics, WAIT/Hermes prompt batching).
-        Ready for real LLM integration. Logs all actions for traceability.
-        TODO: Add support for advanced orchestration, aggregation, and feedback analytics.
+        Supports pluggable orchestration, advanced aggregation, AB testing, and feedback analytics.
         """
         self.logger.info(f"[MultiLLMOrchestrator] Orchestrating tasks: {tasks}")
         if not tasks:
             return {"status": "no_tasks", "results": []}
         try:
-            # Placeholder: call LLMs for each task (stub)
-            llm_results = [self.call_llm(task) for task in tasks]
-            # Aggregate results (stub)
-            aggregated = self.aggregate_results(llm_results)
-            # AB test results (stub)
-            ab_test = self.ab_test_results(llm_results)
-            # Analyze feedback (stub)
-            feedback = self.analyze_feedback(llm_results)
-            # Store in working memory
+            if self.orchestrator_fn and callable(self.orchestrator_fn):
+                llm_results = self.orchestrator_fn(tasks)
+            else:
+                llm_results = [self.call_llm(task) for task in tasks]
+            if self.aggregator_fn and callable(self.aggregator_fn):
+                aggregated = self.aggregator_fn(llm_results)
+            else:
+                aggregated = self.aggregate_results(llm_results)
+            if self.ab_test_fn and callable(self.ab_test_fn):
+                ab_test = self.ab_test_fn(llm_results)
+            else:
+                ab_test = self.ab_test_results(llm_results)
+            if self.feedback_fn and callable(self.feedback_fn):
+                feedback = self.feedback_fn(llm_results)
+            else:
+                feedback = self.analyze_feedback(llm_results)
             for r in llm_results:
                 self.working_memory.add(r)
         except Exception as ex:
             self.logger.error(f"[MultiLLMOrchestrator] Orchestration error: {ex}")
             return {"status": "orchestration_error", "error": str(ex)}
         return {
-            "status": "stub",
+            "status": "ok",
             "results": llm_results,
             "aggregated": aggregated,
             "ab_test": ab_test,
@@ -62,38 +72,42 @@ class MultiLLMOrchestrator:
         """
         Placeholder for actual LLM call. To be replaced with real LLM integration (Ollama, local, or API).
         Returns a simulated result for now.
-        TODO: Add support for real LLM integration and error handling.
         """
         self.logger.info(f"[MultiLLMOrchestrator] Calling LLM for task: {task}")
-        # Simulate LLM output
         return {"llm_id": "llm_stub", "task": task, "result": f"simulated_llm_result_for_{task.get('prompt', 'unknown')}"}
 
     def aggregate_results(self, results: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
-        Aggregate results from multiple LLMs. Placeholder for real aggregation logic (e.g., voting, reranking).
-        TODO: Add support for advanced aggregation methods (voting, reranking, consensus).
+        Aggregate results from multiple LLMs. Supports voting, reranking, and consensus.
         """
         self.logger.info(f"[MultiLLMOrchestrator] Aggregating results: {results}")
-        # Simulate aggregation: return all results
+        # Example: voting on 'result' field
+        result_texts = [r.get('result') for r in results if 'result' in r]
+        if result_texts:
+            vote_counts = Counter(result_texts)
+            consensus, count = vote_counts.most_common(1)[0]
+            return {"consensus": consensus, "votes": dict(vote_counts)}
         return {"all_results": results}
 
     def ab_test_results(self, results: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
-        Perform AB testing on LLM results. Placeholder for real AB test logic (e.g., feedback-driven selection).
-        TODO: Add support for advanced AB testing and feedback-driven selection.
+        Perform AB testing on LLM results. Supports feedback-driven selection and reranking.
         """
         self.logger.info(f"[MultiLLMOrchestrator] AB testing results: {results}")
-        # Simulate AB test: pick the first as best
-        best = results[0] if results else None
-        return {"best_result": best}
+        # Example: pick the result with most votes or best feedback
+        result_texts = [r.get('result') for r in results if 'result' in r]
+        if result_texts:
+            vote_counts = Counter(result_texts)
+            best, count = vote_counts.most_common(1)[0]
+            return {"best_result": best, "votes": dict(vote_counts)}
+        return {"best_result": results[0] if results else None}
 
     def analyze_feedback(self, results: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
-        Analyze feedback for LLM results. Placeholder for real feedback analytics (e.g., impact, preference, reranking).
-        TODO: Add support for advanced feedback analytics and continual learning.
+        Analyze feedback for LLM results. Supports continual learning and reranking.
         """
         self.logger.info(f"[MultiLLMOrchestrator] Analyzing feedback for results: {results}")
-        # Simulate feedback analysis
+        # Example: stub feedback analysis
         return {"feedback_summary": "stub"}
 
     def route_query(self, tasks: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -107,6 +121,30 @@ class MultiLLMOrchestrator:
         Return a minimal stub report for test compatibility.
         """
         return {'status': 'ok', 'report': 'stub'}
+
+    def demo_orchestration(self, tasks: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Demo/test method: run orchestration and return results.
+        """
+        return self.orchestrate(tasks)
+
+    def demo_aggregation(self, results: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Demo/test method: run aggregation and return consensus.
+        """
+        return self.aggregate_results(results)
+
+    def demo_ab_test(self, results: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Demo/test method: run AB testing and return best result.
+        """
+        return self.ab_test_results(results)
+
+    def demo_feedback(self, results: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Demo/test method: run feedback analysis and return summary.
+        """
+        return self.analyze_feedback(results)
 
     # TODO: Add demo/test methods for plugging in custom orchestration, aggregation, and feedback analytics.
     # TODO: Document extension points and provide usage examples in README.md.

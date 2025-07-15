@@ -31,8 +31,16 @@ from .sensory_column.sensory_column import SensoryColumn
 from .spinal_cord.spinal_cord import SpinalCord
 from .dreaming_engine import DreamingEngine
 from .simulated_reality import SimulatedReality
-from src.mcp.lobes.alignment_engine import AlignmentEngine
-from src.mcp.lobes.pattern_recognition_engine import PatternRecognitionEngine
+
+# Move these imports to the bottom and wrap in try/except to break circular import
+try:
+    from src.mcp.lobes.alignment_engine import AlignmentEngine
+except ImportError:
+    AlignmentEngine = None  # See idea.txt: avoid circular import
+try:
+    from src.mcp.lobes.pattern_recognition_engine import PatternRecognitionEngine
+except ImportError:
+    PatternRecognitionEngine = None  # See idea.txt: avoid circular import
 
 # In-place stubs for missing lobes (should be modularized in the future if not already present as modules)
 # class AlignmentEngine:

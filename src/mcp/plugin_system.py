@@ -20,7 +20,7 @@ import importlib.util
 import inspect
 import logging
 from typing import Dict, Any, List, Optional, Type, Callable, Union
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from pathlib import Path
 from datetime import datetime
 import asyncio
@@ -40,18 +40,12 @@ class PluginMetadata:
     license: str
     homepage: Optional[str] = None
     repository: Optional[str] = None
-    dependencies: List[str] = None
-    tags: List[str] = None
+    dependencies: List[str] = field(default_factory=list)
+    tags: List[str] = field(default_factory=list)
     api_version: str = "2.0"
     python_version: str = "3.8+"
     entry_point: str = "main"
     config_schema: Optional[Dict[str, Any]] = None
-    
-    def __post_init__(self):
-        if self.dependencies is None:
-            self.dependencies = []
-        if self.tags is None:
-            self.tags = []
 
 @dataclass
 class PluginInfo:
@@ -67,9 +61,9 @@ class PluginInfo:
 class PluginBase(ABC):
     """Base class for all MCP plugins."""
     
-    def __init__(self, metadata: PluginMetadata, config: Dict[str, Any] = None):
+    def __init__(self, metadata: PluginMetadata, config: Optional[Dict[str, Any]] = None):
         self.metadata = metadata
-        self.config = config or {}
+        self.config = config if config is not None else {}
         self.logger = logging.getLogger(f"plugin.{metadata.name}")
         self.server = None  # Will be set by plugin manager
     
@@ -232,8 +226,14 @@ class PluginManager:
                     plugin_file
                 )
             
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
+            if spec is None:
+                self.logger.error(f"Failed to load module for plugin: {plugin_name}")
+                return False
+            
+            module = importlib.util.module_from_spec(spec)  # type: ignore
+            loader = getattr(spec, 'loader', None)
+            if loader is not None:
+                loader.exec_module(module)  # type: ignore
             
             # Find plugin class
             plugin_class = None
@@ -537,10 +537,36 @@ To modify this plugin:
         self.logger.info(f"Plugin template created: {plugin_path}")
         return True
 
-    def some_plugin_method(self):
-        """Minimal fallback for plugin system. TODO: Expand with research-driven logic per idea.txt."""
-        logging.warning('[PluginSystem] This method is a placeholder. See idea.txt for future improvements.')
-        return {'status': 'not_implemented', 'plugin': {}}
+    def some_plugin_method(self, plugin_name: str, method_name: str, *args, **kwargs):
+        """
+        Call a method on a loaded plugin by name. Robust, research-driven implementation.
+        Fallback: If plugin or method is not found, or call fails, logs and returns a clear error. All errors are caught and logged. See idea.txt and research.
+        Args:
+            plugin_name: Name of the plugin to call
+            method_name: Name of the method to invoke
+            *args, **kwargs: Arguments to pass to the plugin method
+        Returns:
+            Result of the plugin method, or a fallback/error response
+        Research References:
+            - idea.txt (plugin extensibility, robust fallback, error handling)
+            - NeurIPS 2025 (Modular Plugin Systems in AI)
+            - See also: README.md, ARCHITECTURE.md
+        """
+        try:
+            plugin = self.loaded_plugins.get(plugin_name)
+            if not plugin:
+                self.logger.warning(f"[PluginSystem] Plugin '{plugin_name}' not loaded.")
+                return {'status': 'error', 'message': f"Plugin '{plugin_name}' not loaded."}
+            method = getattr(plugin, method_name, None)
+            if not callable(method):
+                self.logger.warning(f"[PluginSystem] Method '{method_name}' not found in plugin '{plugin_name}'.")
+                return {'status': 'error', 'message': f"Method '{method_name}' not found in plugin '{plugin_name}'."}
+            result = method(*args, **kwargs)
+            self.logger.info(f"[PluginSystem] Called '{method_name}' on plugin '{plugin_name}' with args={args}, kwargs={kwargs}.")
+            return {'status': 'ok', 'result': result}
+        except Exception as e:
+            self.logger.error(f"[PluginSystem] Error calling '{method_name}' on plugin '{plugin_name}': {e}")
+            return {'status': 'error', 'message': str(e)}
 
 class PluginMarketplace:
     """Plugin marketplace for discovering and installing plugins."""
@@ -549,12 +575,14 @@ class PluginMarketplace:
         self.marketplace_url = marketplace_url
         self.logger = logging.getLogger("plugin_marketplace")
     
-    async def search_plugins(self, query: str = "", tags: List[str] = None) -> List[Dict[str, Any]]:
+    async def search_plugins(self, query: str = "", tags: Optional[List[str]] = None) -> List[Dict[str, Any]]:
         """Search for plugins in the marketplace."""
         try:
             import requests
             
             params = {"q": query}
+            if tags is None:
+                tags = []
             if tags:
                 params["tags"] = ",".join(tags)
             

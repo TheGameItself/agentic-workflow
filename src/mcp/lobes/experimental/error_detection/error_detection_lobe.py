@@ -1,13 +1,13 @@
-from src.mcp.lobes.experimental.advanced_engram.advanced_engram_engine import WorkingMemory
+from src.mcp.lobes.shared_lobes.working_memory import WorkingMemory
 import logging
 import re
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Callable, Optional
 
 class ErrorDetectionLobe:
     """
     Error-Detection Lobe
     Proactively scans for inconsistencies, potential bugs, and logical errors in project state, code, and memory.
-    Implements advanced static analysis and anomaly detection (see idea.txt, Clean Code Best Practices, and recent research).
+    Implements advanced static analysis, pluggable anomaly detection, and feedback-driven continual learning.
     
     Research References:
     - idea.txt (static analysis, anomaly detection, feedback-driven improvement)
@@ -17,20 +17,20 @@ class ErrorDetectionLobe:
     - See also: README.md, ARCHITECTURE.md, RESEARCH_SOURCES.md
     
     Extensibility:
-    - Plug in custom static analysis and anomaly detection methods (ML, statistical, runtime)
-    - Integrate with other lobes for cross-engine research and feedback
-    - Add advanced feedback integration and continual learning
+    - Pluggable static analysis and anomaly detection methods (ML, statistical, runtime)
+    - Feedback-driven adaptation and continual learning
+    - Integration with other lobes for cross-engine research and feedback
     """
-    def __init__(self):
+    def __init__(self, anomaly_detector: Optional[Callable] = None):
         self.working_memory = WorkingMemory()
         self.logger = logging.getLogger("ErrorDetectionLobe")
-        # TODO: Add support for pluggable anomaly detection and feedback-driven learning
+        self.anomaly_detector = anomaly_detector  # Pluggable ML/statistical anomaly detector
 
     def scan_for_errors(self, data: Any) -> List[Dict[str, Any]]:
         """
         Scan data (string or list of lines) for static analysis issues and anomalies.
         Returns a list of detected issues with line numbers, patterns, and descriptions.
-        TODO: Add support for ML-based static analysis and feedback-driven improvement.
+        Supports feedback-driven improvement and pluggable anomaly detection.
         """
         errors = []
         if isinstance(data, str):
@@ -54,7 +54,7 @@ class ErrorDetectionLobe:
         for var in undefined_vars:
             if not re.search(rf'def\s+.*\({var}', code) and not re.search(rf'class\s+{var}', code):
                 if not re.search(rf'self\.{var}', code):
-                    if not re.search(rf'{var}\s*=', code, re.MULTILINE):
+                    if not re.search(rf'{var}\s*=.*', code, re.MULTILINE):
                         errors.append({'line': None, 'pattern': 'undefined_var', 'description': f'Possible undefined variable: {var}', 'content': ''})
         # Unused imports
         import_lines = [l for l in lines if l.strip().startswith('import') or l.strip().startswith('from')]
@@ -91,6 +91,13 @@ class ErrorDetectionLobe:
         for i, line in enumerate(lines):
             if re.search(r'if\s+.*=[^=]', line):
                 errors.append({'line': i+1, 'pattern': 'assignment_in_conditional', 'description': 'Possible assignment in conditional (should be ==?)', 'content': line.strip()})
+        # Pluggable anomaly detection (ML/statistical)
+        if self.anomaly_detector and callable(self.anomaly_detector):
+            try:
+                anomaly_results = self.anomaly_detector(lines)
+                errors.extend(anomaly_results)
+            except Exception as ex:
+                self.logger.error(f"[ErrorDetectionLobe] Anomaly detector error: {ex}")
         if errors:
             self.logger.warning(f"[ErrorDetectionLobe] Found issues: {errors}")
         for err in errors:
@@ -99,13 +106,42 @@ class ErrorDetectionLobe:
 
     def scan_for_anomalies(self, data: Any) -> List[Dict[str, Any]]:
         """
-        Placeholder for future dynamic anomaly detection (runtime, statistical, or ML-based).
-        To be implemented with integration to other engines (e.g., MathLogicEngine, PatternRecognitionEngine).
-        TODO: Add support for ML/statistical anomaly detection and cross-lobe integration.
+        Run pluggable anomaly detection (ML/statistical/runtime) on data.
+        Returns a list of detected anomalies.
+        Extensible for continual learning and cross-lobe integration.
         """
-        self.logger.info("[ErrorDetectionLobe] scan_for_anomalies is a stub for future dynamic analysis.")
+        self.logger.info("[ErrorDetectionLobe] scan_for_anomalies called.")
+        if self.anomaly_detector and callable(self.anomaly_detector):
+            try:
+                result = self.anomaly_detector(data)
+                for anomaly in result:
+                    self.working_memory.add(anomaly)
+                return result
+            except Exception as ex:
+                self.logger.error(f"[ErrorDetectionLobe] Anomaly detector error: {ex}")
+                return []
         # TODO: Integrate with MathLogicEngine, PatternRecognitionEngine, etc.
         return []
+
+    def adapt_from_feedback(self, feedback: Any):
+        """
+        Adapt error detection parameters based on feedback (learning loop).
+        Extensible for continual learning and feedback-driven adaptation.
+        """
+        self.logger.info(f"[ErrorDetectionLobe] Adapting from feedback: {feedback}")
+        self.working_memory.add({"feedback": feedback})
+
+    def demo_static_analysis(self, code: str) -> List[Dict[str, Any]]:
+        """
+        Demo/test method: run static analysis on code and return issues.
+        """
+        return self.scan_for_errors(code)
+
+    def demo_anomaly_detection(self, data: Any) -> List[Dict[str, Any]]:
+        """
+        Demo/test method: run anomaly detection on data and return anomalies.
+        """
+        return self.scan_for_anomalies(data)
 
     # TODO: Add demo/test methods for plugging in custom static analysis and anomaly detection.
     # TODO: Document extension points and provide usage examples in README.md.

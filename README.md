@@ -8,7 +8,9 @@
 
 > **Accelerate AI-powered development workflows with a portable, local-only MCP server for LLMs**
 
-A comprehensive **Master Control Program (MCP) server** designed to accelerate **agentic development workflows** for **Large Language Models (LLMs)**. This portable Python application helps LLMs transform single prompts into complete, functioning applications through intelligent project management, memory systems, and workflow orchestration.
+> **Note:** This project is currently undergoing a comprehensive cleanup to remove non-essential files, logs, and temporary artifacts in preparation for GitHub publication. The file `idea.txt` will never be removed or modified, as it is the core alignment and vision document. A `LICENSE` file will be added if missing to ensure open-source compliance.
+
+A comprehensive **Model Context Protocol (MCP) server** designed to accelerate **agentic development workflows** for **Large Language Models (LLMs)**. This portable Python application helps LLMs transform single prompts into complete, functioning applications through intelligent project management, memory systems, and workflow orchestration.
 
 ## 🎯 What This Does
 
@@ -925,5 +927,30 @@ The project is designed to be portable and can work with system Python or any vi
 - Ensures code is robust, maintainable, and easy to debug.
 - Aligns with latest research and best practices for agentic, research-driven Python projects.
 - Required for full alignment with `idea.txt` and project vision.
+
+---
+
+## Project Structure (Post-Cleanup)
+
+The following files and directories are essential for the MCP server's core functionality, documentation, and GitHub best practices:
+
+- `src/` — Main source code (modular, lobe-based architecture)
+- `frontend/` — Minimalist dark-themed web UI
+- `docs/` — Comprehensive documentation (user, developer, API, research)
+- `config/` — Configuration files for all aspects of the MCP
+- `scripts/` — Essential build, deployment, and utility scripts
+- `plugins/` — Modular plugin system
+- `data/` — Core databases (vector, workflow, memory, etc.)
+- `packages/` — Distribution packages (AppImage, tar.gz, Flatpak, etc.)
+- `deployment_packages/` — Portable deployment scripts and archives
+- `usb_templates/` — Templates for portable/USB deployment
+- `README.md` — This file (project overview, install, usage, structure)
+- `requirements.txt`, `pyproject.toml`, `setup.py` — Python packaging and dependencies
+- `start_mcp.sh`, `start_mcp.bat`, `start_mcp.ps1` — Cross-platform launch scripts
+- `idea.txt` — **Never to be removed or modified** (project vision and alignment)
+- `.gitignore` — (To be added/updated)
+- `LICENSE` — (To be added if missing)
+
+Obsolete, temporary, and redundant files (e.g., logs, backup files, empty scripts, non-essential reports) will be removed as part of the cleanup. See the TODO for details.
 
 ---

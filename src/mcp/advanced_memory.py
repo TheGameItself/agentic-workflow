@@ -17,11 +17,11 @@ from .vector_memory import get_vector_backend
 
 # Optional numpy import with fallback
 try:
-    import numpy as np
+    import numpy as np  # type: ignore[import]
     NUMPY_AVAILABLE = True
 except ImportError:
     NUMPY_AVAILABLE = False
-    np = None  # Optional dependency for advanced memory operations
+    np = None  # type: ignore
     # Fallback: raise clear error if numpy-dependent features are used
     class np:
         @staticmethod
@@ -58,6 +58,14 @@ except ImportError:
         # Add missing attributes for compatibility
         float32 = float
         float64 = float
+        # Add stubs for missing numpy attributes to avoid linter errors
+        uint8 = int
+        int8 = int
+        float8 = float  # Simulate float8 as float
+        @staticmethod
+        def where(condition, x, y):
+            # Simple fallback for np.where
+            return [xi if cond else yi for cond, xi, yi in zip(condition, x, y)]
 
 class VectorEncoder:
     """Base class for vector encoders/decoders."""
@@ -91,6 +99,57 @@ class RaBitQEncoder(VectorEncoder):
         sign_bits = np.array(encoded['sign_bits'], dtype=np.uint8)
         arr = np.where(sign_bits == 1, 1.0, -1.0)
         return dict(zip(keys, arr))
+
+class Float8QEncoder(VectorEncoder):
+    """Float8 quantization encoder/decoder using NumPy or simulated float8. Supports hormone-state-driven dynamic quantization. Reference: idea.txt, low-precision neural encoding research."""
+    def encode(self, vector, hormone_state=None):
+        try:
+            import numpy as np  # type: ignore[import]
+        except ImportError:
+            raise ImportError("Numpy is required for Float8QEncoder. Please install numpy.")
+        keys = sorted(vector.keys())
+        arr = np.array([vector[k] for k in keys], dtype=np.float32)  # type: ignore[attr-defined]
+        # Dynamic quantization selection based on hormone state
+        def select_quant_mode_from_hormones(hormone_state):
+            if not hormone_state:
+                return 'int8'  # Fallback
+            dopamine = hormone_state.get('dopamine', 0.5)
+            serotonin = hormone_state.get('serotonin', 0.5)
+            cortisol = hormone_state.get('cortisol', 0.1)
+            avg_positive = (dopamine + serotonin) / 2
+            if cortisol > 0.7:
+                return 'float8'
+            elif avg_positive > 0.7:
+                return 'float32'
+            elif avg_positive > 0.5:
+                return 'float16'
+            else:
+                return 'int8'
+        quant_mode = select_quant_mode_from_hormones(hormone_state)
+        if quant_mode == 'float8':
+            if hasattr(np, 'float8'):
+                quantized = arr.astype(np.float8)  # type: ignore[attr-defined]
+            else:
+                arr = np.clip(arr, -1, 1)
+                int_arr = np.round(arr * 127).astype(np.int8)
+                quantized = int_arr.astype(np.float32) / 127.0
+        elif quant_mode == 'float16':
+            quantized = arr.astype(np.float16)
+        elif quant_mode == 'float32':
+            quantized = arr.astype(np.float32)
+        else:  # int8 fallback
+            arr = np.clip(arr, 0, 1)
+            quantized = np.round(arr * 255).astype(np.int8)
+        return {'keys': keys, 'quant_mode': quant_mode, 'quantized': quantized.tolist()}
+    def decode(self, encoded):
+        try:
+            import numpy as np  # type: ignore[import]
+        except ImportError:
+            raise ImportError("Numpy is required for Float8QEncoder. Please install numpy.")
+        keys = encoded['keys']
+        quant_mode = encoded.get('quant_mode', 'float8')
+        quantized = np.array(encoded['quantized'], dtype=np.float32)  # type: ignore[attr-defined]
+        return dict(zip(keys, quantized))
 
 class AdvancedMemoryManager:
     """Advanced memory management with vector search, categorization, and relationships.

@@ -1,40 +1,143 @@
-# MCP TODO BACKUP (improved and portable)
-# Exported: [date will be filled by script]
-# Improvements: Tasks clarified, made atomic/actionable, dependencies and statuses preserved, minor rewording for clarity and standardization.
-# Format: [status] (id) description [dependencies]
+x Create `src/mcp/hypothetical_engine.py`.
+x Implement speculation and hypothesis generation.
+x Add integration with other engines.
+x Add to server.py routing.
+Expand lobes system with more brain-inspired modules.
+Implement split-brain AB testing architecture.
+Add neural column pattern recognition.
+Create dreaming simulation engine.
+Implement engram development and management.
+Add first/second/third order memory organization.
+Create mutagenic algorithm for memory evolution.
+Implement memory compression and vector encoding.
+Add autonomous web crawling capabilities.
+Implement "from zero" feedback model.
+Create performance metrics and reporting.
+Add self-repair functionality.
+Enhance physics engine with CUDA support.
+Add scientific process engine.
+Implement statistical analysis features.
+Create calculus/math/tensor engines.
+Remove duplicate files and methods.
+Consolidate similar functionality.
+Fix linter errors.
+Optimize file sizes (keep under 1000 lines).
+Reorganize according to information flow principles.
+Implement split-brain folder structure.
+Clean up temporary files.
+Remove junk methods.
+Optimize memory usage (target <10GB).
+Improve vector processing efficiency.
+Add caching mechanisms.
+Optimize database queries.
+Research latest LLM slope maps.
+Implement advanced pattern recognition.
+Add novel memory compression techniques.
+Research brain-inspired architectures.
+Add web interface with dark theme.
+Implement advanced CLI tools.
+Add email server functionality.
+Create identity management system.
+Enhance IDE integration.
+Add more plugin support.
+Improve cross-engine communication.
+Add redundancy and fallbacks.
+Comprehensive system testing.
+Performance benchmarking.
+Security auditing.
+Cross-platform testing.
+Update user documentation.
+Create LLM-specific guides.
+Add API documentation.
+Create troubleshooting guides.
+Update portable packages.
+Create new executables.
+Test USB deployment.
+Verify cross-platform compatibility.
+Add comprehensive logging.
+Implement health checks.
+Add performance monitoring.
+Create alerting system.
+Add auto-update capabilities.
+Implement backup systems.
+Add data cleanup routines.
+Create maintenance scripts.
+All changes must align with idea.txt requirements.
+Maintain portability and local-only operation.
+Keep file sizes under 1000 lines.
+Ensure cross-platform compatibility.
+Prioritize LLM usability and auto-prompting.
 
-[pending] (export-todo-to-todotxt) Export a backup of the current MCP TODO list to a portable todo.txt file, preserving task content, status, dependencies, and metadata. As you copy, review each task for clarity, atomicity, and actionable phrasing, making improvements and refinements where needed. Ensure the resulting file is compatible with standard todo.txt tools and formats. Document any changes or improvements made during the migration. []
+# === MCP ACTIVE TODO BACKUP (as of latest backup) ===
+- Refactor memory architecture: 1) Separate memory into working, short-term, and long-term modules/classes. 2) Move all context-sensitive, feedback, and temporary storage to WorkingMemory. 3) Implement ShortTermMemory for recent, high-priority, or volatile information (e.g., recent tasks, user interactions, session data). 4) Implement LongTermMemory for persistent, structured, and research-driven storage (e.g., vector DB, engrams, knowledge, historical logs). 5) Update all lobes/engines to use the appropriate memory type. 6) Document the architecture and reference idea.txt. 7) Ensure robust fallbacks and extensibility. 8) Update README and docs to reflect the new memory structure.
+- Continue systematic upgrade and debugging: 1) Proceed to the next unfinished or stubbed module (e.g., VectorMemory backends, ScientificProcessEngine, WorkflowManager, DecisionMakingLobe, MultiLLMOrchestrator, AdvancedEngramEngine, ErrorDetectionLobe, PatternRecognitionEngine, MindMapEngine, WebInterface). 2) For each: read and analyze code, debug, finish stubs/TODOs, upgrade implementations, add/document fallbacks, update documentation, and reference idea.txt and research. 3) Ensure all modules are robust, research-driven, and production-ready. Repeat until the entire project is complete. 4) Regularly update the TODO and documentation to reflect progress and new research-driven improvements.
+- Systematically debug all recently upgraded modules (SimulatedReality, ResearchIntegrator, and dependencies): 1) Review for runtime errors, missing imports, or integration issues. 2) Add/fix error handling and fallbacks as needed. 3) Test new features (causality modeling, feedback adaptation, research paper analysis) with sample data. 4) Log and document all issues and fixes. 5) Ensure all changes are robust, production-ready, and aligned with idea.txt. Repeat for each module as upgrades continue.
+# === END MCP ACTIVE TODO BACKUP ===
 
-[completed] (vesicle-pool-class) Design and implement a VesiclePool class modeling readily releasable, reserve, and recycling pools with tunable parameters (size, release probability, recycling rate). []
-[in_progress] (integrate-vesicle-pool-lobes) Integrate a vesicle pool model instance into each lobe/module, ensuring modularity and configurability. [vesicle-pool-class]
-[pending] (vesicle-dynamics) Implement vesicle fusion, release, and recycling dynamics, including clathrin-mediated and activity-dependent bulk endocytosis, in the VesiclePool class. [vesicle-pool-class]
-[pending] (expose-parameters) Expose pool sizes, release probabilities, and recycling rates as configurable parameters for each lobe/module. [integrate-vesicle-pool-lobes]
-[pending] (profile-impact) Simulate and log the impact of vesicle pool depletion and replenishment on lobe responsiveness and system adaptation. [vesicle-dynamics, integrate-vesicle-pool-lobes]
-[pending] (document-emergent-behaviors) Document and simulate emergent behaviors such as synaptic fatigue, facilitation, and recovery in the vesicle pool model. [profile-impact]
-[pending] (simulate-pathology) Implement mechanisms to simulate pathological disruptions (e.g., reduced recycling, pool depletion) and observe effects on system robustness and recovery. [vesicle-dynamics]
-[pending] (integrate-logging-visualization) Integrate vesicle pool state into logging, monitoring, and visualization tools for real-time system introspection. [profile-impact]
-[pending] (update-documentation) Update developer and user documentation to describe vesicle pool models, emergent behaviors, and clinical relevance. [document-emergent-behaviors, simulate-pathology, integrate-logging-visualization]
-[pending] (neuroplasticity-dropin-dropout) Implement dynamic DropIn (neurogenesis) and DropOut/Pruning (neuroapoptosis) mechanisms for neural network modules, allowing the system to add or remove neurons/connections during operation. Evaluate network performance and adapt structure accordingly. []
-[pending] (dual-memory-system) Develop a dual-memory system inspired by the hippocampus–cortex model: implement fast (volatile) and slow (stable) memory, with offline consolidation (replay) to transfer knowledge and prevent catastrophic forgetting. []
-[pending] (calcium-plasticity-models) Integrate calcium-based synaptic plasticity models (SBC, GB, FPLR) into learning rules for synaptic weights or lobe connections. Track calcium variables, implement LTP/LTD with saturating/asymptotic behavior, and allow for protein synthesis-dependent late-phase plasticity. []
-[pending] (continual-learning) Enable continual/life-long learning: use dual learning rates, rehearsal, and grow-and-prune paradigms to maintain old knowledge while integrating new. Monitor and adapt plasticity based on novelty and performance. []
-[pending] (meta-plasticity-modulation) Implement meta-plasticity: allow the system to dynamically modulate its own plasticity rules, learning rates, and thresholds in response to feedback, stress, or environmental changes, using hormone/neurotransmitter-inspired signals. []
-[pending] (vesiclepool-plasticity-extension) Extend VesiclePool and lobe connections to include calcium and plasticity variables. Implement LTP/LTD update rules, saturating weight changes, and log/visualize calcium traces and plasticity events. []
-[pending] (plasticity-visualization) Create real-time dashboards and visualization tools for plasticity state, calcium traces, network structure changes, and emergent behaviors in the web UI. []
-[pending] (prototype-benchmark-plasticity) Prototype and benchmark all new plasticity and neurogenesis features in isolated modules, then integrate and test in core lobes with profiling and ablation studies. []
-[pending] (plasticity-documentation) Document all plasticity mechanisms, parameters, and emergent behaviors for transparency, reproducibility, and user/LLM alignment. []
-[pending] (continual-pretraining-finetuning) Implement continual pre-training and fine-tuning workflows for foundation models and LLMs, ensuring the MCP system can update, specialize, and adapt models over time without full retraining. Integrate mechanisms for knowledge staleness mitigation and domain adaptation. []
-[pending] (continual-compositionality) Develop a modular continual compositionality framework: enable dynamic orchestration, recombination, and adaptation of foundation models, agents, and neural modules within the MCP system. Support plug-and-play, scalable, and evolving model ecosystems. []
-[pending] (scole-framework-integration) Integrate SCoLe (Scaling Continual Learning) experimentation framework to simulate and benchmark MCP's knowledge retention, accumulation, and convergence in long task sequences with reoccurring data. Implement SGD modifications (e.g., gradient masking, no momentum) for improved continual learning. []
-[pending] (dynamic-distribution-control) Implement dynamic class/task distribution control in continual learning experiments, allowing entropy and imbalance tuning for robust evaluation of MCP's learning and retention under realistic, non-uniform data streams. [scole-framework-integration]
-[pending] (continued-pretraining-reuse) Implement continued pretraining workflows for language models in the MCP system, following best practices for data distribution design and learning rate scheduling to maximize reuse and minimize retraining costs. Integrate guidelines from recent research to improve model accuracy and efficiency. [continual-pretraining-finetuning]
-[pending] (seamless-data-packing) Integrate seamless data packing strategies (e.g., sliding window, First-Fit-Decreasing bin packing) into the MCP's continual pretraining pipeline to preserve context, minimize truncation, and improve model performance. Benchmark against baseline packing methods. [continued-pretraining-reuse]
-[pending] (finetune-vs-pretrain-framework) Develop a decision framework and automated pipeline in the MCP for choosing between fine-tuning and continued pretraining, based on domain shift, data availability, and compute resources. Provide user-facing recommendations and fallback options. [continued-pretraining-reuse]
-[pending] (cpt-hyperparam-sweep) Add hyperparameter sweep utilities to the MCP's continued pretraining pipeline, enabling automated exploration of learning rates, training durations, and data mixes for optimal adaptation and performance. Integrate dataset characterization tools to identify which data sources most effectively improve model capabilities. [continued-pretraining-reuse]
-[pending] (model-souping-eval) Implement model souping and evaluation strategies in the MCP to mitigate forgetting during continued pretraining, allowing for robust adaptation to new data without degrading prior knowledge. [cpt-hyperparam-sweep]
-[pending] (automated-hyperopt) Integrate automated hyperparameter optimization algorithms (grid search, random search, Bayesian optimization) into the MCP's hyperparameter sweep utilities for continued pretraining and fine-tuning. Allow users to define search spaces, performance metrics, and trial limits. Log and compare experiment results for optimal configuration selection. [cpt-hyperparam-sweep]
-[pending] (experiment-tracking-visualization) Add experiment tracking and visualization tools to the MCP, enabling users to monitor, compare, and analyze hyperparameter sweeps and model performance across all continual learning and pretraining experiments. [automated-hyperopt]
-[pending] (optuna-integration) Integrate Optuna as the primary hyperparameter optimization backend in the MCP system, leveraging its state-of-the-art algorithms, eager search spaces, and parallelization features. Provide support for multi-objective optimization, LLM/agentic control, and dashboard-based experiment monitoring. [automated-hyperopt]
-[pending] (optuna-mcp-dashboard) Enable Optuna MCP server and dashboard integration for interactive, LLM-driven hyperparameter optimization and real-time monitoring within the MCP. Expose APIs for conversational control and data querying. [optuna-integration]
-[pending] (carbs-integration) Integrate cost-aware hyperparameter optimization (CARBS) into the MCP system to jointly optimize for model performance and compute efficiency, automatically discovering scaling laws for all hyperparameters and enabling robust tuning for large models. [optuna-integration]
-[pending] (bohb-integration) Add support for BOHB (Bayesian Optimization and HyperBand) as an alternative HPO backend in the MCP, providing robust, scalable, and efficient hyperparameter optimization for high-dimensional and expensive deep learning tasks. [optuna-integration] 
+# === MCP FULL TODO HISTORICAL BACKUP (all sources, as of latest backup) ===
+Expand lobes system with more brain-inspired modules.
+Implement split-brain AB testing architecture.
+Add neural column pattern recognition.
+Create dreaming simulation engine.
+Implement engram development and management.
+Add first/second/third order memory organization.
+Create mutagenic algorithm for memory evolution.
+Implement memory compression and vector encoding.
+Add autonomous web crawling capabilities.
+Implement "from zero" feedback model.
+Create performance metrics and reporting.
+Add self-repair functionality.
+Enhance physics engine with CUDA support.
+Add scientific process engine.
+Implement statistical analysis features.
+Create calculus/math/tensor engines.
+Remove duplicate files and methods.
+Consolidate similar functionality.
+Fix linter errors.
+Optimize file sizes (keep under 1000 lines).
+Reorganize according to information flow principles.
+Implement split-brain folder structure.
+Clean up temporary files.
+Remove junk methods.
+Optimize memory usage (target <10GB).
+Improve vector processing efficiency.
+Add caching mechanisms.
+Optimize database queries.
+Research latest LLM slope maps.
+Implement advanced pattern recognition.
+Add novel memory compression techniques.
+Research brain-inspired architectures.
+Add web interface with dark theme.
+Implement advanced CLI tools.
+Add email server functionality.
+Create identity management system.
+Enhance IDE integration.
+Add more plugin support.
+Improve cross-engine communication.
+Add redundancy and fallbacks.
+Comprehensive system testing.
+Performance benchmarking.
+Security auditing.
+Cross-platform testing.
+Update user documentation.
+Create LLM-specific guides.
+Add API documentation.
+Create troubleshooting guides.
+Update portable packages.
+Create new executables.
+Test USB deployment.
+Verify cross-platform compatibility.
+Add comprehensive logging.
+Implement health checks.
+Add performance monitoring.
+Create alerting system.
+Add auto-update capabilities.
+Implement backup systems.
+Add data cleanup routines.
+Create maintenance scripts.
+All changes must align with idea.txt requirements.
+Maintain portability and local-only operation.
+Keep file sizes under 1000 lines.
+Ensure cross-platform compatibility.
+Prioritize LLM usability and auto-prompting.
+# === END MCP FULL TODO HISTORICAL BACKUP ===

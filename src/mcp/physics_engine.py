@@ -689,12 +689,77 @@ class TensorEngine:
         else:
             raise ValueError(f"Unknown tensor operation: {operation}")
     
-    def _create_tensor(self, inputs: Dict[str, Any]) -> Any:
-        """Create a tensor from data."""
+    def _create_tensor(self, inputs: Dict[str, Any], hormone_state=None) -> Any:
+        """Create a tensor from data. Supports float8 (or simulated float8) and hormone-state-driven dynamic quantization. Reference: idea.txt."""
         data = inputs.get('data', [])
         shape = inputs.get('shape', None)
-        dtype = inputs.get('dtype', 'float32')
-        
+        dtype = inputs.get('dtype', None)
+        # Dynamic quantization selection based on hormone state
+        def select_quant_mode_from_hormones(hormone_state):
+            if not hormone_state:
+                return 'int8'  # Fallback
+            dopamine = hormone_state.get('dopamine', 0.5)
+            serotonin = hormone_state.get('serotonin', 0.5)
+            cortisol = hormone_state.get('cortisol', 0.1)
+            avg_positive = (dopamine + serotonin) / 2
+            if cortisol > 0.7:
+                return 'float8'
+            elif avg_positive > 0.7:
+                return 'float32'
+            elif avg_positive > 0.5:
+                return 'float16'
+            else:
+                return 'int8'
+        if dtype is None and hormone_state is not None:
+            dtype = select_quant_mode_from_hormones(hormone_state)
+        if dtype == 'float8':
+            try:
+                import numpy as np  # type: ignore[import]
+            except ImportError:
+                raise ImportError("Numpy is required for float8 tensor support. Please install numpy.")
+            if hasattr(np, 'float8'):
+                if shape:
+                    tensor = np.zeros(shape, dtype=np.float8)  # type: ignore[attr-defined]
+                    if data:
+                        tensor.flat[:len(data)] = np.array(data, dtype=np.float8)  # type: ignore[attr-defined]
+                else:
+                    tensor = np.array(data, dtype=np.float8)  # type: ignore[attr-defined]
+            else:
+                arr = np.array(data, dtype=np.float32)
+                arr = np.clip(arr, -1, 1)
+                int_arr = np.round(arr * 127).astype(np.int8)
+                tensor = int_arr.astype(np.float32) / 127.0
+                if shape:
+                    tensor = np.reshape(tensor, shape)
+            return self._tensor_to_list(tensor)
+        elif dtype == 'float16':
+            import numpy as np  # type: ignore[import]
+            if shape:
+                tensor = np.zeros(shape, dtype=np.float16)
+                if data:
+                    tensor.flat[:len(data)] = np.array(data, dtype=np.float16)
+            else:
+                tensor = np.array(data, dtype=np.float16)
+            return self._tensor_to_list(tensor)
+        elif dtype == 'float32':
+            import numpy as np  # type: ignore[import]
+            if shape:
+                tensor = np.zeros(shape, dtype=np.float32)
+                if data:
+                    tensor.flat[:len(data)] = np.array(data, dtype=np.float32)
+            else:
+                tensor = np.array(data, dtype=np.float32)
+            return self._tensor_to_list(tensor)
+        elif dtype == 'int8':
+            import numpy as np  # type: ignore[import]
+            arr = np.clip(data, 0, 1)
+            if shape:
+                tensor = np.zeros(shape, dtype=np.int8)
+                tensor.flat[:len(arr)] = np.round(np.array(arr) * 255).astype(np.int8)
+            else:
+                tensor = np.round(np.array(arr) * 255).astype(np.int8)
+            return self._tensor_to_list(tensor)
+        # ... existing code for GPU/CuPy/PyTorch/NumPy fallback ...
         if self.gpu_available and inputs.get('gpu', False):
             # Use CuPy for GPU tensors
             if shape:
@@ -714,13 +779,13 @@ class TensorEngine:
                 tensor = torch.tensor(data, dtype=getattr(torch, dtype))
         else:
             # Use NumPy as fallback
+            import numpy as np  # type: ignore[import]
             if shape:
                 tensor = np.zeros(shape, dtype=dtype)
                 if data:
                     tensor.flat[:len(data)] = data
             else:
                 tensor = np.array(data, dtype=dtype)
-        
         return self._tensor_to_list(tensor)
     
     def _multiply_tensors(self, inputs: Dict[str, Any]) -> Any:

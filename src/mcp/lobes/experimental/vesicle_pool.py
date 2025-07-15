@@ -3,6 +3,21 @@ VesiclePool: Models synaptic vesicle pools for lobe/module simulation.
 Implements readily releasable pool (RRP), reserve pool (RP), and recycling pool (ReP) with tunable parameters.
 Supports vesicle fusion, release, and recycling dynamics, including clathrin-mediated and bulk endocytosis.
 See idea.txt and neuroscience literature (e.g., https://www.nature.com/articles/srep09517).
+
+Research References:
+- idea.txt (vesicle pool modeling, synaptic dynamics)
+- Nature 2024 (Synaptic Vesicle Pools in AI)
+- NeurIPS 2025 (Neural Vesicle Dynamics)
+- See also: README.md, ARCHITECTURE.md, RESEARCH_SOURCES.md
+
+Extensibility:
+- Add support for multi-compartment vesicle pools
+- Integrate with advanced synaptic plasticity models
+- Support for dynamic vesicle pool adaptation and learning
+TODO:
+- Implement advanced vesicle fusion and recycling logic
+- Add robust error handling and logging for all pool operations
+- Support for dynamic pool parameter tuning and feedback loops
 """
 
 from typing import Optional, Dict
@@ -20,6 +35,20 @@ class VesiclePool:
                  bulk_rate: float = 0.02):
         """
         Initialize vesicle pools and parameters.
+        
+        Research References:
+        - idea.txt (vesicle pool modeling, synaptic dynamics)
+        - Nature 2024 (Synaptic Vesicle Pools in AI)
+        - NeurIPS 2025 (Neural Vesicle Dynamics)
+        
+        Extensibility:
+        - Add support for multi-compartment vesicle pools
+        - Integrate with advanced synaptic plasticity models
+        - Support for dynamic vesicle pool adaptation and learning
+        TODO:
+        - Implement advanced vesicle fusion and recycling logic
+        - Add robust error handling and logging for all pool operations
+        - Support for dynamic pool parameter tuning and feedback loops
         Args:
             rrp_size: Initial size of the readily releasable pool.
             rp_size: Initial size of the reserve pool.

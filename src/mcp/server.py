@@ -70,7 +70,7 @@ from .auto_management_daemon import AutoManagementDaemon
 from .hypothetical_engine import HypotheticalEngine
 from .dreaming_engine import DreamingEngine
 from .engram_engine import EngramEngine
-from .scientific_engine import ScientificProcessEngine
+from src.mcp.lobes.experimental.scientific_process.scientific_process_engine import ScientificProcessEngine
 
 @dataclass
 class MCPRequest:
@@ -119,7 +119,7 @@ class MCPServer:
         self.hypothetical_engine = HypotheticalEngine(self.memory_manager, self.unified_memory)
         self.dreaming_engine = DreamingEngine(memory_manager=self.memory_manager)
         self.engram_engine = EngramEngine(memory_manager=self.memory_manager)
-        self.scientific_engine = ScientificProcessEngine(memory_manager=self.memory_manager)
+        self.scientific_engine = ScientificProcessEngine()
         self.executor = ThreadPoolExecutor(max_workers=4)
         # Auto Management Daemon
         self.auto_management_daemon = AutoManagementDaemon(
@@ -1670,15 +1670,8 @@ class MCPServer:
     async def _handle_propose_hypothesis(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Handle hypothesis proposal."""
         statement = params.get("statement", "")
-        category = params.get("category", "causal")
-        variables = params.get("variables", [])
-        assumptions = params.get("assumptions", [])
-        confidence = params.get("confidence", 0.5)
-        
         try:
-            hypothesis_id = self.scientific_engine.propose_hypothesis(
-                statement, category, variables, assumptions, confidence
-            )
+            hypothesis_id = self.scientific_engine.propose_hypothesis(statement)
             return {
                 "status": "success",
                 "hypothesis_id": hypothesis_id
@@ -1690,15 +1683,9 @@ class MCPServer:
     async def _handle_design_experiment(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Handle experiment design."""
         hypothesis_id = params.get("hypothesis_id", "")
-        methodology = params.get("methodology", "randomized_control")
-        sample_size = params.get("sample_size")
-        duration_days = params.get("duration_days")
-        variables = params.get("variables", {})
-        
+        design = params.get("design", "")
         try:
-            experiment_id = self.scientific_engine.design_experiment(
-                hypothesis_id, methodology, sample_size, duration_days, variables
-            )
+            experiment_id = self.scientific_engine.design_experiment(hypothesis_id, design)
             return {
                 "status": "success",
                 "experiment_id": experiment_id
@@ -1710,13 +1697,13 @@ class MCPServer:
     async def _handle_run_experiment(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Handle experiment execution."""
         experiment_id = params.get("experiment_id", "")
-        data_collection_strategy = params.get("data_collection_strategy", "systematic")
-        
+        data = params.get("data", "")
+        quality_score = params.get("quality_score", 0.5)
         try:
-            results = self.scientific_engine.run_experiment(experiment_id, data_collection_strategy)
+            evidence_id = self.scientific_engine.add_evidence(experiment_id, data, quality_score)
             return {
                 "status": "success",
-                "results": results
+                "evidence_id": evidence_id
             }
         except Exception as e:
             self.logger.error(f"Error running experiment: {e}")
@@ -1725,7 +1712,6 @@ class MCPServer:
     async def _handle_analyze_hypothesis(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Handle hypothesis analysis."""
         hypothesis_id = params.get("hypothesis_id", "")
-        
         try:
             analysis = self.scientific_engine.analyze_hypothesis(hypothesis_id)
             return {

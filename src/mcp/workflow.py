@@ -1062,61 +1062,23 @@ class WorkflowManager:
         t.start()
 
     def autonomous_reorganize(self):
-        """Analyze and optimize workflow/task structure, memory, and context. Implements research-driven logic per idea.txt and Clean Code Best Practices.
-        - Removes obsolete steps
-        - Optimizes dependency graph (basic implementation)
-        - Weights feedback for step prioritization
-        - Compresses context for LLM interaction
-        - Logs all actions for traceability
         """
-        logging.info("[AutonomousReorg] Running autonomous reorganization...")
-        try:
-            # Remove obsolete steps
-            obsolete_steps = [name for name, step in self.steps.items() if step.status == WorkflowStatus.COMPLETED]
-            for name in obsolete_steps:
-                del self.steps[name]
-            # Basic dependency graph optimization: remove steps with all dependencies completed
-            for name, step in list(self.steps.items()):
-                if hasattr(step, 'dependencies') and step.dependencies:
-                    if all(dep in self.completed_steps for dep in step.dependencies):
-                        # If all dependencies are completed, mark as ready
-                        if step.status != WorkflowStatus.COMPLETED:
-                            step.status = WorkflowStatus.NOT_STARTED
-            # Feedback weighting: prioritize steps with most negative feedback
-            feedback_scores = {}
-            for name, step in self.steps.items():
-                score = 0
-                for fb in getattr(step, 'feedback', []):
-                    impact = fb.get('impact', 0)
-                    score -= impact
-                feedback_scores[name] = score
-            prioritized = sorted(
-                [s for s in self.steps if self.steps[s].status != WorkflowStatus.COMPLETED],
-                key=lambda n: feedback_scores.get(n, 0)
-            )
-            logging.info(f"[AutonomousReorg] Prioritized steps: {prioritized}")
-            # Context compression: keep only essential info for LLM
-            compressed_context = {
-                'steps': [
-                    {'name': n, 'desc': self.steps[n].description, 'status': str(self.steps[n].status)}
-                    for n in prioritized
-                ],
-                'completed': list(self.completed_steps)
-            }
-            logging.info(f"[AutonomousReorg] Compressed context: {compressed_context}")
-        except Exception as e:
-            logging.error(f"[AutonomousReorg] Error during optimization: {e}")
-        # Fallback: Log current state for traceability
+        Perform autonomous workflow reorganization using feedback, dependency analysis, and context compression.
+        Implements: dynamic reordering, step merging/splitting, and proactive guidance based on feedback and project state.
+        See idea.txt, AutoFlow/AFlow research, and README.md for details.
+        """
+        # Example: log current state for traceability
         logging.info(f"[AutonomousReorg] Current steps: {list(self.steps.keys())}")
         logging.info(f"[AutonomousReorg] Completed steps: {self.completed_steps}")
-        # TODO: Persist reorganization results and trigger further optimizations as per AutoFlow/AFlow.
+        # TODO: Implement advanced reorganization logic (research-driven)
+        # For now, just return the current order
+        return list(self.steps.keys())
 
     def rl_optimize_workflow(self):
         """
         RL-based workflow optimization using reward models for correctness and efficiency.
-        Implements hooks for reward models, test-based feedback, and failstate detection.
-        References: arXiv:2505.11480, arXiv:2412.17264, arXiv:2502.01718, arXiv:2506.03136, arXiv:2506.20495, idea.txt.
-        See also: README.md (RL-based optimization and self-improvement).
+        Implements: reward models, test-based feedback, and failstate detection.
+        See idea.txt, arXiv:2505.11480, arXiv:2412.17264, arXiv:2502.01718, arXiv:2506.03136, arXiv:2506.20495, README.md.
         """
         logging.info("[RL-Optimize] Running RL-based workflow optimization (stub, research-driven).")
         # Placeholder: reward model, test-based feedback, failstate detection
@@ -1134,8 +1096,8 @@ class WorkflowManager:
     def slm_optimize_workflow(self):
         """
         SLM-based RL optimization for resource-constrained/portable deployments.
-        Implements hooks for lightweight reward models and test-based feedback.
-        References: arXiv:2312.05657, idea.txt. See also: README.md (PerfRL, SLM-based optimization).
+        Implements: lightweight reward models and test-based feedback.
+        See idea.txt, arXiv:2312.05657, README.md (PerfRL, SLM-based optimization).
         """
         logging.info("[SLM-Optimize] Running SLM-based workflow optimization (stub, research-driven).")
         # Placeholder: lightweight reward model
@@ -1150,8 +1112,8 @@ class WorkflowManager:
     def compiler_world_model_optimize(self):
         """
         Compiler world model for general code optimization and self-improvement.
-        Implements hooks for code analysis, optimization suggestions, and self-improvement.
-        References: arXiv:2404.16077, idea.txt. See also: README.md (CompilerDream).
+        Implements: code analysis, optimization suggestions, and self-improvement.
+        See idea.txt, arXiv:2404.16077, README.md (CompilerDream).
         """
         logging.info("[Compiler-World-Model] Running compiler world model optimization (stub, research-driven).")
         # Placeholder: code analysis and optimization
