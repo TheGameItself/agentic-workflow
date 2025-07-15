@@ -21,61 +21,7 @@ from .lobes.experimental.task_proposal.task_proposal_lobe import TaskProposalLob
 from .lobes.experimental.multi_llm_orchestrator.multi_llm_orchestrator import MultiLLMOrchestrator
 
 # No active class definitions or logic should be added here.
-# See src/mcp/lobes/experimental/ for all current and future development.
-
-# Stubs for missing experimental lobes
-class SimulatedReality:
-    """
-    SimulatedReality lobe: Minimal stub for entity, event, and state management. See idea.txt.
-    """
-    def __init__(self, db_path=None):
-        self.db_path = db_path
-        self.entities = []
-        self.events = []
-        self.states = []
-    def add_entity(self, name, attrs):
-        eid = len(self.entities) + 1
-        self.entities.append({'id': eid, 'name': name, 'attrs': attrs})
-        return eid
-    def add_event(self, name, timestamp, entities):
-        eid = len(self.events) + 1
-        self.events.append({'id': eid, 'name': name, 'timestamp': timestamp, 'entities': entities})
-        return eid
-    def add_state(self, name, value, timestamp):
-        sid = len(self.states) + 1
-        self.states.append({'id': sid, 'name': name, 'value': value, 'timestamp': timestamp})
-        return sid
-    def query_entities(self):
-        return self.entities
-    def query_events(self):
-        return self.events
-    def query_states(self):
-        return self.states
-
-class DreamingEngine:
-    """
-    DreamingEngine lobe: Minimal stub for dream simulation and learning. See idea.txt.
-    """
-    def __init__(self, db_path=None):
-        self.db_path = db_path
-        self.dreams = []
-    def simulate_dream(self, context, scenario):
-        dream = {'scenario': scenario, 'context': context}
-        self.dreams.append(dream)
-        return dream
-    def learn_from_dreams(self):
-        return {'insights': [d['scenario'] for d in self.dreams]}
-    def get_dream_statistics(self):
-        return {'total_dreams': len(self.dreams)}
-
-class SpeculationEngine:
-    """
-    SpeculationEngine lobe: Minimal stub for speculation. See idea.txt.
-    """
-    def __init__(self, db_path=None):
-        self.db_path = db_path
-    def speculate(self, topic=None, *args, **kwargs):
-        return {'speculation': f'Speculating about {topic or "unknown"}'}
+# All stub classes (SimulatedReality, SpeculationEngine, etc.) have been removed as they are now modularized.
 
 """
 This module re-exports experimental lobes for test and integration compatibility.

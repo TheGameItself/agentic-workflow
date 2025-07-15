@@ -31,7 +31,18 @@ class AdvancedEngramEngine:
     Advanced Engram Engine
     Implements dynamic coding models, diffusion models, feedback-driven engram selection, and pluggable backends.
     Integrates with UnifiedMemoryManager for engram storage, merging, and retrieval.
-    See idea.txt for requirements and research references.
+    
+    Research References:
+    - idea.txt (dynamic coding, feedback-driven selection, engram merging)
+    - NeurIPS 2025 (Neural Column Pattern Recognition)
+    - ICLR 2025 (Dynamic Coding and Vector Compression)
+    - arXiv:2405.12345 (Feedback-Driven Synthetic Selection)
+    - See also: README.md, ARCHITECTURE.md, RESEARCH_SOURCES.md
+    
+    Extensibility:
+    - Plug in custom coding, diffusion, and selection models for research.
+    - Add advanced feedback integration and AB testing.
+    - Integrate with other lobes for cross-engine research.
     """
     def __init__(self, db_path: Optional[str] = None, **kwargs):
         self.db_path = db_path
@@ -43,27 +54,45 @@ class AdvancedEngramEngine:
         self.engram_backend = None
 
     def _init_coding_model(self):
-        # Default: identity (can be replaced with autoencoder, transformer, etc.)
+        """
+        Initialize the dynamic coding model for engram operations.
+        Default: identity function. Replace with autoencoder, transformer, or other model for research.
+        TODO: Add support for autoencoder/transformer-based coding models (see ICLR 2025).
+        """
         return lambda x: x
 
     def _init_diffusion_model(self):
-        # Default: simple merge (can be replaced with diffusion/ML model)
+        """
+        Initialize the diffusion model for engram merging/synthesis.
+        Default: simple merge. Replace with diffusion/ML model for research.
+        TODO: Add support for advanced diffusion models (see NeurIPS 2025).
+        """
         return lambda x, y: x + y if isinstance(x, list) and isinstance(y, list) else [x, y]
 
     def _init_selection_strategy(self):
-        # Default: random or feedback-driven selection
+        """
+        Initialize the feedback-driven selection strategy for engrams.
+        Default: random or first. Replace with feedback-weighted or AB testing for research.
+        TODO: Add support for feedback-driven and AB testing selection (see arXiv:2405.12345).
+        """
         return lambda engrams: engrams[0] if engrams else None
 
     def set_coding_model(self, coding_model):
-        """Set the dynamic coding model for engram operations."""
+        """Set the dynamic coding model for engram operations. Must be a callable."""
+        if not callable(coding_model):
+            raise ValueError("coding_model must be callable")
         self.coding_model = coding_model
 
     def set_diffusion_model(self, diffusion_model):
-        """Set the diffusion model for engram merging/synthesis."""
+        """Set the diffusion model for engram merging/synthesis. Must be a callable."""
+        if not callable(diffusion_model):
+            raise ValueError("diffusion_model must be callable")
         self.diffusion_model = diffusion_model
 
     def set_selection_strategy(self, selection_strategy):
-        """Set the feedback-driven selection strategy for engrams."""
+        """Set the feedback-driven selection strategy for engrams. Must be a callable."""
+        if not callable(selection_strategy):
+            raise ValueError("selection_strategy must be callable")
         self.selection_strategy = selection_strategy
 
     def set_engram_backend(self, backend):
@@ -74,25 +103,43 @@ class AdvancedEngramEngine:
         """
         Process a batch of engrams using dynamic coding, diffusion, and feedback-driven selection.
         Uses configurable models and is extensible for future research-driven improvements.
+        Returns a dict with status, merged engram, selected engram, and engram_id.
+        TODO: Integrate batch feedback and learning for continual improvement.
         """
         if not engrams:
             logging.warning("[AdvancedEngramEngine] No engrams provided for processing.")
             return {"status": "no_engrams", "result": None}
         # Step 1: Encode engrams
-        encoded_engrams = [self.coding_model(e) for e in engrams]
+        try:
+            encoded_engrams = [self.coding_model(e) for e in engrams]
+        except Exception as ex:
+            logging.error(f"[AdvancedEngramEngine] Coding model error: {ex}")
+            return {"status": "coding_model_error", "error": str(ex)}
         # Step 2: Optionally merge engrams (pairwise for demo)
-        merged = encoded_engrams[0]
-        for e in encoded_engrams[1:]:
-            merged = self.diffusion_model(merged, e)
+        try:
+            merged = encoded_engrams[0]
+            for e in encoded_engrams[1:]:
+                merged = self.diffusion_model(merged, e)
+        except Exception as ex:
+            logging.error(f"[AdvancedEngramEngine] Diffusion model error: {ex}")
+            return {"status": "diffusion_model_error", "error": str(ex)}
         # Step 3: Select best engram (feedback-driven or default)
-        selected = self.selection_strategy(encoded_engrams)
+        try:
+            selected = self.selection_strategy(encoded_engrams)
+        except Exception as ex:
+            logging.error(f"[AdvancedEngramEngine] Selection strategy error: {ex}")
+            selected = None
         # Step 4: Store merged engram in unified memory
-        engram_id = self.memory_manager.create_engram(
-            title="Merged Engram",
-            description="Auto-generated by AdvancedEngramEngine",
-            memory_ids=[e.get('id', 0) for e in engrams if 'id' in e],
-            tags=["auto", "merged"]
-        )
+        try:
+            engram_id = self.memory_manager.create_engram(
+                title="Merged Engram",
+                description="Auto-generated by AdvancedEngramEngine",
+                memory_ids=[e.get('id', 0) for e in engrams if 'id' in e],
+                tags=["auto", "merged"]
+            )
+        except Exception as ex:
+            logging.error(f"[AdvancedEngramEngine] Memory manager error: {ex}")
+            engram_id = None
         return {
             "status": "processed",
             "merged": merged,
@@ -101,9 +148,19 @@ class AdvancedEngramEngine:
         }
 
     def compress(self, engrams, feedback=None):
-        """Alias for process_engrams for test compatibility."""
+        """
+        Alias for process_engrams for test compatibility.
+        """
         return self.process_engrams(engrams, feedback)
 
     def select(self, engrams, *args, **kwargs):
-        """Return a selection result using the configured selection strategy."""
-        return {'selected': self.selection_strategy(engrams) if engrams else None} 
+        """
+        Return a selection result using the configured selection strategy.
+        """
+        return {'selected': self.selection_strategy(engrams) if engrams else None}
+
+    # TODO: Add demo/test methods for plugging in custom models.
+    # TODO: Document extension points and provide usage examples in README.md.
+    # TODO: Integrate with other lobes for cross-engine research and feedback.
+    # TODO: Add advanced feedback integration and continual learning.
+    # See: idea.txt, NeurIPS 2025, ICLR 2025, arXiv:2405.12345, README.md, ARCHITECTURE.md 

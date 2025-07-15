@@ -40,6 +40,7 @@ try:
 except ImportError:
     requests = None
 import psutil
+import logging.handlers
 
 from .memory import MemoryManager
 from .workflow import WorkflowManager
@@ -143,7 +144,6 @@ class MCPServer:
         """Setup logging configuration."""
         logger = logging.getLogger("mcp_server")
         logger.setLevel(logging.INFO)
-        
         if not logger.handlers:
             handler = logging.StreamHandler()
             formatter = logging.Formatter(
@@ -151,7 +151,12 @@ class MCPServer:
             )
             handler.setFormatter(formatter)
             logger.addHandler(handler)
-        
+            # Add file handler for persistent logs
+            file_handler = logging.handlers.RotatingFileHandler(
+                "mcp.log", maxBytes=2*1024*1024, backupCount=3
+            )
+            file_handler.setFormatter(formatter)
+            logger.addHandler(file_handler)
         return logger
     
     def _initialize_feedback_model(self) -> Dict[str, Any]:

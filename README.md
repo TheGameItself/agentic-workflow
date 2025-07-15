@@ -904,4 +904,26 @@ The project is designed to be portable and can work with system Python or any vi
 - See `idea.txt` and `TODO_DEVELOPMENT_PLAN.md` for the guiding vision and roadmap.
 - For details, see code comments and docstrings in each module.
 
+## 🐞 Debugging Workflow & Best Practices (2025)
+
+### Modern Debugging Tools
+- **debugpy**: Seamless debugging in VSCode and other editors via the Debug Adapter Protocol. To debug, prefix your Python command with `debugpy` (e.g., `debugpy --listen 5678 src/mcp/cli.py`).
+- **Explicit Exception Handling**: Always specify exception types (avoid bare `except:`) for safer, more maintainable code. See [PEP 760](https://peps.python.org/pep-0760/).
+- **Static Analysis**:
+  - **Vulture**: Detects unused code and methods.
+  - **Eradicate**: Removes junk and commented-out code.
+  - **Ruff**: Fast, comprehensive linter and formatter (optional, see [Ruff](https://github.com/charliermarsh/ruff)).
+  - **mypy**: Static type checking for robust, maintainable code.
+
+### Recommended Workflow
+1. **Run tests**: `python -m pytest` (or use the provided test scripts).
+2. **Run static analysis**: `vulture src/`, `eradicate src/`, `ruff check src/`, `mypy src/`.
+3. **Debug with debugpy**: `debugpy --listen 5678 src/mcp/cli.py` and attach your IDE.
+4. **Review and fix all warnings/errors before committing.**
+
+### Why?
+- Ensures code is robust, maintainable, and easy to debug.
+- Aligns with latest research and best practices for agentic, research-driven Python projects.
+- Required for full alignment with `idea.txt` and project vision.
+
 ---

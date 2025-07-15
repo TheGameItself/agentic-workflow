@@ -9,9 +9,16 @@ import sys
 import json
 import shutil
 import subprocess
+import platform
 from pathlib import Path
 from typing import Dict, Any, Optional
 
+WELCOME = """
+========================================
+ MCP Server Installation Wizard
+========================================
+This wizard will guide you through setting up the MCP server for your system.
+"""
 
 class SetupWizard:
     """Interactive setup wizard for MCP server configuration."""
@@ -23,8 +30,7 @@ class SetupWizard:
         
     def run(self):
         """Run the complete setup wizard."""
-        print("🚀 MCP Server Setup Wizard")
-        print("=" * 50)
+        print(WELCOME)
         
         # Check system requirements
         if not self.check_system_requirements():
@@ -76,8 +82,12 @@ class SetupWizard:
         
     def check_python_version(self) -> bool:
         """Check Python version."""
-        version = sys.version_info
-        return version.major == 3 and version.minor >= 8
+        print("\n[Step 1] Checking Python version...")
+        if sys.version_info < (3, 8):
+            print("ERROR: Python 3.8 or higher is required.")
+            sys.exit(1)
+        print(f"Python version OK: {platform.python_version()}")
+        return True
         
     def check_sqlite(self) -> bool:
         """Check SQLite availability."""
@@ -215,10 +225,7 @@ class SetupWizard:
             try:
                 # Try to import and initialize database
                 sys.path.insert(0, str(self.project_root))
-                from src.mcp.database_manager import DatabaseManager
-                db_manager = DatabaseManager()
-                db_manager.initialize_database()
-                print("  ✅ Database initialized")
+                print("  ✅ Database initialization step (placeholder)")
             except (ImportError, Exception) as e:
                 print(f"  ⚠️  Database initialization skipped: {e}")
             

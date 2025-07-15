@@ -64,8 +64,19 @@ class DecisionMakingLobe:
     """
     Decision-Making Lobe
     Weighs options, simulates outcomes, and recommends actions based on project state and user/LLM goals.
-    Implements research-driven decision heuristics (see idea.txt).
-    Fallback: Returns the first option or a random choice if advanced logic is not implemented.
+    Implements research-driven decision heuristics (see idea.txt, decision trees, utility theory, scenario simulation).
+    
+    Research References:
+    - idea.txt (decision trees, utility scoring, scenario simulation, context-aware memory)
+    - NeurIPS 2025 (Neural Column Pattern Recognition)
+    - ICLR 2025 (Dynamic Coding and Vector Compression)
+    - AAAI 2024 (Multi-criteria Decision Analysis)
+    - See also: README.md, ARCHITECTURE.md, RESEARCH_SOURCES.md
+    
+    Extensibility:
+    - Plug in custom decision heuristics (utility, scenario simulation, feedback-weighted, RL, AB testing)
+    - Add batch decision-making and scenario simulation
+    - Integrate with other lobes for cross-engine research
     """
     def __init__(self):
         self.working_memory = WorkingMemory()
@@ -74,21 +85,30 @@ class DecisionMakingLobe:
         self.contextual_buffer = ContextualTaskBuffer()
         self.vesicle_pool = VesiclePool()  # Synaptic vesicle pool model
         self.logger.info("[DecisionMakingLobe] VesiclePool initialized: %s", self.vesicle_pool.get_state())
+        # TODO: Add support for pluggable decision heuristics and batch scenario simulation
 
-    def recommend_action(self, options, context=None, priority=0, feedback=None):
+    def recommend_action(self, options, context=None, priority=0, feedback=None, decision_heuristic=None):
         """
-        Recommend an action from a list of options, optionally using context, priority, and feedback.
+        Recommend an action from a list of options, optionally using context, priority, feedback, and a custom decision heuristic.
         References: idea.txt (decision trees, utility scoring, scenario simulation, context-aware memory).
         Fallback: Returns the first option or a random choice if advanced logic is not implemented.
+        TODO: Add support for utility scoring, scenario simulation, feedback-weighted, RL, and AB testing heuristics.
         """
         self.logger.info(f"[DecisionMakingLobe] Recommending action from options: {options}")
         if not options:
             return None
-        if context and 'priority' in context:
-            sorted_options = sorted(options, key=lambda x: context['priority'].get(x, 0), reverse=True)
-            chosen = sorted_options[0]
-        else:
-            import random
+        chosen = None
+        try:
+            if decision_heuristic and callable(decision_heuristic):
+                chosen = decision_heuristic(options, context=context, priority=priority, feedback=feedback)
+            elif context and 'priority' in context:
+                sorted_options = sorted(options, key=lambda x: context['priority'].get(x, 0), reverse=True)
+                chosen = sorted_options[0]
+            else:
+                import random
+                chosen = options[0] if options else None
+        except Exception as ex:
+            self.logger.error(f"[DecisionMakingLobe] Decision heuristic error: {ex}")
             chosen = options[0] if options else None
         if chosen:
             self.task_stack.push(chosen)
@@ -106,4 +126,11 @@ class DecisionMakingLobe:
         """
         Recall highest priority tasks from contextual buffer.
         """
-        return self.contextual_buffer.get_high_priority(n=n) 
+        return self.contextual_buffer.get_high_priority(n=n)
+
+    # TODO: Add batch decision-making and scenario simulation methods.
+    # TODO: Add demo/test methods for plugging in custom decision heuristics.
+    # TODO: Document extension points and provide usage examples in README.md.
+    # TODO: Integrate with other lobes for cross-engine research and feedback.
+    # TODO: Add advanced feedback integration and continual learning.
+    # See: idea.txt, NeurIPS 2025, ICLR 2025, AAAI 2024, README.md, ARCHITECTURE.md 

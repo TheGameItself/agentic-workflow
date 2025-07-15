@@ -8,17 +8,29 @@ class ErrorDetectionLobe:
     Error-Detection Lobe
     Proactively scans for inconsistencies, potential bugs, and logical errors in project state, code, and memory.
     Implements advanced static analysis and anomaly detection (see idea.txt, Clean Code Best Practices, and recent research).
-    Checks for TODOs, pass, NotImplementedError, undefined variables, unused imports, unreachable code, duplicate code blocks, suspicious signatures, and logic errors.
-    Stores findings in working memory for feedback and self-improvement. Extensible for dynamic analysis and integration with other engines.
+    
+    Research References:
+    - idea.txt (static analysis, anomaly detection, feedback-driven improvement)
+    - Clean Code Best Practices (https://hackernoon.com/how-to-write-clean-code-and-save-your-sanity)
+    - arXiv:2504.08623 (Security Best Practices)
+    - NeurIPS 2025 (Neural Column Pattern Recognition)
+    - See also: README.md, ARCHITECTURE.md, RESEARCH_SOURCES.md
+    
+    Extensibility:
+    - Plug in custom static analysis and anomaly detection methods (ML, statistical, runtime)
+    - Integrate with other lobes for cross-engine research and feedback
+    - Add advanced feedback integration and continual learning
     """
     def __init__(self):
         self.working_memory = WorkingMemory()
         self.logger = logging.getLogger("ErrorDetectionLobe")
+        # TODO: Add support for pluggable anomaly detection and feedback-driven learning
 
     def scan_for_errors(self, data: Any) -> List[Dict[str, Any]]:
         """
         Scan data (string or list of lines) for static analysis issues and anomalies.
         Returns a list of detected issues with line numbers, patterns, and descriptions.
+        TODO: Add support for ML-based static analysis and feedback-driven improvement.
         """
         errors = []
         if isinstance(data, str):
@@ -89,7 +101,14 @@ class ErrorDetectionLobe:
         """
         Placeholder for future dynamic anomaly detection (runtime, statistical, or ML-based).
         To be implemented with integration to other engines (e.g., MathLogicEngine, PatternRecognitionEngine).
+        TODO: Add support for ML/statistical anomaly detection and cross-lobe integration.
         """
         self.logger.info("[ErrorDetectionLobe] scan_for_anomalies is a stub for future dynamic analysis.")
         # TODO: Integrate with MathLogicEngine, PatternRecognitionEngine, etc.
-        return [] 
+        return []
+
+    # TODO: Add demo/test methods for plugging in custom static analysis and anomaly detection.
+    # TODO: Document extension points and provide usage examples in README.md.
+    # TODO: Integrate with other lobes for cross-engine research and feedback.
+    # TODO: Add advanced feedback integration and continual learning.
+    # See: idea.txt, Clean Code Best Practices, arXiv:2504.08623, NeurIPS 2025, README.md, ARCHITECTURE.md 

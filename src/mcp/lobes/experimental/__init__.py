@@ -1,5 +1,6 @@
 # Experimental lobes package for MCP
-# Each lobe should be in its own module for modularity and clarity
+# Modular plug-and-play architecture: Each lobe is a fully independent module with clear interfaces and research references.
+# See idea.txt and latest research for requirements and design principles.
 
 __all__ = [
     "AlignmentEngine",
@@ -29,30 +30,15 @@ from .multi_llm_orchestrator.multi_llm_orchestrator import MultiLLMOrchestrator
 from .sensory_column.sensory_column import SensoryColumn
 from .spinal_cord.spinal_cord import SpinalCord
 from .dreaming_engine import DreamingEngine
+from .simulated_reality import SimulatedReality
+from src.mcp.lobes.alignment_engine import AlignmentEngine
+from src.mcp.lobes.pattern_recognition_engine import PatternRecognitionEngine
 
-# Stubs for missing experimental lobes and utilities
-class AlignmentEngine:
-    """Stub for AlignmentEngine. TODO: Implement per idea.txt."""
-    pass
-
-class SimulatedReality:
-    """Stub for SimulatedReality lobe. Implements simulated external reality for deep reasoning. TODO: Expand per idea.txt requirements."""
-    def __init__(self, *args, **kwargs):
-        pass
-    def simulate(self, input_data=None):
-        """Minimal simulation method (stub)."""
-        return {"status": "stub", "result": None}
-
-class PatternRecognitionEngine:
-    """Stub for PatternRecognitionEngine. See src/mcp/lobes/pattern_recognition_engine.py for full implementation. Refer to idea.txt for requirements."""
-    pass
-
-class DreamingEngine:
-    """Stub for DreamingEngine. Implements alternative scenario simulation and learning from dreams. TODO: Expand per idea.txt requirements."""
-    def __init__(self, *args, **kwargs):
-        pass
-    def dream(self, input_data=None):
-        """Minimal dream simulation method (stub)."""
-        return {"status": "stub", "result": None}
-
-# Remove imports of missing modules to resolve circular import errors
+# In-place stubs for missing lobes (should be modularized in the future if not already present as modules)
+# class AlignmentEngine:
+#     """Stub for AlignmentEngine. See idea.txt and [Deep Research Agents, arXiv:2506.18096]."""
+#     pass
+#
+# class PatternRecognitionEngine:
+#     """Stub for PatternRecognitionEngine. See idea.txt and [Python Agentic Frameworks, Medium 2025]."""
+#     pass

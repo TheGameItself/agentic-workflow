@@ -134,94 +134,22 @@ class PortableEnvironmentBuilder:
             if Path(file).exists():
                 shutil.copy2(file, self.output_dir)
         
-    def _create_launchers(self):
-        """Create launcher scripts for different platforms."""
-        print("Creating launcher scripts...")
-        
-        # Create main launcher
-        launcher_content = self._get_launcher_content()
-        
-        if self.platform == "windows":
-            # Windows batch file
-            launcher_path = self.output_dir / "start_mcp.bat"
-            with open(launcher_path, 'w') as f:
-                f.write(launcher_content['windows'])
-            
-            # PowerShell script
-            ps_path = self.output_dir / "start_mcp.ps1"
-            with open(ps_path, 'w') as f:
-                f.write(launcher_content['powershell'])
-                
-        else:
-            # Unix shell script
-            launcher_path = self.output_dir / "start_mcp.sh"
-            with open(launcher_path, 'w') as f:
-                f.write(launcher_content['unix'])
-            
-            # Make executable
-            os.chmod(launcher_path, 0o755)
-        
-        # Create MCP server launcher
-        mcp_launcher = self._get_mcp_launcher_content()
-        mcp_path = self.output_dir / "mcp_server.py"
-        with open(mcp_path, 'w') as f:
-            f.write(mcp_launcher)
-        
-    def _get_launcher_content(self) -> Dict[str, str]:
-        """Get launcher script content for different platforms."""
-        return {
-            'windows': '''@echo off
-echo Starting MCP Server...
-cd /d "%~dp0"
-python_env\\Scripts\\python.exe mcp_server.py
-pause
-''',
-            'powershell': '''# PowerShell launcher for MCP Server
-Write-Host "Starting MCP Server..." -ForegroundColor Green
-Set-Location $PSScriptRoot
-& "python_env\\Scripts\\python.exe" "mcp_server.py"
-''',
-            'unix': '''#!/bin/bash
-echo "Starting MCP Server..."
+    def _create_launchers(self) -> str:
+        """Create launcher scripts for the portable environment."""
+        launcher_sh = self.output_dir / "start_mcp.sh"
+        launcher_content = '''#!/bin/bash
+echo "Starting MCP Agentic Workflow Accelerator..."
 cd "$(dirname "$0")"
-./python_env/bin/python mcp_server.py
+if [ -f ./mcp_agentic_workflow ]; then
+    ./mcp_agentic_workflow "$@"
+else
+    python3 mcp_cli.py "$@"
+fi
 '''
-        }
-    
-    def _get_mcp_launcher_content(self) -> str:
-        """Get the main MCP server launcher content."""
-        return '''#!/usr/bin/env python3
-"""
-MCP Server Launcher for Portable Environment
-"""
-
-import sys
-import os
-from pathlib import Path
-
-# Add the src directory to Python path
-src_path = Path(__file__).parent / "src"
-sys.path.insert(0, str(src_path))
-
-# Set up environment
-os.environ["MCP_PORTABLE"] = "1"
-os.environ["MCP_DATA_DIR"] = str(Path(__file__).parent / "data")
-
-# Import and run MCP server
-try:
-    from mcp.server import MCPServer
-    from mcp.cli import main
-    
-    if __name__ == "__main__":
-        main()
-except ImportError as e:
-    print(f"Error importing MCP server: {e}")
-    print("Please ensure all dependencies are installed.")
-    sys.exit(1)
-except Exception as e:
-    print(f"Error starting MCP server: {e}")
-    sys.exit(1)
-'''
+        with open(launcher_sh, 'w') as f:
+            f.write(launcher_content)
+        os.chmod(launcher_sh, 0o755)
+        return str(launcher_sh)
     
     def _create_config(self):
         """Create default configuration."""

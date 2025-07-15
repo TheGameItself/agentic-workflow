@@ -6,6 +6,7 @@ import sys
 import asyncio
 import json
 import datetime
+import time
 
 from .memory import MemoryManager
 from .workflow import WorkflowManager
@@ -20,6 +21,7 @@ from .performance_monitor import ObjectivePerformanceMonitor
 from .rag_system import RAGSystem
 from .reminder_engine import EnhancedReminderEngine
 from .advanced_memory import TFIDFEncoder, RaBitQEncoder
+from .server import MCPServer
 
 FEATURE_FLAGS: Final[Dict[str, bool]] = {
     'experimental_lobes': False,
@@ -30,6 +32,11 @@ FEATURE_FLAGS: Final[Dict[str, bool]] = {
 }
 
 REALITY_PATH: Final[str] = 'data/simulated_reality.json'
+
+# Initialize MCPServer to ensure logging is set up for all CLI commands
+mcp_server = MCPServer()
+logger = mcp_server.logger
+logger.info('[MCP CLI] Logger initialized and ready (test log to trigger mcp.log creation).')
 
 def find_project_root(start_path=None):
     """Walk up directories to find the project root (where config.cfg or .mcp exists)."""
@@ -2464,6 +2471,42 @@ def search_docs(query, mode, max_results):
     click.echo(f"[MCP] Search results for '{query}':")
     for idx, r in enumerate(results):
         click.echo(f"[{idx+1}] {r}")
+
+@cli.command()
+@click.option('--lines', default=20, help='Number of lines to show from the end of the log file')
+@click.option('--follow', is_flag=True, help='Follow the log file (like tail -f)')
+@click.option('--level', default=None, type=click.Choice(['DEBUG', 'INFO', 'WARNING', 'ERROR']), help='Filter by log level')
+def tail_logs(lines, follow, level):
+    """Tail the MCP log file (mcp.log in project root)."""
+    log_path = os.path.join(os.getcwd(), 'mcp.log')
+    if not os.path.exists(log_path):
+        click.echo('[MCP] No log file found at mcp.log. If logging to file is not enabled, please enable it in the server configuration.')
+        return
+    def filter_lines(log_lines):
+        if not level:
+            return log_lines
+        prefix = f"{level}:"
+        return [l for l in log_lines if f"{level}" in l]
+    with open(log_path, 'r') as f:
+        f.seek(0, os.SEEK_END)
+        filesize = f.tell()
+        f.seek(max(filesize - 8192, 0), os.SEEK_SET)
+        lines_list = f.readlines()
+        lines_list = filter_lines(lines_list)
+        click.echo(''.join(lines_list[-lines:]))
+        if follow:
+            try:
+                while True:
+                    where = f.tell()
+                    line = f.readline()
+                    if not line:
+                        time.sleep(0.5)
+                        f.seek(where)
+                    else:
+                        if not level or level in line:
+                            click.echo(line, nl=False)
+            except KeyboardInterrupt:
+                click.echo('\n[MCP] Log tailing stopped.')
 
 if __name__ == '__main__':
     cli() 

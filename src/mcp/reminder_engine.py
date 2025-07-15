@@ -9,11 +9,14 @@ import json
 import os
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
+import logging
+
+logger = logging.getLogger("reminder_engine")
 
 class EnhancedReminderEngine:
     """Enhanced reminder engine with advanced scheduling algorithms."""
     
-    def __init__(self, db_path: str = None):
+    def __init__(self, db_path: Optional[str] = None) -> None:
         """Initialize the reminder engine."""
         if db_path is None:
             current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -21,228 +24,261 @@ class EnhancedReminderEngine:
             data_dir = os.path.join(project_root, 'data')
             os.makedirs(data_dir, exist_ok=True)
             db_path = os.path.join(data_dir, 'unified_memory.db')
-        
-        self.db_path = db_path
+        self.db_path: str = str(db_path)
         self._init_reminder_database()
     
-    def _init_reminder_database(self):
+    def _init_reminder_database(self) -> None:
         """Initialize reminder-specific database tables."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        # Enhanced reminders table
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS enhanced_reminders (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                memory_id INTEGER,
-                task_id INTEGER,
-                reminder_type TEXT,
-                trigger_conditions TEXT,
-                next_reminder TIMESTAMP,
-                reminder_count INTEGER DEFAULT 0,
-                last_triggered TIMESTAMP,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                effectiveness_score REAL DEFAULT 0.0,
-                user_feedback_history TEXT,
-                easiness_factor REAL DEFAULT 2.5,
-                context_history TEXT,
-                FOREIGN KEY (memory_id) REFERENCES advanced_memories (id)
-            )
-        """)
-        
-        # Context patterns table
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS context_patterns (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                pattern_type TEXT,
-                pattern_data TEXT,
-                confidence REAL DEFAULT 1.0,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-        
-        # User retention rates table
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS user_retention_rates (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id TEXT,
-                content_type TEXT,
-                retention_rate REAL DEFAULT 0.5,
-                sample_count INTEGER DEFAULT 0,
-                last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-        
-        conn.commit()
-        conn.close()
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            # Enhanced reminders table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS enhanced_reminders (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    memory_id INTEGER,
+                    task_id INTEGER,
+                    reminder_type TEXT,
+                    trigger_conditions TEXT,
+                    next_reminder TIMESTAMP,
+                    reminder_count INTEGER DEFAULT 0,
+                    last_triggered TIMESTAMP,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    effectiveness_score REAL DEFAULT 0.0,
+                    user_feedback_history TEXT,
+                    easiness_factor REAL DEFAULT 2.5,
+                    context_history TEXT,
+                    FOREIGN KEY (memory_id) REFERENCES advanced_memories (id)
+                )
+            """)
+            
+            # Context patterns table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS context_patterns (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    pattern_type TEXT,
+                    pattern_data TEXT,
+                    confidence REAL DEFAULT 1.0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            # User retention rates table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS user_retention_rates (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id TEXT,
+                    content_type TEXT,
+                    retention_rate REAL DEFAULT 0.5,
+                    sample_count INTEGER DEFAULT 0,
+                    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            conn.commit()
+        except Exception as e:
+            logger.error(f"Failed to initialize reminder database: {e}")
+        finally:
+            if 'conn' in locals():
+                conn.close()
     
     def create_spaced_repetition_reminder(self, memory_id: int, initial_interval_hours: int = 24) -> int:
         """Create a spaced repetition reminder for a memory."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        next_reminder = datetime.now() + timedelta(hours=initial_interval_hours)
-        
-        cursor.execute("""
-            INSERT INTO enhanced_reminders 
-            (memory_id, reminder_type, next_reminder, easiness_factor)
-            VALUES (?, ?, ?, ?)
-        """, (memory_id, 'spaced_repetition', next_reminder, 2.5))
-        
-        reminder_id = cursor.lastrowid
-        conn.commit()
-        conn.close()
-        
-        return reminder_id
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            next_reminder = datetime.now() + timedelta(hours=initial_interval_hours)
+            
+            cursor.execute("""
+                INSERT INTO enhanced_reminders 
+                (memory_id, reminder_type, next_reminder, easiness_factor)
+                VALUES (?, ?, ?, ?)
+            """, (memory_id, 'spaced_repetition', next_reminder, 2.5))
+            
+            reminder_id = cursor.lastrowid
+            conn.commit()
+            logger.info(f"Created spaced repetition reminder for memory_id={memory_id}, id={reminder_id}")
+            return int(reminder_id) if reminder_id is not None else -1
+        except Exception as e:
+            logger.error(f"Failed to create spaced repetition reminder: {e}")
+            return -1
+        finally:
+            if 'conn' in locals():
+                conn.close()
     
     def create_context_aware_reminder(self, memory_id: int, context_keywords: List[str], 
-                                    trigger_context: str = None) -> int:
+                                    trigger_context: Optional[str] = None) -> int:
         """Create a context-aware reminder."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        trigger_conditions = {
-            'context_keywords': context_keywords,
-            'trigger_context': trigger_context,
-            'type': 'context_aware'
-        }
-        
-        cursor.execute("""
-            INSERT INTO enhanced_reminders 
-            (memory_id, reminder_type, trigger_conditions, next_reminder)
-            VALUES (?, ?, ?, ?)
-        """, (memory_id, 'context_aware', json.dumps(trigger_conditions), datetime.now()))
-        
-        reminder_id = cursor.lastrowid
-        conn.commit()
-        conn.close()
-        
-        return reminder_id
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            trigger_conditions = {
+                'context_keywords': context_keywords,
+                'trigger_context': trigger_context,
+                'type': 'context_aware'
+            }
+            
+            cursor.execute("""
+                INSERT INTO enhanced_reminders 
+                (memory_id, reminder_type, trigger_conditions, next_reminder)
+                VALUES (?, ?, ?, ?)
+            """, (memory_id, 'context_aware', json.dumps(trigger_conditions), datetime.now()))
+            
+            reminder_id = cursor.lastrowid
+            conn.commit()
+            logger.info(f"Created context-aware reminder for memory_id={memory_id}, id={reminder_id}")
+            return int(reminder_id) if reminder_id is not None else -1
+        except Exception as e:
+            logger.error(f"Failed to create context-aware reminder: {e}")
+            return -1
+        finally:
+            if 'conn' in locals():
+                conn.close()
     
     def create_adaptive_reminder(self, memory_id: int, base_interval_hours: int = 24,
                                adaptation_factor: float = 1.0) -> int:
         """Create an adaptive reminder that adjusts based on user feedback."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        # Calculate initial interval based on adaptation factor
-        initial_interval = base_interval_hours * adaptation_factor
-        next_reminder = datetime.now() + timedelta(hours=initial_interval)
-        
-        trigger_conditions = {
-            'base_interval_hours': base_interval_hours,
-            'adaptation_factor': adaptation_factor,
-            'type': 'adaptive'
-        }
-        
-        cursor.execute("""
-            INSERT INTO enhanced_reminders 
-            (memory_id, reminder_type, trigger_conditions, next_reminder, easiness_factor)
-            VALUES (?, ?, ?, ?, ?)
-        """, (memory_id, 'adaptive', json.dumps(trigger_conditions), next_reminder, 2.5))
-        
-        reminder_id = cursor.lastrowid
-        conn.commit()
-        conn.close()
-        
-        return reminder_id
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            # Calculate initial interval based on adaptation factor
+            initial_interval = base_interval_hours * adaptation_factor
+            next_reminder = datetime.now() + timedelta(hours=initial_interval)
+            
+            trigger_conditions = {
+                'base_interval_hours': base_interval_hours,
+                'adaptation_factor': adaptation_factor,
+                'type': 'adaptive'
+            }
+            
+            cursor.execute("""
+                INSERT INTO enhanced_reminders 
+                (memory_id, reminder_type, trigger_conditions, next_reminder, easiness_factor)
+                VALUES (?, ?, ?, ?, ?)
+            """, (memory_id, 'adaptive', json.dumps(trigger_conditions), next_reminder, 2.5))
+            
+            reminder_id = cursor.lastrowid
+            conn.commit()
+            logger.info(f"Created adaptive reminder for memory_id={memory_id}, id={reminder_id}")
+            return int(reminder_id) if reminder_id is not None else -1
+        except Exception as e:
+            logger.error(f"Failed to create adaptive reminder: {e}")
+            return -1
+        finally:
+            if 'conn' in locals():
+                conn.close()
     
     def create_task_reminder(self, task_id: int, interval_hours: int = 24, reminder_type: str = 'task_feedback', trigger_conditions: Optional[dict] = None) -> int:
         """Create a reminder directly linked to a task (not just memory)."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        next_reminder = datetime.now() + timedelta(hours=interval_hours)
-        trigger_conditions_json = json.dumps(trigger_conditions) if trigger_conditions is not None else '{}'
-        cursor.execute(
-            """
-            INSERT INTO enhanced_reminders 
-            (task_id, reminder_type, trigger_conditions, next_reminder, easiness_factor)
-            VALUES (?, ?, ?, ?, ?)
-            """,
-            (int(task_id), str(reminder_type), trigger_conditions_json, next_reminder, 2.5)
-        )
-        reminder_id = cursor.lastrowid
-        conn.commit()
-        conn.close()
-        return int(reminder_id)
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            next_reminder = datetime.now() + timedelta(hours=interval_hours)
+            trigger_conditions_json = json.dumps(trigger_conditions) if trigger_conditions is not None else '{}'
+            cursor.execute(
+                """
+                INSERT INTO enhanced_reminders 
+                (task_id, reminder_type, trigger_conditions, next_reminder, easiness_factor)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (int(task_id), str(reminder_type), trigger_conditions_json, next_reminder, 2.5)
+            )
+            reminder_id = cursor.lastrowid
+            conn.commit()
+            logger.info(f"Created task reminder for task_id={task_id}, id={reminder_id}")
+            return int(reminder_id) if reminder_id is not None else -1
+        except Exception as e:
+            logger.error(f"Failed to create task reminder: {e}")
+            return -1
+        finally:
+            if 'conn' in locals():
+                conn.close()
     
-    def check_due_reminders(self, current_context: str = None) -> List[Dict[str, Any]]:
+    def check_due_reminders(self, current_context: Optional[str] = None) -> List[Dict[str, Any]]:
         """Check for due reminders, including context-aware ones."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        due_reminders = []
-        
-        # Check time-based reminders
-        cursor.execute("""
-            SELECT r.id, r.memory_id, r.reminder_type, r.reminder_count,
-                   r.easiness_factor, r.trigger_conditions, r.next_reminder,
-                   m.text, m.memory_type, m.category
-            FROM enhanced_reminders r
-            JOIN advanced_memories m ON r.memory_id = m.id
-            WHERE r.next_reminder <= ? AND r.reminder_type IN ('spaced_repetition', 'adaptive')
-        """, (datetime.now(),))
-        
-        time_based_reminders = cursor.fetchall()
-        
-        for reminder in time_based_reminders:
-            reminder_id, memory_id, reminder_type, reminder_count, easiness_factor, \
-            trigger_conditions, next_reminder, text, memory_type, category = reminder
+        due_reminders: List[Dict[str, Any]] = []
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
             
-            due_reminders.append({
-                'reminder_id': reminder_id,
-                'memory_id': memory_id,
-                'reminder_type': reminder_type,
-                'reminder_count': reminder_count,
-                'easiness_factor': easiness_factor,
-                'text': text,
-                'memory_type': memory_type,
-                'category': category,
-                'trigger_reason': 'time_based'
-            })
-        
-        # Check context-aware reminders if context is provided
-        if current_context:
+            # Check time-based reminders
             cursor.execute("""
                 SELECT r.id, r.memory_id, r.reminder_type, r.reminder_count,
                        r.easiness_factor, r.trigger_conditions, r.next_reminder,
                        m.text, m.memory_type, m.category
                 FROM enhanced_reminders r
                 JOIN advanced_memories m ON r.memory_id = m.id
-                WHERE r.reminder_type = 'context_aware'
-            """)
+                WHERE r.next_reminder <= ? AND r.reminder_type IN ('spaced_repetition', 'adaptive')
+            """, (datetime.now(),))
             
-            context_reminders = cursor.fetchall()
+            time_based_reminders = cursor.fetchall()
             
-            for reminder in context_reminders:
+            for reminder in time_based_reminders:
                 reminder_id, memory_id, reminder_type, reminder_count, easiness_factor, \
                 trigger_conditions, next_reminder, text, memory_type, category = reminder
                 
-                try:
-                    conditions = json.loads(trigger_conditions)
-                    context_keywords = conditions.get('context_keywords', [])
-                    
-                    # Check if current context matches any keywords
-                    context_lower = current_context.lower()
-                    if any(keyword.lower() in context_lower for keyword in context_keywords):
-                        due_reminders.append({
-                            'reminder_id': reminder_id,
-                            'memory_id': memory_id,
-                            'reminder_type': reminder_type,
-                            'reminder_count': reminder_count,
-                            'easiness_factor': easiness_factor,
-                            'text': text,
-                            'memory_type': memory_type,
-                            'category': category,
-                            'trigger_reason': 'context_match',
-                            'matched_keywords': [kw for kw in context_keywords if kw.lower() in context_lower]
-                        })
+                due_reminders.append({
+                    'reminder_id': reminder_id,
+                    'memory_id': memory_id,
+                    'reminder_type': reminder_type,
+                    'reminder_count': reminder_count,
+                    'easiness_factor': easiness_factor,
+                    'text': text,
+                    'memory_type': memory_type,
+                    'category': category,
+                    'trigger_reason': 'time_based'
+                })
+            
+            # Check context-aware reminders if context is provided
+            if current_context:
+                cursor.execute("""
+                    SELECT r.id, r.memory_id, r.reminder_type, r.reminder_count,
+                           r.easiness_factor, r.trigger_conditions, r.next_reminder,
+                           m.text, m.memory_type, m.category
+                    FROM enhanced_reminders r
+                    JOIN advanced_memories m ON r.memory_id = m.id
+                    WHERE r.reminder_type = 'context_aware'
+                """)
                 
-                except (json.JSONDecodeError, KeyError):
-                    continue
-        
-        conn.close()
-        return due_reminders
+                context_reminders = cursor.fetchall()
+                
+                for reminder in context_reminders:
+                    reminder_id, memory_id, reminder_type, reminder_count, easiness_factor, \
+                    trigger_conditions, next_reminder, text, memory_type, category = reminder
+                    
+                    try:
+                        conditions = json.loads(trigger_conditions)
+                        context_keywords = conditions.get('context_keywords', [])
+                        
+                        # Check if current context matches any keywords
+                        context_lower = current_context.lower()
+                        if any(keyword.lower() in context_lower for keyword in context_keywords):
+                            due_reminders.append({
+                                'reminder_id': reminder_id,
+                                'memory_id': memory_id,
+                                'reminder_type': reminder_type,
+                                'reminder_count': reminder_count,
+                                'easiness_factor': easiness_factor,
+                                'text': text,
+                                'memory_type': memory_type,
+                                'category': category,
+                                'trigger_reason': 'context_match',
+                                'matched_keywords': [kw for kw in context_keywords if kw.lower() in context_lower]
+                            })
+                    
+                    except (json.JSONDecodeError, KeyError):
+                        continue
+            return due_reminders
+        except Exception as e:
+            logger.error(f"Failed to check due reminders: {e}")
+            return []
+        finally:
+            if 'conn' in locals():
+                conn.close()
     
     def process_reminder_feedback(self, reminder_id: int, feedback_score: int, response_time_seconds: int = 0) -> bool:
         """
@@ -250,67 +286,73 @@ class EnhancedReminderEngine:
         Implements dynamic self-tuning of reminder intervals and effectiveness scores based on user feedback and performance metrics.
         See idea.txt line 185: all non-user-editable settings should be dynamically adjusting with all useful metrics.
         """
-        # feedback_score: 1-5 (1=forgot, 5=remembered perfectly)
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        # Get current reminder data
-        cursor.execute("""
-            SELECT memory_id, reminder_type, reminder_count, easiness_factor, 
-                   trigger_conditions, effectiveness_score, user_feedback_history
-            FROM enhanced_reminders WHERE id = ?
-        """, (reminder_id,))
-        
-        row = cursor.fetchone()
-        if not row:
-            conn.close()
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            # Get current reminder data
+            cursor.execute("""
+                SELECT memory_id, reminder_type, reminder_count, easiness_factor, 
+                       trigger_conditions, effectiveness_score, user_feedback_history
+                FROM enhanced_reminders WHERE id = ?
+            """, (reminder_id,))
+            
+            row = cursor.fetchone()
+            if not row:
+                conn.close()
+                return False
+            
+            memory_id, reminder_type, reminder_count, easiness_factor, \
+            trigger_conditions, effectiveness_score, feedback_history_json = row
+            
+            # Update feedback history
+            feedback_history = json.loads(feedback_history_json) if feedback_history_json else []
+            feedback_entry = {
+                'timestamp': datetime.now().isoformat(),
+                'score': feedback_score,
+                'response_time': response_time_seconds or 0
+            }
+            feedback_history.append(feedback_entry)
+            
+            # Update effectiveness score
+            new_effectiveness = self._calculate_effectiveness_score(feedback_history)
+            
+            # Calculate next reminder interval based on feedback
+            if reminder_type == 'spaced_repetition':
+                new_interval = self._calculate_spaced_repetition_interval(
+                    feedback_score, reminder_count, easiness_factor
+                )
+            elif reminder_type == 'adaptive':
+                new_interval = self._calculate_adaptive_interval(
+                    feedback_score, reminder_count, easiness_factor, trigger_conditions, reminder_id
+                )
+            else:
+                new_interval = 24  # Default 24 hours
+            
+            # Update easiness factor (SuperMemo algorithm)
+            new_easiness = self._update_easiness_factor(easiness_factor, feedback_score)
+            
+            # Schedule next reminder
+            next_reminder = datetime.now() + timedelta(hours=new_interval)
+            
+            # Update reminder
+            cursor.execute("""
+                UPDATE enhanced_reminders 
+                SET reminder_count = ?, easiness_factor = ?, next_reminder = ?,
+                    effectiveness_score = ?, user_feedback_history = ?, last_triggered = ?
+                WHERE id = ?
+            """, (reminder_count + 1, new_easiness, next_reminder, 
+                  new_effectiveness, json.dumps(feedback_history), datetime.now(), reminder_id))
+            
+            conn.commit()
+            logger.info(f"Processed feedback for reminder_id={reminder_id}, score={feedback_score}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to process feedback for reminder_id={reminder_id}: {e}")
             return False
-        
-        memory_id, reminder_type, reminder_count, easiness_factor, \
-        trigger_conditions, effectiveness_score, feedback_history_json = row
-        
-        # Update feedback history
-        feedback_history = json.loads(feedback_history_json) if feedback_history_json else []
-        feedback_entry = {
-            'timestamp': datetime.now().isoformat(),
-            'score': feedback_score,
-            'response_time': response_time_seconds or 0
-        }
-        feedback_history.append(feedback_entry)
-        
-        # Update effectiveness score
-        new_effectiveness = self._calculate_effectiveness_score(feedback_history)
-        
-        # Calculate next reminder interval based on feedback
-        if reminder_type == 'spaced_repetition':
-            new_interval = self._calculate_spaced_repetition_interval(
-                feedback_score, reminder_count, easiness_factor
-            )
-        elif reminder_type == 'adaptive':
-            new_interval = self._calculate_adaptive_interval(
-                feedback_score, reminder_count, easiness_factor, trigger_conditions
-            )
-        else:
-            new_interval = 24  # Default 24 hours
-        
-        # Update easiness factor (SuperMemo algorithm)
-        new_easiness = self._update_easiness_factor(easiness_factor, feedback_score)
-        
-        # Schedule next reminder
-        next_reminder = datetime.now() + timedelta(hours=new_interval)
-        
-        # Update reminder
-        cursor.execute("""
-            UPDATE enhanced_reminders 
-            SET reminder_count = ?, easiness_factor = ?, next_reminder = ?,
-                effectiveness_score = ?, user_feedback_history = ?, last_triggered = ?
-            WHERE id = ?
-        """, (reminder_count + 1, new_easiness, next_reminder, 
-              new_effectiveness, json.dumps(feedback_history), datetime.now(), reminder_id))
-        
-        conn.commit()
-        conn.close()
-        return True
+        finally:
+            if 'conn' in locals():
+                conn.close()
     
     def _calculate_effectiveness_score(self, feedback_history: List[Dict[str, Any]]) -> float:
         """Calculate effectiveness score based on feedback history."""
@@ -349,7 +391,7 @@ class EnhancedReminderEngine:
         return max(interval, 1)  # Minimum 1 hour
     
     def _calculate_adaptive_interval(self, feedback_score: int, reminder_count: int,
-                                   easiness_factor: float, trigger_conditions: str) -> int:
+                                   easiness_factor: float, trigger_conditions: str, reminder_id: Optional[int] = None) -> int:
         """Calculate adaptive interval based on user performance."""
         try:
             conditions = json.loads(trigger_conditions) if trigger_conditions else {}
@@ -369,17 +411,21 @@ class EnhancedReminderEngine:
         interval = int(base_interval * adaptation_factor * easiness_factor)
         
         # Update adaptation factor in database
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        conditions['adaptation_factor'] = adaptation_factor
-        cursor.execute("""
-            UPDATE enhanced_reminders 
-            SET trigger_conditions = ? WHERE id = ?
-        """, (json.dumps(conditions), reminder_id))
-        
-        conn.commit()
-        conn.close()
+        if reminder_id is not None:
+            try:
+                conn = sqlite3.connect(self.db_path)
+                cursor = conn.cursor()
+                conditions['adaptation_factor'] = adaptation_factor
+                cursor.execute("""
+                    UPDATE enhanced_reminders 
+                    SET trigger_conditions = ? WHERE id = ?
+                """, (json.dumps(conditions), reminder_id))
+                conn.commit()
+            except Exception as e:
+                logger.error(f"Failed to update adaptation factor for reminder_id={reminder_id}: {e}")
+            finally:
+                if 'conn' in locals():
+                    conn.close()
         
         return max(interval, 1)
     
@@ -523,8 +569,11 @@ class EnhancedReminderEngine:
         conn.commit()
         conn.close()
 
-    def update_reminder_type(self, reminder_id: int, reminder_type: str):
+    def update_reminder_type(self, reminder_id: int, reminder_type: str) -> None:
         """Update the reminder_type for a reminder."""
+        if reminder_type is None:
+            logger.error("reminder_type must not be None")
+            return
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         cursor.execute("UPDATE enhanced_reminders SET reminder_type = ? WHERE id = ?", (reminder_type, reminder_id))
