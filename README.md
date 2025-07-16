@@ -8,7 +8,7 @@
 
 > **Accelerate AI-powered development workflows with a portable, local MCP server for LLMs**
 
-- **Python 3.8+** | **MIT License** | **MCP-Compatible** | **Local-Only** | **Portable** | "Advanced" API
+- **Python 3.8+** | **MIT License** | **MCP-Compatible** | **Local-Only** | **Portable** | **"Advanced" API**
 
 ---
 
