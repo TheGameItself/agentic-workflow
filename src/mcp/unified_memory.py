@@ -508,12 +508,24 @@ class UnifiedMemoryManager:
             return []
 
     def get_memory_quality_report(self, memory_id: int) -> Dict[str, Any]:
-        """Expose memory quality/confidence scoring via the unified interface."""
+        """
+        Expose enhanced memory quality/confidence scoring via the unified interface.
+        
+        This method uses the comprehensive MemoryQualityAssessment system if available,
+        otherwise falls back to the basic quality report from advanced_memory.
+        """
         try:
-            return self.advanced_memory.get_memory_quality_report(memory_id)
-        except Exception as e:
-            print(f"Error in get_memory_quality_report: {e}")
-            return {}
+            # Try to use the enhanced quality assessment system
+            from .memory_quality_assessment import MemoryQualityAssessment
+            quality_assessment = MemoryQualityAssessment(self.db_path)
+            return quality_assessment.get_memory_quality_report(memory_id)
+        except ImportError:
+            # Fall back to advanced memory's quality report
+            try:
+                return self.advanced_memory.get_memory_quality_report(memory_id)
+            except Exception as e:
+                print(f"Error in get_memory_quality_report: {e}")
+                return {}
 
     def create_engram(self, title: str, description: str = "", memory_ids: Optional[list] = None, tags: Optional[list] = None) -> int:
         """Create a new engram and return its ID."""
@@ -810,4 +822,87 @@ class UnifiedMemoryManager:
             return self.basic_memory.prune_memories(min_priority, max_age_days)
         except Exception as e:
             print(f"[UnifiedMemoryManager] Pruning failed: {e}")
-            return 0 
+            return 0    
+ def detect_memory_relationships(self, memory_id: int, max_candidates: int = 50) -> List[Dict[str, Any]]:
+        """
+        Detect relationships between a memory and other memories in the system.
+        
+        Args:
+            memory_id: ID of the memory to analyze
+            max_candidates: Maximum number of candidate memories to check
+            
+        Returns:
+            List of detected relationships with scores
+        """
+        try:
+            # Try to use the enhanced quality assessment system
+            from .memory_quality_assessment import MemoryQualityAssessment
+            quality_assessment = MemoryQualityAssessment(self.db_path)
+            return quality_assessment.detect_memory_relationships(memory_id, max_candidates)
+        except ImportError:
+            # Fall back to basic relationship detection
+            try:
+                return self.advanced_memory.get_memory_relationships(memory_id)
+            except Exception as e:
+                print(f"Error in detect_memory_relationships: {e}")
+                return []
+    
+    def store_memory_relationships(self, relationships: List[Dict[str, Any]]) -> int:
+        """
+        Store detected relationships in the database.
+        
+        Args:
+            relationships: List of relationship dictionaries
+            
+        Returns:
+            Number of relationships stored
+        """
+        try:
+            # Try to use the enhanced quality assessment system
+            from .memory_quality_assessment import MemoryQualityAssessment
+            quality_assessment = MemoryQualityAssessment(self.db_path)
+            return quality_assessment.store_memory_relationships(relationships)
+        except ImportError:
+            # No fallback for storing enhanced relationships
+            print("Enhanced memory relationship storage not available")
+            return 0
+    
+    def consolidate_memories(self, memory_ids: List[int], consolidation_type: str = 'merge') -> Dict[str, Any]:
+        """
+        Consolidate multiple memories into a single memory.
+        
+        Args:
+            memory_ids: List of memory IDs to consolidate
+            consolidation_type: Type of consolidation ('merge', 'summarize', 'compress')
+            
+        Returns:
+            Dictionary with consolidation results
+        """
+        try:
+            # Try to use the enhanced quality assessment system
+            from .memory_quality_assessment import MemoryQualityAssessment
+            quality_assessment = MemoryQualityAssessment(self.db_path)
+            return quality_assessment.consolidate_memories(memory_ids, consolidation_type)
+        except ImportError:
+            # No fallback for memory consolidation
+            return {'error': 'Memory consolidation not available'}
+    
+    def optimize_memory_storage(self, max_candidates: int = 100, similarity_threshold: float = 0.85) -> Dict[str, Any]:
+        """
+        Optimize memory storage by identifying and consolidating similar memories.
+        
+        Args:
+            max_candidates: Maximum number of memories to analyze
+            similarity_threshold: Minimum similarity threshold for consolidation
+            
+        Returns:
+            Dictionary with optimization results
+        """
+        try:
+            # Try to use the enhanced quality assessment system
+            from .memory_quality_assessment import MemoryQualityAssessment
+            quality_assessment = MemoryQualityAssessment(self.db_path)
+            return quality_assessment.optimize_memory_storage(max_candidates, similarity_threshold)
+        except ImportError:
+            # No fallback for memory optimization
+            return {'error': 'Memory optimization not available'}

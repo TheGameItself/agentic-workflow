@@ -13,6 +13,7 @@ __description__ = "Portable, local-only Python MCP server for agentic developmen
 
 from .memory import MemoryManager
 from .regex_search import RegexSearchEngine, SearchQuery, SearchType, SearchScope, RegexSearchFormatter
+from .hormone_system_controller import HormoneSystemController
 
 __all__ = [
     'MemoryManager',
@@ -21,6 +22,7 @@ __all__ = [
     'SearchType',
     'SearchScope',
     'RegexSearchFormatter',
+    'HormoneSystemController',
     '__version__',
     '__author__',
     '__description__'

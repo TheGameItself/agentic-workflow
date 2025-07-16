@@ -11,8 +11,10 @@ import json
 import os
 import re
 import math
+import hashlib
 from typing import List, Dict, Any, Optional
 from collections import Counter
+from datetime import datetime
 from .vector_memory import get_vector_backend
 
 # Optional numpy import with fallback
@@ -70,11 +72,88 @@ except ImportError:
 class VectorEncoder:
     """Base class for vector encoders/decoders."""
     def encode(self, vector):
-        """Encode the vector. See idea.txt for requirements. This is a stub."""
-        raise NotImplementedError("Encode method not implemented. See idea.txt.")
+        """Encode the vector using basic compression fallback."""
+        try:
+            import json
+            import zlib
+            import base64
+            
+            # Convert vector to JSON string
+            vector_json = json.dumps(vector)
+            
+            # Compress using zlib
+            compressed = zlib.compress(vector_json.encode('utf-8'))
+            
+            # Encode as base64 for storage
+            encoded = base64.b64encode(compressed).decode('utf-8')
+            
+            return {
+                'encoded_data': encoded,
+                'original_size': len(vector_json),
+                'compressed_size': len(compressed),
+                'compression_ratio': len(compressed) / len(vector_json),
+                'encoding_method': 'zlib_base64',
+                'timestamp': datetime.now().isoformat()
+            }
+            
+        except Exception as e:
+            # Ultimate fallback - return vector as-is with metadata
+            return {
+                'encoded_data': vector,
+                'original_size': len(str(vector)),
+                'compressed_size': len(str(vector)),
+                'compression_ratio': 1.0,
+                'encoding_method': 'passthrough',
+                'error': str(e),
+                'timestamp': datetime.now().isoformat()
+            }
     def decode(self, encoded):
-        """Decode the encoded vector. See idea.txt for requirements. This is a stub."""
-        raise NotImplementedError("Decode method not implemented. See idea.txt.")
+        """Decode the encoded vector using fallback decompression."""
+        try:
+            import json
+            import zlib
+            import base64
+            
+            # Check if it's our encoded format
+            if isinstance(encoded, dict) and 'encoded_data' in encoded:
+                encoding_method = encoded.get('encoding_method', 'unknown')
+                
+                if encoding_method == 'zlib_base64':
+                    # Decode base64
+                    compressed = base64.b64decode(encoded['encoded_data'].encode('utf-8'))
+                    
+                    # Decompress using zlib
+                    decompressed = zlib.decompress(compressed)
+                    
+                    # Parse JSON
+                    vector = json.loads(decompressed.decode('utf-8'))
+                    return vector
+                    
+                elif encoding_method == 'passthrough':
+                    # Return the data as-is
+                    return encoded['encoded_data']
+            
+            # Fallback: assume it's already decoded or in a simple format
+            if isinstance(encoded, (list, dict)):
+                return encoded
+            
+            # Try to parse as JSON
+            if isinstance(encoded, str):
+                try:
+                    return json.loads(encoded)
+                except json.JSONDecodeError:
+                    return encoded
+            
+            return encoded
+            
+        except Exception as e:
+            # Ultimate fallback - return as-is with error info
+            return {
+                'decoded_data': encoded,
+                'decoding_method': 'fallback',
+                'error': str(e),
+                'timestamp': datetime.now().isoformat()
+            }
     def name(self):
         return self.__class__.__name__
 
@@ -169,8 +248,9 @@ class AdvancedMemoryManager:
         backend_config: Dict of backend-specific configuration options.
     """
     
-    def __init__(self, db_path: Optional[str] = None, encoder: Optional[VectorEncoder] = None):
-        """Initialize the advanced memory manager."""
+    def __init__(self, db_path: Optional[str] = None, encoder: Optional[VectorEncoder] = None, 
+                 backend_name: str = 'sqlitefaiss', backend_config: Optional[Dict] = None):
+        """Initialize the advanced memory manager with multiple encoder backend support."""
         if db_path is None:
             current_dir = os.path.dirname(os.path.abspath(__file__))
             project_root = os.path.join(current_dir, '..', '..')
@@ -180,9 +260,22 @@ class AdvancedMemoryManager:
         
         self.db_path = str(db_path)
         self.encoder = encoder or TFIDFEncoder()
+        self.backend_name = backend_name
+        self.backend_config = backend_config or {}
+        
+        # Support for multiple encoder backends
+        self.available_encoders = {
+            'tfidf': TFIDFEncoder(),
+            'rabitq': RaBitQEncoder(),
+            'float8q': Float8QEncoder()
+        }
+        
         self._init_advanced_database()
         self.compression_ratios = []  # Track compression ratios for reporting
         self.search_similarities = []  # Track search similarities for reporting
+        
+        # Initialize vector backend
+        self.initialize_vector_backend(backend_name, backend_config)
     
     def _init_advanced_database(self):
         """
@@ -544,19 +637,112 @@ class AdvancedMemoryManager:
         """Search memories using vector similarity and log similarity scores."""
         if memory_type is None:
             memory_type = ''
-        # Use the modular vector backend for search
-        query_embedding = self._create_vector_embedding(query)
-        backend_results = self.vector_backend.search_vector(query_embedding, limit=limit, min_similarity=min_similarity)
-        results = []
-        if backend_results is None:
+        
+        # Fallback to database search if vector backend is not available
+        if not hasattr(self, 'vector_backend') or self.vector_backend is None:
+            return self._fallback_search(query, limit, memory_type, min_similarity)
+        
+        try:
+            # Create query embedding
+            query_embedding = self._create_vector_embedding(query)
+            
+            # Search using vector backend
+            backend_results = self.vector_backend.search_vector(query_embedding, limit=limit, min_similarity=min_similarity)
+            
+            if not backend_results:
+                return self._fallback_search(query, limit, memory_type, min_similarity)
+            
+            results = []
+            for item in backend_results:
+                similarity = item.get('similarity', 0)
+                metadata = item.get('metadata', {})
+                metadata['similarity'] = similarity
+                results.append(metadata)
+                self.search_similarities.append(similarity)
+            
             return results
-        for item in backend_results:
-            similarity = item.get('similarity', 0)
-            metadata = item.get('metadata', {})
-            metadata['similarity'] = similarity
-            results.append(metadata)
-            self.search_similarities.append(similarity)
+            
+        except Exception as e:
+            print(f"Vector search failed, falling back to database search: {e}")
+            return self._fallback_search(query, limit, memory_type, min_similarity)
+    
+    def _fallback_search(self, query: str, limit: int = 10, 
+                        memory_type: Optional[str] = None, min_similarity: float = 0.1) -> List[Dict[str, Any]]:
+        """Fallback search using database text matching."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        # Build search query
+        search_terms = query.lower().split()
+        where_conditions = []
+        params = []
+        
+        # Text search
+        for term in search_terms:
+            where_conditions.append("(LOWER(text) LIKE ? OR LOWER(context) LIKE ? OR LOWER(tags) LIKE ?)")
+            params.extend([f'%{term}%', f'%{term}%', f'%{term}%'])
+        
+        # Memory type filter
+        if memory_type and memory_type != '':
+            where_conditions.append("memory_type = ?")
+            params.append(memory_type)
+        
+        where_clause = " AND ".join(where_conditions) if where_conditions else "1=1"
+        
+        cursor.execute(f"""
+            SELECT id, text, memory_type, priority, context, tags, category,
+                   quality_score, confidence_score, completeness_score, relevance_score,
+                   memory_order, created_at, updated_at, last_accessed, access_count
+            FROM advanced_memories 
+            WHERE {where_clause}
+            ORDER BY priority DESC, quality_score DESC
+            LIMIT ?
+        """, params + [limit])
+        
+        results = []
+        for row in cursor.fetchall():
+            tags = json.loads(row[5]) if row[5] else []
+            
+            # Calculate simple text similarity
+            similarity = self._calculate_text_similarity(query, row[1])
+            
+            if similarity >= min_similarity:
+                results.append({
+                    'id': row[0],
+                    'text': row[1],
+                    'memory_type': row[2],
+                    'priority': row[3],
+                    'context': row[4],
+                    'tags': tags,
+                    'category': row[6],
+                    'quality_score': row[7],
+                    'confidence_score': row[8],
+                    'completeness_score': row[9],
+                    'relevance_score': row[10],
+                    'memory_order': row[11],
+                    'created_at': row[12],
+                    'updated_at': row[13],
+                    'last_accessed': row[14],
+                    'access_count': row[15],
+                    'similarity': similarity
+                })
+                self.search_similarities.append(similarity)
+        
+        conn.close()
         return results
+    
+    def _calculate_text_similarity(self, query: str, text: str) -> float:
+        """Calculate simple text similarity based on word overlap."""
+        query_words = set(query.lower().split())
+        text_words = set(text.lower().split())
+        
+        if not query_words or not text_words:
+            return 0.0
+        
+        intersection = query_words.intersection(text_words)
+        union = query_words.union(text_words)
+        
+        return len(intersection) / len(union) if union else 0.0
     
     def get_memory_relationships(self, memory_id: int) -> List[Dict[str, Any]]:
         """Get relationships for a specific memory."""
@@ -593,51 +779,748 @@ class AdvancedMemoryManager:
         return relationships
     
     def get_memory_quality_report(self, memory_id: int) -> Dict[str, Any]:
-        """Generate a quality report for a memory."""
+        """
+        Generate a comprehensive quality report for a memory.
+        
+        This method uses the enhanced MemoryQualityAssessment system if available,
+        otherwise falls back to the basic quality report.
+        """
+        try:
+            # Try to use the enhanced quality assessment system
+            from .memory_quality_assessment import MemoryQualityAssessment
+            quality_assessment = MemoryQualityAssessment(self.db_path)
+            return quality_assessment.get_memory_quality_report(memory_id)
+        except ImportError:
+            # Fall back to basic quality report
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT quality_score, confidence_score, completeness_score, relevance_score,
+                       text, context, tags, category, created_at, last_accessed, access_count
+                FROM advanced_memories WHERE id = ?
+            """, (memory_id,))
+            
+            row = cursor.fetchone()
+            conn.close()
+            
+            if not row:
+                return {}
+            
+            quality_score, confidence_score, completeness_score, relevance_score, \
+            text, context, tags_json, category, created_at, last_accessed, access_count = row
+            
+            tags = json.loads(tags_json) if tags_json else None
+            
+            # Calculate overall quality
+            overall_quality = (quality_score + confidence_score + completeness_score + relevance_score) / 4
+            
+            # Generate improvement suggestions
+            suggestions = []
+            if quality_score < 0.7:
+                suggestions.append("Add more context or details to improve quality")
+            if confidence_score < 0.7:
+                suggestions.append("Provide more specific information to increase confidence")
+            if completeness_score < 0.7:
+                suggestions.append("Include additional relevant information for completeness")
+            if relevance_score < 0.7:
+                suggestions.append("Add relevant tags or keywords to improve relevance")
+            
+            return {
+                'memory_id': memory_id,
+                'overall_quality': overall_quality,
+                'quality_breakdown': {
+                    'quality_score': quality_score,
+                    'confidence_score': confidence_score,
+                    'completeness_score': completeness_score,
+                    'relevance_score': relevance_score
+                },
+                'content_info': {
+                    'text_length': len(text),
+                    'has_context': bool(context),
+                    'tag_count': len(tags) if tags else 0,
+                    'category': category,
+                    'access_count': access_count,
+                    'created_at': created_at,
+                    'last_accessed': last_accessed
+                },
+                'improvement_suggestions': suggestions
+            }
+
+    def get_memory(self, memory_id: int) -> Optional[Dict[str, Any]]:
+        """Get a specific memory by ID."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
         cursor.execute("""
-            SELECT quality_score, confidence_score, completeness_score, relevance_score,
-                   text, context, tags, category, created_at, last_accessed, access_count
+            SELECT id, text, memory_type, priority, context, tags, category,
+                   quality_score, confidence_score, completeness_score, relevance_score,
+                   memory_order, created_at, updated_at, last_accessed, access_count
             FROM advanced_memories WHERE id = ?
         """, (memory_id,))
         
         row = cursor.fetchone()
+        
+        if row:
+            # Update access tracking
+            cursor.execute("""
+                UPDATE advanced_memories 
+                SET last_accessed = CURRENT_TIMESTAMP, access_count = access_count + 1
+                WHERE id = ?
+            """, (memory_id,))
+            conn.commit()
+        
         conn.close()
         
         if not row:
-            return {}
+            return None
         
-        quality_score, confidence_score, completeness_score, relevance_score, \
-        text, context, tags_json, category, created_at, last_accessed, access_count = row
-        
-        tags = json.loads(tags_json) if tags_json else None
-        
-        # Calculate overall quality
-        overall_quality = (quality_score + confidence_score + completeness_score + relevance_score) / 4
-        
-        # Generate improvement suggestions
-        suggestions = []
-        if quality_score < 0.7:
-            suggestions.append("Add more context or details to improve quality")
-        if confidence_score < 0.7:
-            suggestions.append("Provide more specific information to increase confidence")
-        if completeness_score < 0.7:
-            suggestions.append("Include additional relevant information for completeness")
-        if relevance_score < 0.7:
-            suggestions.append("Add relevant tags or keywords to improve relevance")
+        tags = json.loads(row[5]) if row[5] else []
         
         return {
-            'memory_id': memory_id,
-            'overall_quality': overall_quality,
-            'quality_breakdown': {
-                'quality_score': quality_score,
-                'confidence_score': confidence_score,
-                'completeness_score': completeness_score,
-                'relevance_score': relevance_score
-            },
-            'content_info': {
+            'id': row[0],
+            'text': row[1],
+            'memory_type': row[2],
+            'priority': row[3],
+            'context': row[4],
+            'tags': tags,
+            'category': row[6],
+            'quality_score': row[7],
+            'confidence_score': row[8],
+            'completeness_score': row[9],
+            'relevance_score': row[10],
+            'memory_order': row[11],
+            'created_at': row[12],
+            'updated_at': row[13],
+            'last_accessed': row[14],
+            'access_count': row[15]
+        }
+
+    def update_memory(self, memory_id: int, **kwargs) -> bool:
+        """Update a memory with new information."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        # Build update query dynamically
+        update_fields = []
+        values = []
+        
+        allowed_fields = ['text', 'memory_type', 'priority', 'context', 'tags', 'category']
+        
+        for field, value in kwargs.items():
+            if field in allowed_fields:
+                if field == 'tags' and isinstance(value, list):
+                    value = json.dumps(value)
+                update_fields.append(f"{field} = ?")
+                values.append(value)
+        
+        if not update_fields:
+            conn.close()
+            return False
+        
+        # Always update the updated_at timestamp
+        update_fields.append("updated_at = CURRENT_TIMESTAMP")
+        
+        query = f"UPDATE advanced_memories SET {', '.join(update_fields)} WHERE id = ?"
+        values.append(memory_id)
+        
+        cursor.execute(query, values)
+        success = cursor.rowcount > 0
+        
+        conn.commit()
+        conn.close()
+        
+        return success
+
+    def delete_memory(self, memory_id: int) -> bool:
+        """Delete a memory and its relationships."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        try:
+            # Delete relationships
+            cursor.execute("""
+                DELETE FROM memory_relationships 
+                WHERE source_memory_id = ? OR target_memory_id = ?
+            """, (memory_id, memory_id))
+            
+            # Delete the memory
+            cursor.execute("DELETE FROM advanced_memories WHERE id = ?", (memory_id,))
+            
+            success = cursor.rowcount > 0
+            conn.commit()
+            
+        except Exception as e:
+            conn.rollback()
+            success = False
+            print(f"Error deleting memory {memory_id}: {e}")
+        
+        finally:
+            conn.close()
+        
+        return success
+
+    def get_statistics(self) -> Dict[str, Any]:
+        """Get comprehensive statistics about the memory system."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        stats = {}
+        
+        # Basic counts
+        cursor.execute("SELECT COUNT(*) FROM advanced_memories")
+        stats['total_memories'] = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM memory_relationships")
+        stats['total_relationships'] = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(DISTINCT category) FROM advanced_memories")
+        stats['unique_categories'] = cursor.fetchone()[0]
+        
+        # Quality statistics
+        cursor.execute("""
+            SELECT AVG(quality_score), AVG(confidence_score), 
+                   AVG(completeness_score), AVG(relevance_score)
+            FROM advanced_memories
+        """)
+        quality_row = cursor.fetchone()
+        if quality_row and quality_row[0] is not None:
+            stats['average_quality'] = {
+                'quality_score': quality_row[0],
+                'confidence_score': quality_row[1],
+                'completeness_score': quality_row[2],
+                'relevance_score': quality_row[3],
+                'overall': sum(quality_row) / 4
+            }
+        else:
+            stats['average_quality'] = {
+                'quality_score': 0.0,
+                'confidence_score': 0.0,
+                'completeness_score': 0.0,
+                'relevance_score': 0.0,
+                'overall': 0.0
+            }
+        
+        # Memory type distribution
+        cursor.execute("""
+            SELECT memory_type, COUNT(*) 
+            FROM advanced_memories 
+            GROUP BY memory_type
+        """)
+        stats['memory_type_distribution'] = dict(cursor.fetchall())
+        
+        # Category distribution
+        cursor.execute("""
+            SELECT category, COUNT(*) 
+            FROM advanced_memories 
+            GROUP BY category
+        """)
+        stats['category_distribution'] = dict(cursor.fetchall())
+        
+        # Access statistics
+        cursor.execute("""
+            SELECT AVG(access_count), MAX(access_count), 
+                   COUNT(*) as total_accesses
+            FROM advanced_memories
+        """)
+        access_row = cursor.fetchone()
+        if access_row:
+            stats['access_statistics'] = {
+                'average_access_count': access_row[0] or 0,
+                'max_access_count': access_row[1] or 0,
+                'total_memories_accessed': access_row[2] or 0
+            }
+        
+        # Compression statistics
+        if self.compression_ratios:
+            stats['compression_statistics'] = {
+                'average_compression_ratio': sum(self.compression_ratios) / len(self.compression_ratios),
+                'best_compression_ratio': min(self.compression_ratios),
+                'worst_compression_ratio': max(self.compression_ratios),
+                'total_compressions': len(self.compression_ratios)
+            }
+        
+        # Search statistics
+        if self.search_similarities:
+            stats['search_statistics'] = {
+                'average_similarity': sum(self.search_similarities) / len(self.search_similarities),
+                'best_similarity': max(self.search_similarities),
+                'worst_similarity': min(self.search_similarities),
+                'total_searches': len(self.search_similarities)
+            }
+        
+        conn.close()
+        return stats
+
+    def cleanup_memories(self, criteria: Optional[Dict[str, Any]] = None) -> Dict[str, int]:
+        """Clean up memories based on specified criteria."""
+        if criteria is None:
+            criteria = {
+                'min_quality_score': 0.3,
+                'min_access_count': 0,
+                'max_age_days': 365,
+                'remove_duplicates': True
+            }
+        
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        deleted_count = 0
+        duplicate_count = 0
+        
+        try:
+            # Remove low quality memories
+            if 'min_quality_score' in criteria:
+                cursor.execute("""
+                    DELETE FROM advanced_memories 
+                    WHERE quality_score < ? AND access_count <= ?
+                """, (criteria['min_quality_score'], criteria.get('min_access_count', 0)))
+                deleted_count += cursor.rowcount
+            
+            # Remove old unused memories
+            if 'max_age_days' in criteria:
+                cursor.execute("""
+                    DELETE FROM advanced_memories 
+                    WHERE datetime(created_at) < datetime('now', '-{} days')
+                    AND access_count <= ?
+                """.format(criteria['max_age_days']), (criteria.get('min_access_count', 0),))
+                deleted_count += cursor.rowcount
+            
+            # Remove duplicates based on text similarity
+            if criteria.get('remove_duplicates', False):
+                cursor.execute("""
+                    SELECT id, text FROM advanced_memories ORDER BY created_at
+                """)
+                memories = cursor.fetchall()
+                
+                seen_texts = set()
+                duplicates_to_remove = []
+                
+                for memory_id, text in memories:
+                    # Simple duplicate detection based on text hash
+                    text_hash = hashlib.md5(text.lower().strip().encode()).hexdigest()
+                    if text_hash in seen_texts:
+                        duplicates_to_remove.append(memory_id)
+                        duplicate_count += 1
+                    else:
+                        seen_texts.add(text_hash)
+                
+                for dup_id in duplicates_to_remove:
+                    cursor.execute("DELETE FROM advanced_memories WHERE id = ?", (dup_id,))
+            
+            # Clean up orphaned relationships
+            cursor.execute("""
+                DELETE FROM memory_relationships 
+                WHERE source_memory_id NOT IN (SELECT id FROM advanced_memories)
+                OR target_memory_id NOT IN (SELECT id FROM advanced_memories)
+            """)
+            orphaned_relationships = cursor.rowcount
+            
+            conn.commit()
+            
+        except Exception as e:
+            conn.rollback()
+            print(f"Error during cleanup: {e}")
+            deleted_count = 0
+            duplicate_count = 0
+            orphaned_relationships = 0
+        
+        finally:
+            conn.close()
+        
+        return {
+            'deleted_memories': deleted_count,
+            'removed_duplicates': duplicate_count,
+            'cleaned_relationships': orphaned_relationships
+        }
+
+    def compress_memories(self, target_compression_ratio: float = 0.5) -> Dict[str, Any]:
+        """Compress memory storage using advanced encoding techniques."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        # Get all memories with their embeddings
+        cursor.execute("""
+            SELECT id, vector_embedding FROM advanced_memories
+        """)
+        memories = cursor.fetchall()
+        
+        compressed_count = 0
+        total_size_before = 0
+        total_size_after = 0
+        
+        for memory_id, embedding_json in memories:
+            try:
+                # Decode current embedding
+                current_embedding = json.loads(embedding_json)
+                current_size = len(embedding_json.encode('utf-8'))
+                total_size_before += current_size
+                
+                # Re-encode with potentially better compression
+                if hasattr(self.encoder, 'encode'):
+                    # If it's already encoded, decode first
+                    if hasattr(self.encoder, 'decode'):
+                        decoded = self.encoder.decode(current_embedding)
+                        reencoded = self.encoder.encode(decoded)
+                    else:
+                        reencoded = current_embedding
+                else:
+                    reencoded = current_embedding
+                
+                new_embedding_json = json.dumps(reencoded)
+                new_size = len(new_embedding_json.encode('utf-8'))
+                total_size_after += new_size
+                
+                # Update if compression improved
+                if new_size < current_size:
+                    cursor.execute("""
+                        UPDATE advanced_memories 
+                        SET vector_embedding = ?, updated_at = CURRENT_TIMESTAMP
+                        WHERE id = ?
+                    """, (new_embedding_json, memory_id))
+                    compressed_count += 1
+                else:
+                    total_size_after = total_size_after - new_size + current_size
+                
+            except Exception as e:
+                print(f"Error compressing memory {memory_id}: {e}")
+                continue
+        
+        conn.commit()
+        conn.close()
+        
+        compression_ratio = total_size_after / total_size_before if total_size_before > 0 else 1.0
+        
+        return {
+            'compressed_memories': compressed_count,
+            'total_memories': len(memories),
+            'size_before_bytes': total_size_before,
+            'size_after_bytes': total_size_after,
+            'compression_ratio': compression_ratio,
+            'space_saved_bytes': total_size_before - total_size_after,
+            'target_achieved': compression_ratio <= target_compression_ratio
+        }
+
+    def organize_hierarchical_memory(self) -> Dict[str, Any]:
+        """Organize memories into hierarchical structure (working, short-term, long-term)."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        # Get all memories with access patterns
+        cursor.execute("""
+            SELECT id, access_count, last_accessed, created_at, priority, quality_score
+            FROM advanced_memories
+        """)
+        memories = cursor.fetchall()
+        
+        working_memory = []
+        short_term_memory = []
+        long_term_memory = []
+        
+        current_time = datetime.now()
+        
+        for memory_data in memories:
+            memory_id, access_count, last_accessed, created_at, priority, quality_score = memory_data
+            
+            # Parse timestamps
+            try:
+                last_access_time = datetime.fromisoformat(last_accessed.replace('Z', '+00:00')) if last_accessed else current_time
+                create_time = datetime.fromisoformat(created_at.replace('Z', '+00:00')) if created_at else current_time
+            except:
+                last_access_time = current_time
+                create_time = current_time
+            
+            # Calculate time since last access and creation
+            hours_since_access = (current_time - last_access_time).total_seconds() / 3600
+            days_since_creation = (current_time - create_time).total_seconds() / 86400
+            
+            # Classify memory based on access patterns and importance
+            importance_score = (priority + quality_score + min(access_count / 10, 1.0)) / 3
+            
+            if hours_since_access <= 2 and access_count >= 2:
+                # Recently and frequently accessed - working memory
+                working_memory.append(memory_id)
+                memory_order = 1
+            elif hours_since_access <= 24 or (access_count >= 1 and days_since_creation <= 7):
+                # Recently accessed or new - short-term memory
+                short_term_memory.append(memory_id)
+                memory_order = 2
+            else:
+                # Older or less accessed - long-term memory
+                long_term_memory.append(memory_id)
+                memory_order = 3
+            
+            # Update memory order in database
+            cursor.execute("""
+                UPDATE advanced_memories 
+                SET memory_order = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            """, (memory_order, memory_id))
+        
+        conn.commit()
+        conn.close()
+        
+        return {
+            'working_memory_count': len(working_memory),
+            'short_term_memory_count': len(short_term_memory),
+            'long_term_memory_count': len(long_term_memory),
+            'working_memory_ids': working_memory[:10],  # Sample
+            'short_term_memory_ids': short_term_memory[:10],  # Sample
+            'long_term_memory_ids': long_term_memory[:10],  # Sample
+            'total_organized': len(memories)
+        }
+
+    def get_memory_by_order(self, memory_order: int, limit: int = 10) -> List[Dict[str, Any]]:
+        """Get memories by their hierarchical order (1=working, 2=short-term, 3=long-term)."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT id, text, memory_type, priority, context, tags, category,
+                   quality_score, confidence_score, completeness_score, relevance_score,
+                   memory_order, created_at, updated_at, last_accessed, access_count
+            FROM advanced_memories 
+            WHERE memory_order = ?
+            ORDER BY priority DESC, quality_score DESC, access_count DESC
+            LIMIT ?
+        """, (memory_order, limit))
+        
+        memories = []
+        for row in cursor.fetchall():
+            tags = json.loads(row[5]) if row[5] else []
+            
+            memories.append({
+                'id': row[0],
+                'text': row[1],
+                'memory_type': row[2],
+                'priority': row[3],
+                'context': row[4],
+                'tags': tags,
+                'category': row[6],
+                'quality_score': row[7],
+                'confidence_score': row[8],
+                'completeness_score': row[9],
+                'relevance_score': row[10],
+                'memory_order': row[11],
+                'created_at': row[12],
+                'updated_at': row[13],
+                'last_accessed': row[14],
+                'access_count': row[15]
+            })
+        
+        conn.close()
+        return memories
+
+    def initialize_vector_backend(self, backend_name: str = 'sqlitefaiss', backend_config: Optional[Dict] = None):
+        """Initialize the vector backend for similarity search."""
+        try:
+            self.vector_backend = get_vector_backend(backend_name, backend_config or {})
+            if hasattr(self.vector_backend, 'db_path'):
+                self.vector_backend.db_path = self.db_path.replace('.db', '_vectors.db')
+        except Exception as e:
+            print(f"Warning: Could not initialize vector backend {backend_name}: {e}")
+            # Fallback to basic implementation
+            from .vector_memory import SQLiteFAISSBackend
+            self.vector_backend = SQLiteFAISSBackend(self.db_path.replace('.db', '_vectors.db'))
+
+    def switch_encoder(self, encoder_name: str, hormone_state: Optional[Dict] = None) -> bool:
+        """Switch to a different encoder backend dynamically."""
+        if encoder_name in self.available_encoders:
+            old_encoder = self.encoder
+            self.encoder = self.available_encoders[encoder_name]
+            
+            # For Float8QEncoder, pass hormone state if available
+            if encoder_name == 'float8q' and hormone_state:
+                self.encoder.hormone_state = hormone_state
+            
+            print(f"Switched encoder from {old_encoder.name()} to {self.encoder.name()}")
+            return True
+        else:
+            print(f"Encoder {encoder_name} not available. Available: {list(self.available_encoders.keys())}")
+            return False
+
+    def benchmark_encoders(self, test_data: Optional[List[str]] = None) -> Dict[str, Dict[str, float]]:
+        """Benchmark different encoder backends for compression and performance."""
+        if test_data is None:
+            # Use some sample data from existing memories
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            cursor.execute("SELECT text FROM advanced_memories LIMIT 10")
+            test_data = [row[0] for row in cursor.fetchall()]
+            conn.close()
+            
+            if not test_data:
+                test_data = [
+                    "This is a sample text for testing encoder performance",
+                    "Another longer text with more complex vocabulary and structure for comprehensive testing",
+                    "Short text",
+                    "A very detailed and comprehensive text that contains multiple sentences, various punctuation marks, and a wide range of vocabulary to test the encoder's ability to handle complex linguistic structures and patterns."
+                ]
+        
+        results = {}
+        
+        for encoder_name, encoder in self.available_encoders.items():
+            encoder_results = {
+                'compression_ratios': [],
+                'encoding_times': [],
+                'decoding_times': [],
+                'accuracy_scores': []
+            }
+            
+            for text in test_data:
+                try:
+                    import time
+                    
+                    # Create TF-IDF vector
+                    tfidf = self._create_tfidf_embedding(text)
+                    
+                    # Test encoding
+                    start_time = time.time()
+                    encoded = encoder.encode(tfidf)
+                    encoding_time = time.time() - start_time
+                    
+                    # Test decoding
+                    start_time = time.time()
+                    decoded = encoder.decode(encoded)
+                    decoding_time = time.time() - start_time
+                    
+                    # Calculate compression ratio
+                    original_size = len(str(tfidf))
+                    encoded_size = len(str(encoded))
+                    compression_ratio = encoded_size / original_size if original_size > 0 else 1.0
+                    
+                    # Calculate accuracy (similarity between original and decoded)
+                    accuracy = self._cosine_similarity(tfidf, decoded) if isinstance(decoded, dict) else 0.0
+                    
+                    encoder_results['compression_ratios'].append(compression_ratio)
+                    encoder_results['encoding_times'].append(encoding_time)
+                    encoder_results['decoding_times'].append(decoding_time)
+                    encoder_results['accuracy_scores'].append(accuracy)
+                    
+                except Exception as e:
+                    print(f"Error benchmarking {encoder_name}: {e}")
+                    continue
+            
+            # Calculate averages
+            if encoder_results['compression_ratios']:
+                results[encoder_name] = {
+                    'avg_compression_ratio': sum(encoder_results['compression_ratios']) / len(encoder_results['compression_ratios']),
+                    'avg_encoding_time': sum(encoder_results['encoding_times']) / len(encoder_results['encoding_times']),
+                    'avg_decoding_time': sum(encoder_results['decoding_times']) / len(encoder_results['decoding_times']),
+                    'avg_accuracy': sum(encoder_results['accuracy_scores']) / len(encoder_results['accuracy_scores']),
+                    'total_tests': len(encoder_results['compression_ratios'])
+                }
+        
+        return results
+
+    def auto_prune_memories(self, max_memories: int = 10000, quality_threshold: float = 0.4) -> Dict[str, int]:
+        """Automatically prune memories to stay within limits while preserving quality."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        # Count current memories
+        cursor.execute("SELECT COUNT(*) FROM advanced_memories")
+        current_count = cursor.fetchone()[0]
+        
+        if current_count <= max_memories:
+            conn.close()
+            return {'pruned_count': 0, 'remaining_count': current_count}
+        
+        # Calculate how many to remove
+        to_remove = current_count - max_memories
+        
+        # Get candidates for removal (low quality, low access, old)
+        cursor.execute("""
+            SELECT id, quality_score, access_count, 
+                   julianday('now') - julianday(last_accessed) as days_since_access
+            FROM advanced_memories
+            WHERE quality_score < ? OR access_count = 0
+            ORDER BY quality_score ASC, access_count ASC, days_since_access DESC
+            LIMIT ?
+        """, (quality_threshold, to_remove))
+        
+        candidates = cursor.fetchall()
+        pruned_count = 0
+        
+        for memory_id, quality_score, access_count, days_since_access in candidates:
+            # Remove the memory and its relationships
+            cursor.execute("DELETE FROM memory_relationships WHERE source_memory_id = ? OR target_memory_id = ?", 
+                          (memory_id, memory_id))
+            cursor.execute("DELETE FROM advanced_memories WHERE id = ?", (memory_id,))
+            pruned_count += 1
+        
+        conn.commit()
+        
+        # Get final count
+        cursor.execute("SELECT COUNT(*) FROM advanced_memories")
+        final_count = cursor.fetchone()[0]
+        
+        conn.close()
+        
+        return {'pruned_count': pruned_count, 'remaining_count': final_count}
+
+    def optimize_memory_storage(self) -> Dict[str, Any]:
+        """Optimize memory storage by reorganizing, compressing, and cleaning up."""
+        results = {
+            'compression_results': {},
+            'cleanup_results': {},
+            'organization_results': {},
+            'pruning_results': {}
+        }
+        
+        try:
+            # 1. Compress memories
+            results['compression_results'] = self.compress_memories()
+            
+            # 2. Clean up low quality and duplicate memories
+            results['cleanup_results'] = self.cleanup_memories()
+            
+            # 3. Organize hierarchical memory
+            results['organization_results'] = self.organize_hierarchical_memory()
+            
+            # 4. Auto-prune if needed
+            results['pruning_results'] = self.auto_prune_memories()
+            
+            # 5. Update statistics
+            results['final_statistics'] = self.get_statistics()
+            
+        except Exception as e:
+            results['error'] = str(e)
+            print(f"Error during memory optimization: {e}")
+        
+        return results
+
+# Initialize vector backend on import
+def get_vector_backend(backend_name: str = 'sqlitefaiss', config: Optional[Dict] = None):
+    """Get a vector backend instance."""
+    if config is None:
+        config = {}
+    
+    try:
+        from .vector_memory import SQLiteFAISSBackend, InMemoryBackend
+        
+        if backend_name == 'sqlitefaiss':
+            db_path = config.get('db_path', 'data/vectors.db')
+            return SQLiteFAISSBackend(db_path)
+        elif backend_name == 'inmemory':
+            return InMemoryBackend()
+        else:
+            # Fallback to SQLite
+            db_path = config.get('db_path', 'data/vectors.db')
+            return SQLiteFAISSBackend(db_path)
+            
+    except ImportError as e:
+        print(f"Warning: Could not import vector backend: {e}")
+        # Ultimate fallback - create a minimal backend
+        class MinimalBackend:
+            def __init__(self, db_path):
+                self.db_path = db_path
+            def search_vector(self, query, limit=10, min_similarity=0.1):
+                return []
+            def add_vector(self, vector, metadata):
+                return 0
+        
+        return MinimalBackend(config.get('db_path', 'data/vectors.db'))ontent_info': {
                 'text_length': len(text),
                 'has_context': bool(context),
                 'tag_count': len(tags) if tags else 0,

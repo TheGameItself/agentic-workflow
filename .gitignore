@@ -23,12 +23,14 @@ get-pip.py
 eradicate
 vulture
 
+# project development alignment files
+idea.txt
+
 # Databases (except core project data/)
 *.db
 !data/*.db
 
 # Do not exclude core files
-!idea.txt
 !src/
 !frontend/
 !docs/
@@ -809,3 +811,13 @@ portable_mcp/python_env/lib/python3.11/site-packages/setuptools-65.5.0.dist-info
 portable_mcp/python_env/lib/python3.11/site-packages/setuptools-65.5.0.dist-info/REQUESTED
 portable_mcp/python_env/lib/python3.11/site-packages/setuptools-65.5.0.dist-info/top_level.txt
 portable_mcp/python_env/lib/python3.11/site-packages/setuptools-65.5.0.dist-info/WHEEL
+.kiro/specs/mcp-system-upgrade/design.md
+.kiro/specs/mcp-system-upgrade/requirements.md
+.kiro/specs/mcp-system-upgrade/tasks.md
+.kiro/steering/idea.md
+.kiro/steering/product.md
+.kiro/steering/structure.md
+.kiro/steering/tech.md
+.kiro/steering/advanced_genetic_features.md
+.kiro/steering/cross-implementation.md
+.vscode/settings.json
