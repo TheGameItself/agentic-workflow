@@ -64,7 +64,7 @@ The API layer provides multiple interfaces for client interaction:
 - **Features**: JSON-RPC 2.0 compliant, authentication, rate limiting
 - **Endpoints**: `/api/v1/` for all operations
 
-#### MCP Stdio Server
+#### MCP Studio Server
 - **Purpose**: Standard MCP protocol implementation for IDE integration
 - **Features**: JSON-RPC over stdio, bidirectional communication
 - **Protocol**: Model Context Protocol specification

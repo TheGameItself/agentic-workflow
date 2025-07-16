@@ -10,7 +10,7 @@ The MCP Server provides a comprehensive command-line interface for managing proj
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/TheGameItself/agentic-workflow
 cd agentic-workflow
 
 # Install dependencies

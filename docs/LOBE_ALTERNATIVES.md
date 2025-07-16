@@ -1,7 +1,7 @@
 # Alternative Lobe Architectures and Communication Methods
 
 ## Overview
-This document explores alternative methods for lobe design, communication, and memory in the MCP system, inspired by neuroscience and state-of-the-art AI research. All proposals are cross-referenced with `idea.txt` and current implementation.
+This document explores alternative methods for lobe design, communication, and memory in the MCP system, inspired by neuroscience and state-of-the-art AI research. All proposals are cross-referenced with current implementation.
 
 ---
 
