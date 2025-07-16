@@ -152,5 +152,3 @@ See the `docs/` vault for ready-to-use configuration snippets for Cursor, JetBra
 ## License
 
 MIT License. See [LICENSE](LICENSE).
-
----
