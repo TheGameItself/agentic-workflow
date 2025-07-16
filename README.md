@@ -1,4 +1,4 @@
-# 🚀 MCP Agentic Workflow Accelerator - AI Development Assistant (Torment Nexus developed almost entirely by an llm off a single inspiration file, needs human assement and improvement)
+# 🚀 MCP Agentic Workflow Accelerator - AI Development Assistant
 
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
@@ -152,9 +152,5 @@ See the `docs/` vault for ready-to-use configuration snippets for Cursor, JetBra
 ## License
 
 MIT License. See [LICENSE](LICENSE).
-
----
-
-**Built with ❤️ for the future of AI-assisted development**
 
 ---
