@@ -1,6 +1,6 @@
 # MCP Agentic Workflow Accelerator Documentation Vault
 
-This folder is now an **Obsidian-compatible documentation vault** for the MCP Agentic Workflow Accelerator project.
+This folder is an **Obsidian-compatible documentation vault** for the MCP Agentic Workflow Accelerator project.
 
 All project documentation—including architecture, API, user and developer guides, plugin development, research sources, and the canonical file tree—is organized here.
 
