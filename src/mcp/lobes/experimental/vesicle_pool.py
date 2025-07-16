@@ -153,4 +153,83 @@ class VesiclePool:
             self.clathrin_rate = clathrin_rate
         if bulk_rate is not None:
             self.bulk_rate = bulk_rate
-        self.logger.info(f"[VesiclePool] Parameters updated: {self.get_state()} | release_prob={self.release_prob}, recycling_rate={self.recycling_rate}, clathrin_rate={self.clathrin_rate}, bulk_rate={self.bulk_rate}") 
+        self.logger.info(f"[VesiclePool] Parameters updated: {self.get_state()} | release_prob={self.release_prob}, recycling_rate={self.recycling_rate}, clathrin_rate={self.clathrin_rate}, bulk_rate={self.bulk_rate}")
+
+    def advanced_fusion(self, fusion_factor: float = 1.0):
+        """
+        Advanced vesicle fusion logic: simulates fusion events with tunable fusion_factor.
+        Returns number of vesicles fused.
+        """
+        try:
+            fused = int(self.rrp * fusion_factor * self.release_prob)
+            self.rrp -= fused
+            self.logger.info(f"[VesiclePool] Advanced fusion: {fused} vesicles fused. RRP now {self.rrp}.")
+            return fused
+        except Exception as e:
+            self.logger.error(f"[VesiclePool] Error in advanced_fusion: {e}")
+            return 0
+
+    def adaptive_recycling(self, feedback: Optional[dict] = None):
+        """
+        Adaptive recycling logic: tunes recycling rate based on feedback.
+        """
+        try:
+            if feedback and 'recycling_rate' in feedback:
+                self.recycling_rate = float(feedback['recycling_rate'])
+                self.logger.info(f"[VesiclePool] Recycling rate adapted to {self.recycling_rate} from feedback.")
+            recycled = int(self.rrp * self.recycling_rate)
+            self.rep += recycled
+            self.logger.info(f"[VesiclePool] Adaptive recycling: {recycled} vesicles recycled. ReP: {self.rep}.")
+            return recycled
+        except Exception as e:
+            self.logger.error(f"[VesiclePool] Error in adaptive_recycling: {e}")
+            return 0
+
+    def feedback_loop(self, feedback: dict):
+        """
+        Feedback loop for dynamic pool parameter tuning.
+        Accepts a feedback dict and updates parameters accordingly.
+        """
+        try:
+            for param in ['release_prob', 'recycling_rate', 'clathrin_rate', 'bulk_rate']:
+                if param in feedback:
+                    setattr(self, param, float(feedback[param]))
+                    self.logger.info(f"[VesiclePool] Parameter {param} updated to {getattr(self, param)} from feedback.")
+        except Exception as e:
+            self.logger.error(f"[VesiclePool] Error in feedback_loop: {e}")
+
+    def advanced_feedback_integration(self, feedback: dict):
+        """
+        Advanced feedback integration and continual learning for vesicle pool.
+        Updates pool parameters or fusion/recycling logic based on structured feedback.
+        Supports cross-lobe research and adaptation.
+        """
+        try:
+            for param in ['release_prob', 'recycling_rate', 'clathrin_rate', 'bulk_rate']:
+                if param in feedback:
+                    setattr(self, param, float(feedback[param]))
+                    self.logger.info(f"[VesiclePool] Parameter {param} updated to {getattr(self, param)} from advanced feedback.")
+            self.logger.info(f"[VesiclePool] Advanced feedback integration: {feedback}")
+        except Exception as ex:
+            self.logger.error(f"[VesiclePool] Error in advanced_feedback_integration: {ex}")
+
+    def cross_lobe_integration(self, lobe_name: str = "", data: dict = None) -> dict:
+        """
+        Integrate with other lobes for cross-engine research and feedback.
+        Example: call TaskProposalLobe or AlignmentEngine for additional context.
+        See idea.txt, README.md, ARCHITECTURE.md.
+        """
+        self.logger.info(f"[VesiclePool] Cross-lobe integration called with {lobe_name}.")
+        if data is None:
+            data = {}
+        # Placeholder: simulate integration
+        return self.get_state()
+
+    # Usage example (add to docstring):
+    # pool = VesiclePool()
+    # pool.advanced_fusion(0.5)
+    # pool.adaptive_recycling({'recycling_rate': 0.2})
+    # pool.feedback_loop({'release_prob': 0.3})
+    # pool.step()
+    # pool.advanced_feedback_integration({'release_prob': 0.4})
+    # pool.cross_lobe_integration(lobe_name='TaskProposalLobe') 

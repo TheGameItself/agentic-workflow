@@ -16,23 +16,26 @@ Features:
 # Paper analysis is a placeholder for future expansion (see idea.txt).
 """
 
-import json
-import re
-import requests
+import asyncio
 import hashlib
-from typing import Dict, Any, List, Optional, Tuple
-from dataclasses import dataclass, asdict, field
+import json
+import logging
+import re
+import sqlite3
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-import logging
+from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlparse
-import sqlite3
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
+
+import requests
+
 
 @dataclass
 class ResearchSource:
     """Research source information."""
+
     title: str
     authors: List[str] = field(default_factory=list)
     url: Optional[str] = None
@@ -46,19 +49,21 @@ class ResearchSource:
     craap_scores: Dict[str, float] = field(default_factory=dict)
     last_accessed: Optional[str] = None
     hash_id: Optional[str] = None
-    
+
     def __post_init__(self):
         if self.hash_id is None:
             self.hash_id = self._generate_hash()
-    
+
     def _generate_hash(self) -> str:
         """Generate a unique hash for this source."""
         content = f"{self.title}{self.authors}{self.url}{self.doi}"
         return hashlib.md5(content.encode()).hexdigest()
 
+
 @dataclass
 class ResearchFinding:
     """Research finding or insight."""
+
     source_id: str
     finding: str
     category: str
@@ -68,16 +73,17 @@ class ResearchFinding:
     notes: Optional[str] = None
     created_at: str = ""
     updated_at: str = ""
-    
+
     def __post_init__(self):
         if not self.created_at:
             self.created_at = datetime.utcnow().isoformat()
         if not self.updated_at:
             self.updated_at = self.created_at
 
+
 class CRAAPTest:
     """CRAAP test implementation for source credibility assessment."""
-    
+
     def __init__(self):
         self.criteria = {
             "currency": {
@@ -85,65 +91,65 @@ class CRAAPTest:
                 "questions": [
                     "When was the information published or posted?",
                     "Has the information been revised or updated?",
-                    "Is the information current or out-of-date for your topic?"
+                    "Is the information current or out-of-date for your topic?",
                 ],
-                "weight": 0.2
+                "weight": 0.2,
             },
             "relevance": {
                 "description": "Importance of the information for your needs",
                 "questions": [
                     "Does the information relate to your topic or answer your question?",
                     "Who is the intended audience?",
-                    "Is the information at an appropriate level?"
+                    "Is the information at an appropriate level?",
                 ],
-                "weight": 0.25
+                "weight": 0.25,
             },
             "authority": {
                 "description": "Source of the information",
                 "questions": [
                     "Who is the author/publisher/source/sponsor?",
                     "Are the author's credentials or organizational affiliations given?",
-                    "What are the author's qualifications to write on the topic?"
+                    "What are the author's qualifications to write on the topic?",
                 ],
-                "weight": 0.25
+                "weight": 0.25,
             },
             "accuracy": {
                 "description": "Reliability, truthfulness, and correctness of the content",
                 "questions": [
                     "Where does the information come from?",
                     "Is the information supported by evidence?",
-                    "Has the information been reviewed or refereed?"
+                    "Has the information been reviewed or refereed?",
                 ],
-                "weight": 0.2
+                "weight": 0.2,
             },
             "purpose": {
                 "description": "Reason the information exists",
                 "questions": [
                     "What is the purpose of the information?",
                     "Do the authors/sponsors make their intentions or purpose clear?",
-                    "Is the information fact, opinion, or propaganda?"
+                    "Is the information fact, opinion, or propaganda?",
                 ],
-                "weight": 0.1
-            }
+                "weight": 0.1,
+            },
         }
-    
+
     def evaluate_source(self, source: ResearchSource) -> Dict[str, Any]:
         """Evaluate a source using the CRAAP test."""
         scores = {}
         total_score = 0.0
-        
+
         for criterion, config in self.criteria.items():
             score = self._evaluate_criterion(criterion, source)
             scores[criterion] = score
             total_score += score * config["weight"]
-        
+
         return {
             "scores": scores,
             "total_score": total_score,
             "credibility_level": self._get_credibility_level(total_score),
-            "recommendations": self._get_recommendations(scores)
+            "recommendations": self._get_recommendations(scores),
         }
-    
+
     def _evaluate_criterion(self, criterion: str, source: ResearchSource) -> float:
         """Evaluate a specific CRAAP criterion."""
         if criterion == "currency":
@@ -158,17 +164,19 @@ class CRAAPTest:
             return self._evaluate_purpose(source)
         else:
             return 0.0
-    
+
     def _evaluate_currency(self, source: ResearchSource) -> float:
         """Evaluate currency of the source."""
         if not source.publication_date:
             return 0.5  # Neutral score if no date available
-        
+
         try:
-            pub_date = datetime.fromisoformat(source.publication_date.replace('Z', '+00:00'))
+            pub_date = datetime.fromisoformat(
+                source.publication_date.replace("Z", "+00:00")
+            )
             now = datetime.utcnow()
             age_years = (now - pub_date).days / 365.25
-            
+
             if age_years < 1:
                 return 1.0  # Very recent
             elif age_years < 3:
@@ -181,18 +189,18 @@ class CRAAPTest:
                 return 0.2  # Dated
         except:
             return 0.5
-    
+
     def _evaluate_relevance(self, source: ResearchSource) -> float:
         """Evaluate relevance of the source."""
         # This would typically involve keyword matching and topic analysis
         # For now, return a default score
         return 0.7
-    
+
     def _evaluate_authority(self, source: ResearchSource) -> float:
         """Evaluate authority of the source."""
         if not source.authors:
             return 0.3
-        
+
         # Check for institutional affiliations, credentials, etc.
         # This is a simplified evaluation
         author_count = len(source.authors)
@@ -202,7 +210,7 @@ class CRAAPTest:
             return 0.8
         else:
             return 0.7
-    
+
     def _evaluate_accuracy(self, source: ResearchSource) -> float:
         """Evaluate accuracy of the source."""
         # Check for peer-reviewed journals, citations, etc.
@@ -210,19 +218,23 @@ class CRAAPTest:
             return 0.9
         elif source.doi:
             return 0.8
-        elif source.url and any(domain in source.url.lower() for domain in [".edu", ".gov", ".org"]):
+        elif source.url and any(
+            domain in source.url.lower() for domain in [".edu", ".gov", ".org"]
+        ):
             return 0.7
         else:
             return 0.5
-    
+
     def _evaluate_purpose(self, source: ResearchSource) -> float:
         """Evaluate purpose of the source."""
         # Check for bias, commercial interests, etc.
-        if source.url and any(domain in source.url.lower() for domain in [".com", "blog", "news"]):
+        if source.url and any(
+            domain in source.url.lower() for domain in [".com", "blog", "news"]
+        ):
             return 0.6
         else:
             return 0.8
-    
+
     def _get_credibility_level(self, score: float) -> str:
         """Get credibility level based on score."""
         if score >= 0.8:
@@ -233,32 +245,36 @@ class CRAAPTest:
             return "fair"
         else:
             return "poor"
-    
+
     def _get_recommendations(self, scores: Dict[str, float]) -> List[str]:
         """Get recommendations based on scores."""
         recommendations = []
-        
+
         for criterion, score in scores.items():
             if score < 0.5:
-                recommendations.append(f"Improve {criterion}: {self.criteria[criterion]['description']}")
-        
+                recommendations.append(
+                    f"Improve {criterion}: {self.criteria[criterion]['description']}"
+                )
+
         return recommendations
+
 
 class ResearchTracker:
     """Tracks and manages research sources and findings."""
-    
+
     def __init__(self, db_path: str = "data/research.db"):
         self.db_path = db_path
         self.logger = logging.getLogger("research_tracker")
         self.craap_test = CRAAPTest()
         self._init_database()
-    
+
     def _init_database(self):
         """Initialize the research database."""
         Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
-        
+
         with sqlite3.connect(self.db_path) as conn:
-            conn.execute("""
+            conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS research_sources (
                     hash_id TEXT PRIMARY KEY,
                     title TEXT NOT NULL,
@@ -275,9 +291,11 @@ class ResearchTracker:
                     last_accessed TEXT,
                     created_at TEXT
                 )
-            """)
-            
-            conn.execute("""
+            """
+            )
+
+            conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS research_findings (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     source_id TEXT,
@@ -291,10 +309,11 @@ class ResearchTracker:
                     updated_at TEXT,
                     FOREIGN KEY (source_id) REFERENCES research_sources (hash_id)
                 )
-            """)
-            
+            """
+            )
+
             conn.commit()
-    
+
     def add_source(self, source: ResearchSource) -> bool:
         """Add a research source to the database."""
         try:
@@ -302,48 +321,54 @@ class ResearchTracker:
             evaluation = self.craap_test.evaluate_source(source)
             source.credibility_score = evaluation["total_score"]
             source.craap_scores = evaluation["scores"]
-            
+
             with sqlite3.connect(self.db_path) as conn:
-                conn.execute("""
+                conn.execute(
+                    """
                     INSERT OR REPLACE INTO research_sources 
                     (hash_id, title, authors, url, doi, publication_date, journal, 
                      abstract, keywords, source_type, credibility_score, craap_scores, 
                      last_accessed, created_at)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    source.hash_id,
-                    source.title,
-                    json.dumps(source.authors),
-                    source.url,
-                    source.doi,
-                    source.publication_date,
-                    source.journal,
-                    source.abstract,
-                    json.dumps(source.keywords),
-                    source.source_type,
-                    source.credibility_score,
-                    json.dumps(source.craap_scores),
-                    datetime.utcnow().isoformat(),
-                    datetime.utcnow().isoformat()
-                ))
+                """,
+                    (
+                        source.hash_id,
+                        source.title,
+                        json.dumps(source.authors),
+                        source.url,
+                        source.doi,
+                        source.publication_date,
+                        source.journal,
+                        source.abstract,
+                        json.dumps(source.keywords),
+                        source.source_type,
+                        source.credibility_score,
+                        json.dumps(source.craap_scores),
+                        datetime.utcnow().isoformat(),
+                        datetime.utcnow().isoformat(),
+                    ),
+                )
                 conn.commit()
-            
+
             self.logger.info(f"Added research source: {source.title}")
             return True
-            
+
         except Exception as e:
             self.logger.error(f"Failed to add research source: {e}")
             return False
-    
+
     def get_source(self, hash_id: str) -> Optional[ResearchSource]:
         """Get a research source by hash ID."""
         try:
             with sqlite3.connect(self.db_path) as conn:
-                cursor = conn.execute("""
+                cursor = conn.execute(
+                    """
                     SELECT * FROM research_sources WHERE hash_id = ?
-                """, (hash_id,))
+                """,
+                    (hash_id,),
+                )
                 row = cursor.fetchone()
-                
+
                 if row:
                     return ResearchSource(
                         title=row[1],
@@ -358,25 +383,28 @@ class ResearchTracker:
                         credibility_score=row[10],
                         craap_scores=json.loads(row[11]) if row[11] else {},
                         last_accessed=row[12],
-                        hash_id=row[0]
+                        hash_id=row[0],
                     )
                 return None
-                
+
         except Exception as e:
             self.logger.error(f"Failed to get research source: {e}")
             return None
-    
+
     def search_sources(self, query: str, limit: int = 10) -> List[ResearchSource]:
         """Search research sources by query."""
         try:
             with sqlite3.connect(self.db_path) as conn:
-                cursor = conn.execute("""
+                cursor = conn.execute(
+                    """
                     SELECT * FROM research_sources 
                     WHERE title LIKE ? OR abstract LIKE ? OR keywords LIKE ?
                     ORDER BY credibility_score DESC
                     LIMIT ?
-                """, (f"%{query}%", f"%{query}%", f"%{query}%", limit))
-                
+                """,
+                    (f"%{query}%", f"%{query}%", f"%{query}%", limit),
+                )
+
                 sources = []
                 for row in cursor.fetchall():
                     source = ResearchSource(
@@ -392,64 +420,69 @@ class ResearchTracker:
                         credibility_score=row[10],
                         craap_scores=json.loads(row[11]) if row[11] else {},
                         last_accessed=row[12],
-                        hash_id=row[0]
+                        hash_id=row[0],
                     )
                     sources.append(source)
-                
+
                 return sources
-                
+
         except Exception as e:
             self.logger.error(f"Failed to search sources: {e}")
             return []
-    
+
     def add_finding(self, finding: ResearchFinding) -> bool:
         """Add a research finding."""
         try:
             with sqlite3.connect(self.db_path) as conn:
-                conn.execute("""
+                conn.execute(
+                    """
                     INSERT INTO research_findings 
                     (source_id, finding, category, confidence, relevance_score,
                      implementation_status, notes, created_at, updated_at)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    finding.source_id,
-                    finding.finding,
-                    finding.category,
-                    finding.confidence,
-                    finding.relevance_score,
-                    finding.implementation_status,
-                    finding.notes,
-                    finding.created_at,
-                    finding.updated_at
-                ))
+                """,
+                    (
+                        finding.source_id,
+                        finding.finding,
+                        finding.category,
+                        finding.confidence,
+                        finding.relevance_score,
+                        finding.implementation_status,
+                        finding.notes,
+                        finding.created_at,
+                        finding.updated_at,
+                    ),
+                )
                 conn.commit()
-            
+
             self.logger.info(f"Added research finding from source: {finding.source_id}")
             return True
-            
+
         except Exception as e:
             self.logger.error(f"Failed to add research finding: {e}")
             return False
-    
-    def get_findings(self, source_id: Optional[str] = None, category: Optional[str] = None) -> List[ResearchFinding]:
+
+    def get_findings(
+        self, source_id: Optional[str] = None, category: Optional[str] = None
+    ) -> List[ResearchFinding]:
         """Get research findings."""
         try:
             with sqlite3.connect(self.db_path) as conn:
                 query = "SELECT * FROM research_findings WHERE 1=1"
                 params = []
-                
+
                 if source_id:
                     query += " AND source_id = ?"
                     params.append(source_id)
-                
+
                 if category:
                     query += " AND category = ?"
                     params.append(category)
-                
+
                 query += " ORDER BY created_at DESC"
-                
+
                 cursor = conn.execute(query, params)
-                
+
                 findings = []
                 for row in cursor.fetchall():
                     finding = ResearchFinding(
@@ -461,50 +494,56 @@ class ResearchTracker:
                         implementation_status=row[6],
                         notes=row[7],
                         created_at=row[8],
-                        updated_at=row[9]
+                        updated_at=row[9],
                     )
                     findings.append(finding)
-                
+
                 return findings
-                
+
         except Exception as e:
             self.logger.error(f"Failed to get findings: {e}")
             return []
-    
-    def update_finding_status(self, finding_id: int, status: str, notes: Optional[str] = None) -> bool:
+
+    def update_finding_status(
+        self, finding_id: int, status: str, notes: Optional[str] = None
+    ) -> bool:
         """Update implementation status of a finding."""
         try:
             with sqlite3.connect(self.db_path) as conn:
-                conn.execute("""
+                conn.execute(
+                    """
                     UPDATE research_findings 
                     SET implementation_status = ?, notes = ?, updated_at = ?
                     WHERE id = ?
-                """, (status, notes, datetime.utcnow().isoformat(), finding_id))
+                """,
+                    (status, notes, datetime.utcnow().isoformat(), finding_id),
+                )
                 conn.commit()
-            
+
             return True
-            
+
         except Exception as e:
             self.logger.error(f"Failed to update finding status: {e}")
             return False
 
+
 class ResearchIntegrator:
     """Integrates research findings into the MCP system."""
-    
+
     def __init__(self, tracker: ResearchTracker):
         self.tracker = tracker
         self.logger = logging.getLogger("research_integrator")
         self.implementation_queue = []
-    
+
     async def analyze_paper(self, paper_url: str) -> Dict[str, Any]:
         """
         Analyze a research paper and extract findings.
         Implements: download, text extraction, NLP key finding extraction, categorization, credibility scoring, summary, and recommendations.
         Robust error handling and fallbacks. See idea.txt and TODO_DEVELOPMENT_PLAN.md.
-        Fallback: If any step fails (download, parsing, NLP), logs and returns a clear error or stub result. All errors are caught and logged.
         """
         import logging
         import re
+
         try:
             import requests
             from bs4 import BeautifulSoup
@@ -517,6 +556,7 @@ class ResearchIntegrator:
             PyPDF2 = None
         try:
             import spacy  # type: ignore[import]
+
             nlp = spacy.load("en_core_web_sm")
         except Exception:
             nlp = None
@@ -527,6 +567,7 @@ class ResearchIntegrator:
                 resp = requests.get(paper_url) if requests else None
                 if resp and resp.ok:
                     from io import BytesIO
+
                     pdf = PyPDF2.PdfReader(BytesIO(resp.content))
                     text = "\n".join(page.extract_text() or "" for page in pdf.pages)
             elif BeautifulSoup and requests:
@@ -535,8 +576,13 @@ class ResearchIntegrator:
                     soup = BeautifulSoup(resp.text, "html.parser")
                     text = soup.get_text()
             else:
-                logging.warning("[ResearchIntegrator] Could not download or parse paper. Returning stub.")
-                return {"status": "error", "message": "Could not download or parse paper."}
+                logging.warning(
+                    "[ResearchIntegrator] Could not download or parse paper. Returning stub."
+                )
+                return {
+                    "status": "error",
+                    "message": "Could not download or parse paper.",
+                }
             if not text:
                 return {"status": "error", "message": "No text extracted from paper."}
             # 2. NLP key finding extraction
@@ -544,13 +590,23 @@ class ResearchIntegrator:
             if nlp:
                 doc = nlp(text)
                 # Simple heuristic: extract sentences with "we find", "our results", "conclude", etc.
-                key_phrases = ["we find", "our results", "we conclude", "this paper shows", "we demonstrate"]
+                key_phrases = [
+                    "we find",
+                    "our results",
+                    "we conclude",
+                    "this paper shows",
+                    "we demonstrate",
+                ]
                 for sent in doc.sents:
                     if any(phrase in sent.text.lower() for phrase in key_phrases):
                         findings.append(sent.text.strip())
             else:
                 # Fallback: regex for key phrases
-                findings = re.findall(r"(?:we find|our results|we conclude|this paper shows|we demonstrate)[^.]*\. ", text, re.IGNORECASE)
+                findings = re.findall(
+                    r"(?:we find|our results|we conclude|this paper shows|we demonstrate)[^.]*\. ",
+                    text,
+                    re.IGNORECASE,
+                )
             # 3. Categorize findings (stub: use keywords)
             categories = []
             for f in findings:
@@ -562,9 +618,13 @@ class ResearchIntegrator:
                     categories.append("general")
             # 4. Score credibility (CRAAP)
             craap = None
-            if hasattr(self.tracker, 'craap_test'):
+            if hasattr(self.tracker, "craap_test"):
                 # If tracker has a CRAAPTest instance
-                craap = [self.tracker.craap_test.evaluate_source(ResearchSource(title=paper_url))]
+                craap = [
+                    self.tracker.craap_test.evaluate_source(
+                        ResearchSource(title=paper_url)
+                    )
+                ]
             # 5. Summarize and recommend
             summary = findings[:3] if findings else ["No key findings extracted."]
             recommendations = ["Review full text for additional insights."]
@@ -574,44 +634,47 @@ class ResearchIntegrator:
                 "categories": categories,
                 "craap": craap,
                 "summary": summary,
-                "recommendations": recommendations
+                "recommendations": recommendations,
             }
         except Exception as e:
             logging.error(f"Failed to analyze paper: {e}")
-            return {"status": "error", "message": str(e)}
-    
+            raise NotImplementedError("analyze_paper fallback not yet implemented. See idea.txt and TODO_DEVELOPMENT_PLAN.md.")
+
     async def integrate_findings(self, category: str) -> Dict[str, Any]:
         """
         Integrate research findings into the system.
         Fallback: If integration fails, logs and returns a clear error. All errors are caught and logged. See idea.txt and research.
+        See TODO_DEVELOPMENT_PLAN.md for roadmap.
         """
         try:
             findings = self.tracker.get_findings(category=category)
-            
+
             if not findings:
-                return {"status": "no_findings", "message": f"No findings for category: {category}"}
-            
+                return {
+                    "status": "no_findings",
+                    "message": f"No findings for category: {category}",
+                }
+
             # Filter high-confidence, relevant findings
             relevant_findings = [
-                f for f in findings 
-                if f.confidence > 0.7 and f.relevance_score > 0.6
+                f for f in findings if f.confidence > 0.7 and f.relevance_score > 0.6
             ]
-            
+
             integration_results = []
             for finding in relevant_findings:
                 result = await self._apply_finding(finding)
                 integration_results.append(result)
-            
+
             return {
                 "status": "success",
                 "findings_processed": len(relevant_findings),
-                "results": integration_results
+                "results": integration_results,
             }
-            
+
         except Exception as e:
             self.logger.error(f"Failed to integrate findings: {e}")
-            return {"status": "error", "message": str(e)}
-    
+            raise NotImplementedError("integrate_findings fallback not yet implemented. See idea.txt and TODO_DEVELOPMENT_PLAN.md.")
+
     async def _apply_finding(self, finding: ResearchFinding) -> Dict[str, Any]:
         """
         Apply a specific finding to the system.
@@ -625,23 +688,25 @@ class ResearchIntegrator:
             # 4. Testing the implementation
             # For now, just mark as implemented
             self.tracker.update_finding_status(
-                finding_id=getattr(finding, 'id', 1),  # Use actual finding_id if present
+                finding_id=getattr(
+                    finding, "id", 1
+                ),  # Use actual finding_id if present
                 status="implemented",
-                notes="Automatically integrated by research integrator"
+                notes="Automatically integrated by research integrator",
             )
             return {
-                "finding_id": getattr(finding, 'id', 1),
+                "finding_id": getattr(finding, "id", 1),
                 "status": "implemented",
-                "message": "Finding applied successfully"
+                "message": "Finding applied successfully",
             }
         except Exception as e:
             self.logger.error(f"Failed to apply finding: {e}")
             return {
-                "finding_id": getattr(finding, 'id', 1),
+                "finding_id": getattr(finding, "id", 1),
                 "status": "failed",
-                "message": str(e)
+                "message": str(e),
             }
-    
+
     def get_research_summary(self) -> Dict[str, Any]:
         """
         Get a summary of research integration status.
@@ -649,36 +714,48 @@ class ResearchIntegrator:
         """
         try:
             all_findings = self.tracker.get_findings()
-            
+
             summary = {
                 "total_findings": len(all_findings),
-                "implemented": len([f for f in all_findings if f.implementation_status == "implemented"]),
-                "pending": len([f for f in all_findings if f.implementation_status == "pending"]),
-                "rejected": len([f for f in all_findings if f.implementation_status == "rejected"]),
+                "implemented": len(
+                    [
+                        f
+                        for f in all_findings
+                        if f.implementation_status == "implemented"
+                    ]
+                ),
+                "pending": len(
+                    [f for f in all_findings if f.implementation_status == "pending"]
+                ),
+                "rejected": len(
+                    [f for f in all_findings if f.implementation_status == "rejected"]
+                ),
                 "categories": {},
-                "recent_findings": []
+                "recent_findings": [],
             }
-            
+
             # Group by category
             for finding in all_findings:
                 if finding.category not in summary["categories"]:
                     summary["categories"][finding.category] = 0
                 summary["categories"][finding.category] += 1
-            
+
             # Get recent findings
-            recent_findings = sorted(all_findings, key=lambda x: x.created_at, reverse=True)[:5]
+            recent_findings = sorted(
+                all_findings, key=lambda x: x.created_at, reverse=True
+            )[:5]
             summary["recent_findings"] = [
                 {
                     "finding": f.finding,
                     "category": f.category,
                     "confidence": f.confidence,
-                    "status": f.implementation_status
+                    "status": f.implementation_status,
                 }
                 for f in recent_findings
             ]
-            
+
             return summary
-            
+
         except Exception as e:
             self.logger.error(f"Failed to get research summary: {e}")
-            return {"error": str(e)} 
+            return {"error": str(e)}

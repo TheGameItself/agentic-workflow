@@ -132,6 +132,77 @@ class MindMapEngine:
         self.working_memory.clear()
         self.logger.info("[MindMapEngine] Working memory cleared.")
 
+    def demo_custom_graph_algorithm(self, algorithm: Any, *args, **kwargs):
+        """
+        Demo/test method: run a custom graph algorithm on the mind map graph.
+        Usage: engine.demo_custom_graph_algorithm(lambda g: list(g.keys()))
+        Returns the result of the algorithm.
+        """
+        try:
+            result = algorithm(self.graph, *args, **kwargs)
+            self.logger.info(f"[MindMapEngine] Custom graph algorithm result: {result}")
+            return result
+        except Exception as ex:
+            self.logger.error(f"[MindMapEngine] Custom graph algorithm error: {ex}")
+            return None
+
+    def advanced_feedback_integration(self, feedback: Dict[str, Any]):
+        """
+        Advanced feedback integration and continual learning for mind map engine.
+        Updates graph structure or edge weights based on structured feedback.
+        Supports cross-lobe research and adaptation.
+        """
+        self.logger.info(f"[MindMapEngine] Advanced feedback integration: {feedback}")
+        # Example: adjust edge weights or log for research
+        if feedback and 'edge' in feedback and 'weight' in feedback:
+            node_a, node_b = feedback['edge']
+            self.update_edge_weight(node_a, node_b, feedback['weight'])
+        self.working_memory.add({"advanced_feedback": feedback})
+
+    def cross_lobe_integration(self, node: str, lobe_name: str = "") -> Any:
+        """
+        Integrate with other lobes for cross-engine research and feedback.
+        Example: call ErrorDetectionLobe or PatternRecognitionEngine for additional context.
+        See idea.txt, README.md, ARCHITECTURE.md.
+        """
+        self.logger.info(f"[MindMapEngine] Cross-lobe integration called with {lobe_name}.")
+        # Placeholder: simulate integration
+        return self.node_centrality().get(node, 0)
+
+    def usage_example(self):
+        """
+        Usage example for mind map engine:
+        >>> engine = MindMapEngine()
+        >>> engine.add_node('A')
+        >>> engine.add_node('B')
+        >>> engine.add_edge('A', 'B', label='friend', weight=2.0)
+        >>> print(engine.export_map('mermaid'))
+        >>> path = engine.find_path('A', 'B')
+        >>> print(path)
+        >>> # Custom algorithm: list all nodes
+        >>> nodes = engine.demo_custom_graph_algorithm(lambda g: list(g.keys()))
+        >>> print(nodes)
+        >>> # Advanced feedback integration
+        >>> engine.advanced_feedback_integration({'edge': ('A', 'B'), 'weight': 3.0})
+        >>> # Cross-lobe integration
+        >>> engine.cross_lobe_integration('A', lobe_name='ErrorDetectionLobe')
+        """
+        pass
+
+    def get_state(self):
+        """Return a summary of the current mind map engine state for aggregation."""
+        return {
+            'db_path': self.db_path,
+            'graph': self.graph,
+            'node_attrs': self.node_attrs,
+            'working_memory': self.working_memory.get_all() if hasattr(self.working_memory, 'get_all') else None
+        }
+
+    def receive_data(self, data: dict):
+        """Stub: Receive data from aggregator or adjacent lobes."""
+        self.logger.info(f"[MindMapEngine] Received data: {data}")
+        # TODO: Integrate received data into engine state
+
     # TODO: Add path finding, centrality, and dynamic edge weighting algorithms.
     # TODO: Add demo/test methods for plugging in custom graph algorithms.
     # TODO: Document extension points and provide usage examples in README.md.

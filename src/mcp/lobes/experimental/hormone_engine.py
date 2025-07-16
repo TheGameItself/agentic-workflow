@@ -78,4 +78,13 @@ class HormoneEngine:
         self._stop_event.set()
         self._thread.join()
 
+    def get_levels(self):
+        """Return current hormone levels for aggregation."""
+        return dict(self.levels)
+
+    def receive_data(self, data: dict):
+        """Stub: Receive data from aggregator or adjacent lobes."""
+        logging.info(f"[HormoneEngine] Received data: {data}")
+        # TODO: Integrate received data into hormone state
+
 # Usage: Instantiate HormoneEngine with the event bus in the MCP system. 

@@ -75,4 +75,83 @@ class SplitBrainABTest:
 
     def run_test(self, *args, **kwargs):
         """Alias for run_ab_test for test compatibility."""
-        return self.run_ab_test(*args, **kwargs) 
+        return self.run_ab_test(*args, **kwargs)
+
+    def advanced_feedback_selection(self, lobe_a, lobe_b, input_data: Any = None, feedback: Optional[Dict[str, float]] = None, selection_fn: Optional[Any] = None) -> Dict[str, Any]:
+        """
+        Advanced feedback-driven selection and reranking for AB testing.
+        Allows custom selection functions and dynamic feedback models.
+        Returns both results and the selected winner.
+        """
+        try:
+            result_a = lobe_a.process(input_data) if hasattr(lobe_a, 'process') else lobe_a(input_data)
+            result_b = lobe_b.process(input_data) if hasattr(lobe_b, 'process') else lobe_b(input_data)
+            if selection_fn and callable(selection_fn):
+                winner = selection_fn(result_a, result_b, feedback)
+            elif feedback:
+                score_a = feedback.get('a', 0)
+                score_b = feedback.get('b', 0)
+                if score_a > score_b:
+                    winner = 'A'
+                elif score_b > score_a:
+                    winner = 'B'
+                else:
+                    winner = random.choice(['A', 'B'])
+            else:
+                winner = random.choice(['A', 'B'])
+            return {
+                "status": "completed",
+                "result_a": result_a,
+                "result_b": result_b,
+                "winner": winner
+            }
+        except Exception as ex:
+            logging.error(f"[SplitBrainABTest] Error in advanced_feedback_selection: {ex}")
+            return {"status": "error", "message": str(ex)}
+
+    def register_agent(self, agent, side: str = 'A'):
+        """
+        Dynamically register an agent (lobe) to the left or right side.
+        """
+        if side == 'A':
+            self.left_config = agent
+        elif side == 'B':
+            self.right_config = agent
+        else:
+            logging.warning(f"[SplitBrainABTest] Unknown side: {side}")
+        logging.info(f"[SplitBrainABTest] Registered agent to side {side}.")
+
+    def remove_agent(self, side: str = 'A'):
+        """
+        Dynamically remove an agent (lobe) from the left or right side.
+        """
+        if side == 'A':
+            self.left_config = None
+        elif side == 'B':
+            self.right_config = None
+        else:
+            logging.warning(f"[SplitBrainABTest] Unknown side: {side}")
+        logging.info(f"[SplitBrainABTest] Removed agent from side {side}.")
+
+    def cross_lobe_integration(self, lobe_a, lobe_b, input_data: Any = None, lobe_name: str = "") -> Any:
+        """
+        Integrate with other lobes for cross-engine research and feedback.
+        Example: call DecisionMakingLobe or PatternRecognitionEngine for additional context.
+        See idea.txt, README.md, ARCHITECTURE.md.
+        """
+        logging.info(f"[SplitBrainABTest] Cross-lobe integration called with {lobe_name}.")
+        # Placeholder: simulate integration
+        return self.advanced_feedback_selection(lobe_a, lobe_b, input_data=input_data)
+
+    def usage_example(self):
+        """
+        Usage example for split brain AB test:
+        >>> ab = SplitBrainABTest()
+        >>> ab.register_agent(lambda x: x + 1, side='A')
+        >>> ab.register_agent(lambda x: x * 2, side='B')
+        >>> result = ab.advanced_feedback_selection(ab.left_config, ab.right_config, input_data=3, feedback={'a': 2, 'b': 1})
+        >>> print(result)
+        >>> # Cross-lobe integration
+        >>> ab.cross_lobe_integration(ab.left_config, ab.right_config, input_data=3, lobe_name='DecisionMakingLobe')
+        """
+        pass 

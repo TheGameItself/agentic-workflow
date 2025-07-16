@@ -21,14 +21,15 @@ TODO:
 """
 
 import json
+import logging
+import os
 import re
 import sqlite3
-import os
-from typing import Dict, List, Any, Optional
 from datetime import datetime
-from src.mcp.lobes.shared_lobes.working_memory import WorkingMemory  # See idea.txt
-import logging
+from typing import Any, Callable, Dict, List, Optional
+
 from src.mcp.lobes.experimental.vesicle_pool import VesiclePool
+from src.mcp.lobes.shared_lobes.working_memory import WorkingMemory  # See idea.txt
 
 
 class PreferenceBuffer:
@@ -50,20 +51,24 @@ class PreferenceBuffer:
     - Implement advanced feedback weighting and prioritization
     - Add robust error handling for buffer overflows/underflows
     """
+
     def __init__(self, capacity=50, decay=0.98):
         self.capacity = capacity
         self.decay = decay
         self.buffer = []
+
     def add(self, preference):
-        self.buffer.append({'preference': preference, 'strength': 1.0})
+        self.buffer.append({"preference": preference, "strength": 1.0})
         if len(self.buffer) > self.capacity:
             self.buffer.pop(0)
+
     def decay_buffer(self):
         for entry in self.buffer:
-            entry['strength'] *= self.decay
-        self.buffer = [e for e in self.buffer if e['strength'] > 0.1]
+            entry["strength"] *= self.decay
+        self.buffer = [e for e in self.buffer if e["strength"] > 0.1]
+
     def get_recent(self, n=5):
-        return [e['preference'] for e in self.buffer[-n:]]
+        return [e["preference"] for e in self.buffer[-n:]]
 
 
 class AssociativePreferenceMemory:
@@ -86,27 +91,43 @@ class AssociativePreferenceMemory:
     - Implement advanced associative memory algorithms
     - Add robust error handling for memory overflows/underflows
     """
+
     def __init__(self, capacity=100, decay=0.97):
         self.capacity = capacity
         self.decay = decay
-        self.memory = []  # Each entry: {'preference': ..., 'context': ..., 'feedback': ..., 'strength': ...}
+        self.memory = (
+            []
+        )  # Each entry: {'preference': ..., 'context': ..., 'feedback': ..., 'strength': ...}
         self.logger = logging.getLogger("AssociativePreferenceMemory")
+
     def add(self, preference, context=None, feedback=None):
-        entry = {'preference': preference, 'context': context, 'feedback': feedback, 'strength': 1.0}
+        entry = {
+            "preference": preference,
+            "context": context,
+            "feedback": feedback,
+            "strength": 1.0,
+        }
         self.memory.append(entry)
         if len(self.memory) > self.capacity:
             self.memory.pop(0)
-        self.logger.info(f"[AssociativePreferenceMemory] Added preference: {preference} (context={context}, feedback={feedback})")
+        self.logger.info(
+            f"[AssociativePreferenceMemory] Added preference: {preference} (context={context}, feedback={feedback})"
+        )
+
     def decay_memory(self):
         for entry in self.memory:
-            entry['strength'] *= self.decay
-        self.memory = [e for e in self.memory if e['strength'] > 0.1]
+            entry["strength"] *= self.decay
+        self.memory = [e for e in self.memory if e["strength"] > 0.1]
+
     def get_by_context(self, context, n=5):
         context_str = str(context) if context is not None else ""
-        matches = [e for e in self.memory if context_str and context_str in str(e['context'])]
-        return [e['preference'] for e in matches[-n:]]
+        matches = [
+            e for e in self.memory if context_str and context_str in str(e["context"])
+        ]
+        return [e["preference"] for e in matches[-n:]]
+
     def get_recent(self, n=5):
-        return [e['preference'] for e in self.memory[-n:]]
+        return [e["preference"] for e in self.memory[-n:]]
 
 
 class AlignmentEngine:
@@ -129,13 +150,14 @@ class AlignmentEngine:
     - Add robust error handling and logging for all alignment operations
     - Support for dynamic alignment templates and feedback loops
     """
+
     def __init__(self, db_path: Optional[str] = None) -> None:
         if db_path is None:
             current_dir = os.path.dirname(os.path.abspath(__file__))
-            project_root = os.path.join(current_dir, '..', '..', '..')
-            data_dir = os.path.join(project_root, 'data')
+            project_root = os.path.join(current_dir, "..", "..", "..")
+            data_dir = os.path.join(project_root, "data")
             os.makedirs(data_dir, exist_ok=True)
-            db_path = os.path.join(data_dir, 'alignment_engine.db')
+            db_path = os.path.join(data_dir, "alignment_engine.db")
         self.db_path = db_path
         self.alignment_history = []
         self.user_preferences = {}
@@ -145,15 +167,19 @@ class AlignmentEngine:
         self.associative_memory = AssociativePreferenceMemory()
         self.logger = logging.getLogger("AlignmentEngine")
         self.vesicle_pool = VesiclePool()  # Synaptic vesicle pool model
-        self.logger.info("[AlignmentEngine] VesiclePool initialized: %s", self.vesicle_pool.get_state())
+        self.logger.info(
+            "[AlignmentEngine] VesiclePool initialized: %s",
+            self.vesicle_pool.get_state(),
+        )
         self._init_database()
-    
+
     def _init_database(self):
         """Initialize alignment database."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
-        cursor.execute("""
+
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS alignment_history (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 original_output TEXT NOT NULL,
@@ -163,9 +189,11 @@ class AlignmentEngine:
                 alignment_method TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """)
-        
-        cursor.execute("""
+        """
+        )
+
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS user_preferences (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 preference_key TEXT UNIQUE NOT NULL,
@@ -174,9 +202,11 @@ class AlignmentEngine:
                 usage_count INTEGER DEFAULT 0,
                 last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """)
-        
-        cursor.execute("""
+        """
+        )
+
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS alignment_patterns (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 pattern_type TEXT NOT NULL,
@@ -185,44 +215,47 @@ class AlignmentEngine:
                 usage_count INTEGER DEFAULT 0,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """)
-        
+        """
+        )
+
         conn.commit()
         conn.close()
 
-    def align(self, llm_output: str, user_preferences: Optional[Dict[str, Any]] = None) -> str:
+    def align(
+        self, llm_output: str, user_preferences: Optional[Dict[str, Any]] = None
+    ) -> str:
         """Align LLM output with user preferences using multiple alignment methods."""
         if user_preferences is None:
             user_preferences = self._get_user_preferences()
-        
+
         if user_preferences is not None:
             self.preference_buffer.add(user_preferences)
             self.associative_memory.add(user_preferences)
         self.preference_buffer.decay_buffer()
         self.associative_memory.decay_memory()
-        
+
         # Apply multiple alignment methods
         aligned_output = llm_output
-        
+
         # Method 1: Length-based alignment
         if user_preferences.get("preference") == "concise":
             aligned_output = self._align_concise(aligned_output, user_preferences)
-        
+
         # Method 2: Style-based alignment
         if user_preferences.get("style"):
             aligned_output = self._align_style(aligned_output, user_preferences)
-        
+
         # Method 3: Content-based alignment
         if user_preferences.get("content_focus"):
             aligned_output = self._align_content(aligned_output, user_preferences)
-        
+
         # Method 4: Format-based alignment
         if user_preferences.get("format"):
             aligned_output = self._align_format(aligned_output, user_preferences)
-        
+
         # Store alignment history
         self._store_alignment_history(llm_output, aligned_output, user_preferences)
-        
+
         return aligned_output
 
     def _align_concise(self, output: str, preferences: Dict[str, Any]) -> str:
@@ -230,116 +263,149 @@ class AlignmentEngine:
         max_words = preferences.get("max_words", 50)
         words = output.split()
         if len(words) > max_words:
-            return ' '.join(words[:max_words]) + "..."
+            return " ".join(words[:max_words]) + "..."
         return output
 
     def _align_style(self, output: str, preferences: Dict[str, Any]) -> str:
         """Align output style based on preferences."""
         style = preferences.get("style", "neutral")
-        
+
         if style == "formal":
             # Remove contractions, informal language
             output = re.sub(r"n't\b", " not", output)
             output = re.sub(r"'re\b", " are", output)
             output = re.sub(r"'s\b", " is", output)
             output = re.sub(r"'ll\b", " will", output)
-        
+
         elif style == "casual":
             # Add contractions, informal language
             output = re.sub(r" not\b", "n't", output)
             output = re.sub(r" are\b", "'re", output)
             output = re.sub(r" is\b", "'s", output)
-        
+
         return output
 
     def _align_content(self, output: str, preferences: Dict[str, Any]) -> str:
         """Align content focus based on preferences."""
         content_focus = preferences.get("content_focus", "balanced")
-        
+
         if content_focus == "technical":
             # Emphasize technical details
-            lines = output.split('\n')
-            technical_lines = [line for line in lines if any(word in line.lower() for word in 
-                           ['function', 'class', 'method', 'api', 'config', 'parameter'])]
+            lines = output.split("\n")
+            technical_lines = [
+                line
+                for line in lines
+                if any(
+                    word in line.lower()
+                    for word in [
+                        "function",
+                        "class",
+                        "method",
+                        "api",
+                        "config",
+                        "parameter",
+                    ]
+                )
+            ]
             if technical_lines:
-                return '\n'.join(technical_lines)
-        
+                return "\n".join(technical_lines)
+
         elif content_focus == "practical":
             # Emphasize practical steps
-            lines = output.split('\n')
-            practical_lines = [line for line in lines if any(word in line.lower() for word in 
-                           ['step', 'run', 'install', 'create', 'add', 'use'])]
+            lines = output.split("\n")
+            practical_lines = [
+                line
+                for line in lines
+                if any(
+                    word in line.lower()
+                    for word in ["step", "run", "install", "create", "add", "use"]
+                )
+            ]
             if practical_lines:
-                return '\n'.join(practical_lines)
-        
+                return "\n".join(practical_lines)
+
         return output
 
     def _align_format(self, output: str, preferences: Dict[str, Any]) -> str:
         """Align format based on preferences."""
         format_type = preferences.get("format", "text")
-        
+
         if format_type == "bullet_points":
             # Convert to bullet points
-            lines = output.split('\n')
+            lines = output.split("\n")
             bulleted = [f"• {line.strip()}" for line in lines if line.strip()]
-            return '\n'.join(bulleted)
-        
+            return "\n".join(bulleted)
+
         elif format_type == "numbered":
             # Convert to numbered list
-            lines = output.split('\n')
-            numbered = [f"{i+1}. {line.strip()}" for i, line in enumerate(lines) if line.strip()]
-            return '\n'.join(numbered)
-        
+            lines = output.split("\n")
+            numbered = [
+                f"{i+1}. {line.strip()}" for i, line in enumerate(lines) if line.strip()
+            ]
+            return "\n".join(numbered)
+
         return output
 
     def _get_user_preferences(self) -> Dict[str, Any]:
         """Get user preferences from database."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
-        cursor.execute("SELECT preference_key, preference_value, confidence FROM user_preferences")
+
+        cursor.execute(
+            "SELECT preference_key, preference_value, confidence FROM user_preferences"
+        )
         preferences = {}
-        
+
         for row in cursor.fetchall():
             key, value, confidence = row
             if confidence > 0.3:  # Only use preferences with sufficient confidence
                 preferences[key] = value
-        
+
         conn.close()
         return preferences
 
-    def _store_alignment_history(self, original: str, aligned: str, preferences: Dict[str, Any]):
+    def _store_alignment_history(
+        self, original: str, aligned: str, preferences: Dict[str, Any]
+    ):
         """Store alignment history in database."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
-        cursor.execute("""
+
+        cursor.execute(
+            """
             INSERT INTO alignment_history (original_output, aligned_output, user_preferences, alignment_method)
             VALUES (?, ?, ?, ?)
-        """, (original, aligned, json.dumps(preferences), "multi_method"))
-        
+        """,
+            (original, aligned, json.dumps(preferences), "multi_method"),
+        )
+
         conn.commit()
         conn.close()
 
-    def learn_from_feedback(self, alignment_id: int, feedback_score: float, feedback_text: str = ""):
+    def learn_from_feedback(
+        self, alignment_id: int, feedback_score: float, feedback_text: str = ""
+    ):
         """Learn from user feedback to improve alignment."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
+
         # Update alignment history with feedback
-        cursor.execute("""
+        cursor.execute(
+            """
             UPDATE alignment_history 
             SET feedback_score = ? 
             WHERE id = ?
-        """, (feedback_score, alignment_id))
-        
+        """,
+            (feedback_score, alignment_id),
+        )
+
         # Extract patterns from feedback text
         if feedback_text:
             self._extract_alignment_patterns(feedback_text, feedback_score)
-        
+
         # Update user preferences based on feedback
         self._update_preferences_from_feedback(alignment_id, feedback_score)
-        
+
         conn.commit()
         conn.close()
 
@@ -347,23 +413,32 @@ class AlignmentEngine:
         """Extract alignment patterns from feedback text."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
+
         # Simple pattern extraction based on keywords
         patterns = []
         if "concise" in feedback_text.lower():
-            patterns.append({"type": "length", "pattern": "concise", "success_rate": score})
+            patterns.append(
+                {"type": "length", "pattern": "concise", "success_rate": score}
+            )
         if "formal" in feedback_text.lower():
-            patterns.append({"type": "style", "pattern": "formal", "success_rate": score})
+            patterns.append(
+                {"type": "style", "pattern": "formal", "success_rate": score}
+            )
         if "technical" in feedback_text.lower():
-            patterns.append({"type": "content", "pattern": "technical", "success_rate": score})
-        
+            patterns.append(
+                {"type": "content", "pattern": "technical", "success_rate": score}
+            )
+
         for pattern in patterns:
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT OR REPLACE INTO alignment_patterns 
                 (pattern_type, pattern_data, success_rate, usage_count)
                 VALUES (?, ?, ?, 1)
-            """, (pattern["type"], json.dumps(pattern), pattern["success_rate"]))
-        
+            """,
+                (pattern["type"], json.dumps(pattern), pattern["success_rate"]),
+            )
+
         conn.commit()
         conn.close()
 
@@ -371,37 +446,51 @@ class AlignmentEngine:
         """Update user preferences based on feedback score."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
+
         # Get the alignment record
-        cursor.execute("SELECT user_preferences FROM alignment_history WHERE id = ?", (alignment_id,))
+        cursor.execute(
+            "SELECT user_preferences FROM alignment_history WHERE id = ?",
+            (alignment_id,),
+        )
         result = cursor.fetchone()
-        
+
         if result:
             preferences = json.loads(result[0])
-            
+
             # Update preference confidence based on feedback
             for key, value in preferences.items():
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT confidence, usage_count FROM user_preferences 
                     WHERE preference_key = ?
-                """, (key,))
-                
+                """,
+                    (key,),
+                )
+
                 existing = cursor.fetchone()
                 if existing:
                     current_confidence, usage_count = existing
                     # Update confidence using exponential moving average
-                    new_confidence = (current_confidence * usage_count + score) / (usage_count + 1)
-                    cursor.execute("""
+                    new_confidence = (current_confidence * usage_count + score) / (
+                        usage_count + 1
+                    )
+                    cursor.execute(
+                        """
                         UPDATE user_preferences 
                         SET confidence = ?, usage_count = usage_count + 1, last_updated = CURRENT_TIMESTAMP
                         WHERE preference_key = ?
-                    """, (new_confidence, key))
+                    """,
+                        (new_confidence, key),
+                    )
                 else:
-                    cursor.execute("""
+                    cursor.execute(
+                        """
                         INSERT INTO user_preferences (preference_key, preference_value, confidence, usage_count)
                         VALUES (?, ?, ?, 1)
-                    """, (key, value, score))
-        
+                    """,
+                        (key, value, score),
+                    )
+
         conn.commit()
         conn.close()
 
@@ -409,27 +498,31 @@ class AlignmentEngine:
         """Get alignment history for analysis."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
-        cursor.execute("""
+
+        cursor.execute(
+            """
             SELECT id, original_output, aligned_output, user_preferences, 
                    feedback_score, alignment_method, created_at
             FROM alignment_history
             ORDER BY created_at DESC
             LIMIT 100
-        """)
-        
+        """
+        )
+
         history = []
         for row in cursor.fetchall():
-            history.append({
-                "id": row[0],
-                "original": row[1],
-                "aligned": row[2],
-                "preferences": json.loads(row[3]) if row[3] else {},
-                "feedback_score": row[4],
-                "method": row[5],
-                "created_at": row[6]
-            })
-        
+            history.append(
+                {
+                    "id": row[0],
+                    "original": row[1],
+                    "aligned": row[2],
+                    "preferences": json.loads(row[3]) if row[3] else {},
+                    "feedback_score": row[4],
+                    "method": row[5],
+                    "created_at": row[6],
+                }
+            )
+
         conn.close()
         return history
 
@@ -437,52 +530,59 @@ class AlignmentEngine:
         """Get alignment statistics and performance metrics."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
+
         # Get basic statistics
         cursor.execute("SELECT COUNT(*) FROM alignment_history")
         total_alignments = cursor.fetchone()[0]
-        
-        cursor.execute("SELECT AVG(feedback_score) FROM alignment_history WHERE feedback_score IS NOT NULL")
+
+        cursor.execute(
+            "SELECT AVG(feedback_score) FROM alignment_history WHERE feedback_score IS NOT NULL"
+        )
         avg_score = cursor.fetchone()[0] or 0.0
-        
-        cursor.execute("SELECT COUNT(*) FROM alignment_history WHERE feedback_score > 0.7")
+
+        cursor.execute(
+            "SELECT COUNT(*) FROM alignment_history WHERE feedback_score > 0.7"
+        )
         high_score_count = cursor.fetchone()[0]
-        
+
         # Get pattern statistics
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT pattern_type, AVG(success_rate), COUNT(*) 
             FROM alignment_patterns 
             GROUP BY pattern_type
-        """)
+        """
+        )
         pattern_stats = {}
         for row in cursor.fetchall():
-            pattern_stats[row[0]] = {
-                "avg_success_rate": row[1],
-                "usage_count": row[2]
-            }
-        
+            pattern_stats[row[0]] = {"avg_success_rate": row[1], "usage_count": row[2]}
+
         # Get preference statistics
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT preference_key, confidence, usage_count 
             FROM user_preferences 
             ORDER BY confidence DESC
-        """)
+        """
+        )
         preferences = []
         for row in cursor.fetchall():
-            preferences.append({
-                "key": row[0],
-                "confidence": row[1],
-                "usage_count": row[2]
-            })
-        
+            preferences.append(
+                {"key": row[0], "confidence": row[1], "usage_count": row[2]}
+            )
+
         conn.close()
-        
+
         return {
             "total_alignments": total_alignments,
             "average_feedback_score": avg_score,
-            "high_score_percentage": (high_score_count / total_alignments * 100) if total_alignments > 0 else 0,
+            "high_score_percentage": (
+                (high_score_count / total_alignments * 100)
+                if total_alignments > 0
+                else 0
+            ),
             "pattern_statistics": pattern_stats,
-            "top_preferences": preferences[:10]
+            "top_preferences": preferences[:10],
         }
 
     def process(self, input_data: Any) -> Any:
@@ -499,11 +599,11 @@ class AlignmentEngine:
         """Reset all user preferences (for testing/debugging)."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
+
         cursor.execute("DELETE FROM user_preferences")
         cursor.execute("DELETE FROM alignment_patterns")
         cursor.execute("DELETE FROM alignment_history")
-        
+
         conn.commit()
         conn.close()
 
@@ -513,4 +613,178 @@ class AlignmentEngine:
         self.associative_memory.decay_memory()
 
     def recall_preferences_by_context(self, context=None, n=5):
-        return self.associative_memory.get_by_context(context, n=n) 
+        return self.associative_memory.get_by_context(context, n=n)
+
+    def align_rlhf(
+        self,
+        llm_output: str,
+        user_preferences: Optional[Dict[str, Any]] = None,
+        feedback: Optional[Dict[str, Any]] = None,
+    ) -> str:
+        """
+        Advanced RLHF-based alignment: aligns LLM output with user preferences using reward modeling and feedback.
+        Returns the aligned output.
+        """
+        try:
+            # Example: reward model stub (replace with real RLHF logic)
+            reward = 1.0
+            if feedback and "reward" in feedback:
+                reward = float(feedback["reward"])
+            aligned = llm_output
+            if user_preferences:
+                for k, v in user_preferences.items():
+                    aligned = aligned.replace(k, v)
+            if reward < 0.5:
+                aligned = f"[LOW REWARD] {aligned}"
+            self.logger.info(
+                f"[AlignmentEngine] RLHF alignment complete. Reward: {reward}"
+            )
+            return aligned
+        except Exception as ex:
+            self.logger.error(f"[AlignmentEngine] RLHF alignment error: {ex}")
+            return llm_output
+
+    def align_with_template(
+        self,
+        llm_output: str,
+        template: str,
+        user_preferences: Optional[Dict[str, Any]] = None,
+    ) -> str:
+        """
+        Align LLM output using a dynamic template and user preferences.
+        """
+        try:
+            aligned = template.format(output=llm_output, **(user_preferences or {}))
+            self.logger.info(f"[AlignmentEngine] Template alignment complete.")
+            return aligned
+        except Exception as ex:
+            self.logger.error(f"[AlignmentEngine] Template alignment error: {ex}")
+            return llm_output
+
+    def feedback_loop(self, alignment_id: int, feedback: Dict[str, Any]):
+        """
+        Integrate feedback for continual improvement and dynamic adaptation.
+        Updates internal parameters, logs feedback, and triggers preference/model updates.
+        """
+        try:
+            score = feedback.get("score", 0.0)
+            text = feedback.get("text", "")
+            self.learn_from_feedback(alignment_id, score, text)
+            self.logger.info(
+                f"[AlignmentEngine] Feedback loop executed for alignment_id={alignment_id}."
+            )
+        except Exception as ex:
+            self.logger.error(f"[AlignmentEngine] Feedback loop error: {ex}")
+
+    def demo_custom_alignment(
+        self,
+        custom_aligner: Callable,
+        llm_output: str,
+        user_preferences: Optional[Dict[str, Any]] = None,
+    ) -> str:
+        """
+        Demo/test method: run a custom alignment function and return the aligned output.
+        Usage: engine.demo_custom_alignment(lambda o, p: o.upper(), 'test', {})
+        """
+        try:
+            result = custom_aligner(llm_output, user_preferences)
+            self.logger.info(f"[AlignmentEngine] Custom alignment result: {result}")
+            return result
+        except Exception as ex:
+            self.logger.error(f"[AlignmentEngine] Custom alignment error: {ex}")
+            return llm_output
+
+    def advanced_feedback_integration(self, feedback: dict):
+        """
+        Advanced feedback integration and continual learning for alignment engine.
+        Updates alignment parameters or preference models based on structured feedback.
+        Supports cross-lobe research and adaptation.
+        """
+        try:
+            if feedback and "preference_update" in feedback:
+                self.user_preferences.update(feedback["preference_update"])
+                self.logger.info(
+                    f"[AlignmentEngine] User preferences updated from advanced feedback: {feedback['preference_update']}"
+                )
+            self.working_memory.add({"advanced_feedback": feedback})
+        except Exception as ex:
+            self.logger.error(
+                f"[AlignmentEngine] Error in advanced_feedback_integration: {ex}"
+            )
+
+    def cross_lobe_integration(self, lobe_name: str = "", data: Any = None) -> Any:
+        """
+        Integrate with other lobes for cross-engine research and feedback.
+        Example: call VesiclePool or TaskProposalLobe for additional context.
+        See idea.txt, README.md, ARCHITECTURE.md.
+        """
+        self.logger.info(
+            f"[AlignmentEngine] Cross-lobe integration called with {lobe_name}."
+        )
+        # Placeholder: simulate integration
+        return self.get_alignment_history()
+
+    def usage_example(self):
+        """
+        Usage example for alignment engine:
+        >>> engine = AlignmentEngine()
+        >>> aligned = engine.align('Hello, user!', {'user': 'Alice'})
+        >>> print(aligned)
+        >>> # RLHF alignment
+        >>> rlhf = engine.align_rlhf('Hello, user!', {'user': 'Alice'}, feedback={'reward': 0.3})
+        >>> print(rlhf)
+        >>> # Custom alignment: uppercase
+        >>> custom = engine.demo_custom_alignment(lambda o, p: o.upper(), 'test', {})
+        >>> print(custom)
+        >>> # Advanced feedback integration
+        >>> engine.advanced_feedback_integration({'preference_update': {'style': 'formal'}})
+        >>> # Cross-lobe integration
+        >>> engine.cross_lobe_integration(lobe_name='VesiclePool')
+        """
+        pass
+
+    def get_state(self):
+        """Return a summary of the current alignment engine state for aggregation."""
+        return {
+            "db_path": self.db_path,
+            "alignment_history": self.alignment_history,
+            "user_preferences": self.user_preferences,
+            "feedback_scores": self.feedback_scores,
+            "working_memory": (
+                self.working_memory.get_all()
+                if hasattr(self.working_memory, "get_all")
+                else None
+            ),
+        }
+
+    def receive_data(self, data: dict):
+        """Stub: Receive data from aggregator or adjacent lobes."""
+        self.logger.info(f"[AlignmentEngine] Received data: {data}")
+        # TODO: Integrate received data into engine state
+
+    def advanced_rlhf(self):
+        """
+        Advanced RLHF and preference modeling algorithms (minimal implementation).
+        Fallback: logs stub status and returns a default alignment result.
+        See idea.txt and TODO_DEVELOPMENT_PLAN.md for future improvements.
+        """
+        self.logger.warning("[AlignmentEngine] advanced_rlhf is a stub. Returning default alignment result.")
+        return {"status": "stub", "alignment_score": 0.0, "details": "Advanced RLHF not yet implemented."}
+
+    def robust_error_handling(self):
+        """
+        Robust error handling and logging for all alignment operations (minimal implementation).
+        Fallback: logs stub status and returns True.
+        See idea.txt and TODO_DEVELOPMENT_PLAN.md for future improvements.
+        """
+        self.logger.warning("[AlignmentEngine] robust_error_handling is a stub. No real error handling implemented.")
+        return True
+
+    def dynamic_alignment_templates(self):
+        """
+        Dynamic alignment templates and feedback loops (minimal implementation).
+        Fallback: logs stub status and returns a default template.
+        See idea.txt and TODO_DEVELOPMENT_PLAN.md for future improvements.
+        """
+        self.logger.warning("[AlignmentEngine] dynamic_alignment_templates is a stub. Returning default template.")
+        return {"template": "default", "feedback_loop": False, "status": "stub"}

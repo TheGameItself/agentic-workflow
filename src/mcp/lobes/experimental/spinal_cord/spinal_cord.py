@@ -26,12 +26,23 @@ class ReflexBuffer:
         self.decay = decay
         self.buffer = []  # Each entry: {'signal': ..., 'context': ..., 'feedback': ..., 'strength': ...}
         self.logger = logging.getLogger("ReflexBuffer")
-    def add(self, signal, context=None, feedback=None):
-        entry = {'signal': signal, 'context': context, 'feedback': feedback, 'strength': 1.0}
-        self.buffer.append(entry)
-        if len(self.buffer) > self.capacity:
-            self.buffer.pop(0)
-        self.logger.info(f"[ReflexBuffer] Added signal: {signal} (context={context}, feedback={feedback})")
+    def add(self, signal, context=None, feedback=None, weight: float = 1.0):
+        """
+        Add a signal to the buffer with optional feedback and weighting.
+        Implements advanced feedback weighting and prioritization.
+        Handles buffer overflow with robust error handling.
+        """
+        try:
+            entry = {'signal': signal, 'context': context, 'feedback': feedback, 'strength': weight}
+            if feedback and isinstance(feedback, dict) and 'weight' in feedback:
+                entry['strength'] *= float(feedback['weight'])
+            self.buffer.append(entry)
+            if len(self.buffer) > self.capacity:
+                self.logger.warning("[ReflexBuffer] Buffer overflow. Oldest signal dropped.")
+                self.buffer.pop(0)
+            self.logger.info(f"[ReflexBuffer] Added signal: {signal} (context={context}, feedback={feedback}, weight={weight})")
+        except Exception as ex:
+            self.logger.error(f"[ReflexBuffer] Error adding signal: {ex}")
     def decay_buffer(self):
         for entry in self.buffer:
             entry['strength'] *= self.decay
@@ -42,6 +53,19 @@ class ReflexBuffer:
         return [e['signal'] for e in matches[-n:]]
     def get_recent(self, n=5):
         return [e['signal'] for e in self.buffer[-n:]]
+    def pop(self):
+        """
+        Remove and return the most recent signal. Handles underflow with error handling.
+        """
+        try:
+            if self.buffer:
+                return self.buffer.pop()
+            else:
+                self.logger.warning("[ReflexBuffer] Buffer underflow. No signal to pop.")
+                return None
+        except Exception as ex:
+            self.logger.error(f"[ReflexBuffer] Error popping signal: {ex}")
+            return None
 
 class SpinalCord:
     """
@@ -91,4 +115,64 @@ class SpinalCord:
         """
         Recall most relevant reflex signals for a given context using reflex buffer.
         """
-        return self.reflex_buffer.get_by_context(context, n=n) 
+        return self.reflex_buffer.get_by_context(context, n=n)
+
+    def enable(self):
+        """
+        Enable the spinal cord reflex pathways.
+        """
+        self.enabled = True
+        self.logger.info("[SpinalCord] Reflex pathways enabled.")
+
+    def disable(self):
+        """
+        Disable the spinal cord reflex pathways.
+        """
+        self.enabled = False
+        self.logger.info("[SpinalCord] Reflex pathways disabled.")
+
+    def advanced_route_signal(self, signal: Any, target: Optional[Any] = None, context: Any = None, feedback: Any = None) -> Any:
+        """
+        Advanced routing logic: context-aware, feedback-driven, and supports dynamic reflex adaptation.
+        Integrates with other lobes for cross-engine research and feedback.
+        Returns the routed signal or result.
+        """
+        if not self.enabled:
+            self.logger.info("[SpinalCord] Disabled. Signal bypassed.")
+            return signal
+        try:
+            # Example: prioritize signals with high feedback weight
+            weight = 1.0
+            if feedback and isinstance(feedback, dict) and 'weight' in feedback:
+                weight = float(feedback['weight'])
+            self.reflex_buffer.add(signal, context=context, feedback=feedback, weight=weight)
+            self.reflex_buffer.decay_buffer()
+            # Integrate with other lobes (stub)
+            self.logger.info(f"[SpinalCord] Advanced routed signal: {signal} to {target} (weight={weight})")
+            # TODO: Add actual routing logic to other lobes
+            return {'signal': signal, 'target': target, 'context': context, 'weight': weight}
+        except Exception as ex:
+            self.logger.error(f"[SpinalCord] Error in advanced_route_signal: {ex}")
+            return signal
+
+    def cross_lobe_integration(self, signal: Any, lobe_name: str = "", context: Any = None) -> Any:
+        """
+        Integrate with other lobes for cross-engine research and feedback.
+        Example: call SensoryColumn or MindMapEngine for additional context.
+        See idea.txt, README.md, ARCHITECTURE.md.
+        """
+        self.logger.info(f"[SpinalCord] Cross-lobe integration called with {lobe_name}.")
+        # Placeholder: simulate integration
+        return self.route_signal(signal, context=context)
+
+    def usage_example(self):
+        """
+        Usage example for spinal cord lobe:
+        >>> cord = SpinalCord()
+        >>> cord.enable()
+        >>> cord.advanced_route_signal('touch', target='MotorLobe', context='pain', feedback={'weight': 2.0})
+        >>> cord.disable()
+        >>> # Cross-lobe integration
+        >>> cord.cross_lobe_integration('touch', lobe_name='SensoryColumn', context='pain')
+        """
+        pass 

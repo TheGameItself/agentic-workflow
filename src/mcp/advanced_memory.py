@@ -70,9 +70,11 @@ except ImportError:
 class VectorEncoder:
     """Base class for vector encoders/decoders."""
     def encode(self, vector):
-        raise NotImplementedError
+        """Encode the vector. See idea.txt for requirements. This is a stub."""
+        raise NotImplementedError("Encode method not implemented. See idea.txt.")
     def decode(self, encoded):
-        raise NotImplementedError
+        """Decode the encoded vector. See idea.txt for requirements. This is a stub."""
+        raise NotImplementedError("Decode method not implemented. See idea.txt.")
     def name(self):
         return self.__class__.__name__
 

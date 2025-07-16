@@ -1,0 +1,133 @@
+--- MCP PROJECT TODO (Sequential Priority Order) ---
+
+# 0. PROJECT AUDIT AND CLEANUP (TOP PRIORITY)
+- [ ] Evaluate all files and directories for necessity and alignment with core functionality, documentation, and GitHub best practices (see idea.txt).
+      _Bulk command skeleton:_
+      `find . -type f \( ! -name 'idea.txt' \) -exec file {} + | grep -vE 'core|doc|src|README|LICENSE'`
+- [ ] Identify and list all junk, obsolete, temporary, redundant, or non-essential files (excluding idea.txt, which must never be removed or modified).
+      _Bulk command skeleton:_
+      `find . -type f -name '*~' -o -name '*.bak' -o -name '*.tmp' -o -name '*.old' > junk_files.txt`
+- [ ] Remove or archive all identified junk files and directories after review.
+      _Bulk command skeleton:_
+      `cat junk_files.txt | xargs -I{} mv {} ./archive/` (for archiving)
+      `cat junk_files.txt | xargs rm` (for deletion, after review)
+- [ ] Document all changes and update the README to reflect the cleaned structure.
+      _Bulk command skeleton:_
+      `git status > cleanup_changes.txt && cat cleanup_changes.txt >> README.md`
+- [ ] Add or update .gitignore and LICENSE if missing.
+      _Bulk command skeleton:_
+      `[ -f .gitignore ] || touch .gitignore`
+      `[ -f LICENSE ] || touch LICENSE`
+- [ ] Prepare a list of files to be deleted and review before final removal.
+      _Bulk command skeleton:_
+      `find . -type f -name '*.tmp' -o -name '*.bak' > review_delete.txt && cat review_delete.txt`
+
+# 1. CORE IMPLEMENTATION & SYSTEM UPGRADE
+- [ ] Systematically upgrade unfinished or stubbed modules (VectorMemory, ScientificProcessEngine, WorkflowManager, DecisionMakingLobe, MultiLLMOrchestrator, AdvancedEngramEngine, ErrorDetectionLobe, PatternRecognitionEngine, MindMapEngine, WebInterface): read, debug, finish stubs, upgrade implementations, add/document fallbacks, update documentation, and reference idea.txt and research.
+      _Bulk command skeleton:_
+      `grep -r -E 'TODO|NotImplementedError|pass|stub' src/ > stubs_report.txt`
+      `find src/ -type f -name '*.py' | xargs pylint > lint_report.txt`
+- [ ] Integrate and document robust fallbacks for all methods in DreamingEngine (async, DB, memory, algorithmic, etc.), ensuring each has at least one reasonable fallback for optimization or error handling. Test all fallbacks.
+      _Bulk command skeleton:_
+      `grep -r 'def ' src/mcp/dreaming_engine.py | grep -v 'fallback'`
+      `pytest src/mcp/dreaming_engine.py`
+- [ ] Integrate dynamic, hormone-state-driven quantization into all relevant modules (advanced_memory, physics_engine, etc.), refactor quantization utilities to accept hormone state, and ensure all quantization is adaptive. Document and test.
+      _Bulk command skeleton:_
+      `grep -r 'quantiz' src/ | grep -E 'def |class ' > quantization_targets.txt`
+      `pytest src/mcp/advanced_memory.py src/mcp/physics/`
+- [ ] Implement or expand a BrainStateAggregator module to collect, buffer, and provide all lobe, hormone, sensory, and global vector memory data, with predictive and ratio-based optimization for memory/CPU usage.
+- [ ] Enhance the LobeEventBus to support predictive/context-aware data routing and pre-broadcasting for lobes.
+- [ ] Update all neural network calls in lobes to use a context package from the BrainStateAggregator, including internal, adjacent, brain state, vector memory, sensory, and hormone data.
+- [ ] Add dynamic buffer and ratio logic to the BrainStateAggregator for optimizing memory and CPU usage based on access patterns and system load.
+- [ ] Expand lobes system with more brain-inspired modules.
+- [ ] Implement split-brain AB testing architecture.
+- [ ] Add neural column pattern recognition.
+- [ ] Create dreaming simulation engine.
+- [ ] Implement engram development and management.
+- [ ] Add first/second/third order memory organization.
+- [ ] Create mutagenic algorithm for memory evolution.
+- [ ] Implement memory compression and vector encoding.
+- [ ] Add autonomous web crawling capabilities.
+- [ ] Implement "from zero" feedback model.
+- [ ] Create performance metrics and reporting.
+- [ ] Add self-repair functionality.
+- [ ] Enhance physics engine with CUDA support.
+- [ ] Add scientific process engine.
+- [ ] Implement statistical analysis features.
+- [ ] Create calculus/math/tensor engines.
+- [ ] Remove duplicate files and methods.
+- [ ] Consolidate similar functionality.
+- [ ] Fix linter errors.
+- [ ] Optimize file sizes (keep under 1000 lines).
+- [ ] Reorganize according to information flow principles.
+- [ ] Implement split-brain folder structure.
+- [ ] Clean up temporary files.
+- [ ] Remove junk methods.
+- [ ] Optimize memory usage (target <10GB).
+- [ ] Improve vector processing efficiency.
+- [ ] Add caching mechanisms.
+- [ ] Optimize database queries.
+- [ ] Refactor memory architecture: Separate memory into working, short-term, and long-term modules/classes; move all context-sensitive, feedback, and temporary storage to WorkingMemory; implement ShortTermMemory for recent, high-priority, or volatile information; implement LongTermMemory for persistent, structured, and research-driven storage; update all lobes/engines to use the appropriate memory type; document the architecture and reference idea.txt; ensure robust fallbacks and extensibility; update README and docs to reflect the new memory structure.
+- [ ] Continue systematic upgrade and debugging: Proceed to the next unfinished or stubbed module (e.g., VectorMemory backends, ScientificProcessEngine, WorkflowManager, DecisionMakingLobe, MultiLLMOrchestrator, AdvancedEngramEngine, ErrorDetectionLobe, PatternRecognitionEngine, MindMapEngine, WebInterface); for each: read and analyze code, debug, finish stubs/TODOs, upgrade implementations, add/document fallbacks, update documentation, and reference idea.txt and research; ensure all modules are robust, research-driven, and production-ready; regularly update the TODO and documentation to reflect progress and new research-driven improvements.
+- [ ] Systematically debug all recently upgraded modules (SimulatedReality, ResearchIntegrator, and dependencies): Review for runtime errors, missing imports, or integration issues; add/fix error handling and fallbacks as needed; test new features (causality modeling, feedback adaptation, research paper analysis) with sample data; log and document all issues and fixes; ensure all changes are robust, production-ready, and aligned with idea.txt; repeat for each module as upgrades continue.
+
+# 2. RESEARCH, FEEDBACK, AND IMPROVEMENT
+- [ ] Review and update all research-driven stubs and demo/test methods to ensure they are functional and documented.
+      _Bulk command skeleton:_
+      `grep -r 'demo\|test\|research' src/ > research_stubs.txt`
+- [ ] Integrate feedback and cross-lobe context for continual learning in all lobes/engines.
+      _Bulk command skeleton:_
+      `grep -r 'feedback' src/ | grep -E 'def |class ' > feedback_targets.txt`
+- [ ] Research latest LLM slope maps.
+- [ ] Implement advanced pattern recognition.
+- [ ] Add novel memory compression techniques.
+- [ ] Research brain-inspired architectures.
+- [ ] Add web interface with dark theme.
+- [ ] Implement advanced CLI tools.
+- [ ] Add email server functionality.
+- [ ] Create identity management system.
+- [ ] Enhance IDE integration.
+- [ ] Add more plugin support.
+- [ ] Improve cross-engine communication.
+- [ ] Add redundancy and fallbacks.
+
+# 3. DEPLOYMENT, TESTING, AND MAINTENANCE
+- [ ] Build and test deployment packages for all platforms (Linux, macOS, Windows, Flatpak, etc.).
+      _Bulk command skeleton:_
+      `find deployment_packages/ -type f -name '*.py' | xargs -I{} python3 {}`
+      `ls deployment_packages/mcp_portable_linux/ deployment_packages/ | grep -E 'flatpak|macos|windows'`
+- [ ] Run all tests and document results.
+      _Bulk command skeleton:_
+      `pytest > test_results.txt && cat test_results.txt`
+- [ ] Comprehensive system testing.
+- [ ] Performance benchmarking.
+- [ ] Security auditing.
+- [ ] Cross-platform testing.
+- [ ] Update portable packages.
+- [ ] Create new executables.
+- [ ] Test USB deployment.
+- [ ] Verify cross-platform compatibility.
+- [ ] Update and expand documentation: user docs, API docs, guides, logging, health checks, monitoring, and comprehensive tests for all modules and features.
+      _Bulk command skeleton:_
+      `find docs/ -type f -name '*.md' | xargs cat > all_docs.txt`
+      `grep -r 'def ' src/ | wc -l > api_function_count.txt`
+- [ ] Use bulk commands and batch operations for all tasks above to maximize efficiency and minimize tool usage.
+- [ ] Update user documentation.
+- [ ] Create LLM-specific guides.
+- [ ] Add API documentation.
+- [ ] Create troubleshooting guides.
+- [ ] Add comprehensive logging.
+- [ ] Implement health checks.
+- [ ] Add performance monitoring.
+- [ ] Create alerting system.
+- [ ] Add auto-update capabilities.
+- [ ] Implement backup systems.
+- [ ] Add data cleanup routines.
+- [ ] Create maintenance scripts.
+
+# NOTES
+- All changes must align with idea.txt requirements.
+- Maintain portability and local-only operation.
+- Ensure cross-platform compatibility.
+- Prioritize LLM usability and auto-prompting.
+- Regularly update this TODO as progress is made and new research emerges.

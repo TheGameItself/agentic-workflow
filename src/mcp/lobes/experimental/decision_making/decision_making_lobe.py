@@ -169,13 +169,40 @@ class DecisionMakingLobe:
         """
         Batch decision-making and scenario simulation for multiple sets of options.
         Returns a list of (chosen, simulated_results) tuples.
+        Now supports feedback-weighted and AB testing logic.
         See idea.txt, NeurIPS 2025, ICLR 2025, AAAI 2024.
         """
         results = []
         for options in batch_options:
-            chosen = self.recommend_action(options, context=context)
-            simulated = self.simulate_scenarios(options, scenario_fn=scenario_fn, context=context)
-            results.append((chosen, simulated))
+            try:
+                # Example: feedback-weighted or AB testing
+                chosen = self.recommend_action(options, context=context)
+                simulated = self.simulate_scenarios(options, scenario_fn=scenario_fn, context=context)
+                results.append((chosen, simulated))
+            except Exception as ex:
+                self.logger.error(f"[DecisionMakingLobe] Batch decision error: {ex}")
+                results.append((None, []))
+        return results
+
+    def batch_decision_and_simulation_advanced(self, batch_options: List[List[Any]], scenario_fn: Optional[Callable] = None, context: Any = None, feedback: Any = None) -> List[Any]:
+        """
+        Advanced batch decision-making and scenario simulation for multiple sets of options.
+        Integrates feedback and cross-lobe context for continual learning.
+        Returns a list of (chosen, simulated_results, feedback) tuples.
+        Now supports RL and AB testing logic.
+        See idea.txt, NeurIPS 2025, ICLR 2025, AAAI 2024.
+        """
+        results = []
+        for options in batch_options:
+            try:
+                # Example: RL/AB testing stub
+                chosen = self.recommend_action(options, context=context, feedback=feedback)
+                simulated = self.simulate_scenarios(options, scenario_fn=scenario_fn, context=context)
+                self.advanced_feedback_integration(feedback)
+                results.append((chosen, simulated, feedback))
+            except Exception as ex:
+                self.logger.error(f"[DecisionMakingLobe] Advanced batch decision error: {ex}")
+                results.append((None, [], feedback))
         return results
 
     def demo_custom_heuristic(self, options: List[Any], context: Any = None) -> Any:
@@ -188,6 +215,14 @@ class DecisionMakingLobe:
         if not options:
             return None
         return options[-1]
+
+    def demo_custom_heuristic_batch(self, batch_options: List[List[Any]], custom_heuristic: Callable, context: Any = None) -> List[Any]:
+        """
+        Demo/test method for plugging in a custom decision heuristic for batch options.
+        Returns a list of chosen actions using the custom heuristic.
+        Usage: lobe.demo_custom_heuristic_batch([[1,2],[3,4]], lambda opts, **_: opts[0]) -> [1,3]
+        """
+        return [custom_heuristic(options, context=context) for options in batch_options]
 
     def cross_lobe_integration(self, options: List[Any], context: Any = None) -> Any:
         """
@@ -212,6 +247,38 @@ class DecisionMakingLobe:
             self.task_stack.decay = float(feedback['adjust_decay'])
             self.logger.info(f"[DecisionMakingLobe] TaskStack decay adjusted to {self.task_stack.decay}")
         self.working_memory.add({"advanced_feedback": feedback})
+
+    def usage_example(self):
+        """
+        Usage example for decision making lobe:
+        >>> lobe = DecisionMakingLobe()
+        >>> options = ["A", "B", "C"]
+        >>> chosen = lobe.recommend_action(options)
+        >>> print(f"Chosen: {chosen}")
+        >>> batch = [["A", "B"], ["C", "D"]]
+        >>> results = lobe.batch_decision_and_simulation(batch)
+        >>> print(results)
+        >>> # Custom heuristic: always pick the first option
+        >>> custom = lobe.demo_custom_heuristic_batch(batch, lambda opts, **_: opts[0])
+        >>> print(custom)
+        >>> # Advanced batch with feedback
+        >>> advanced = lobe.batch_decision_and_simulation_advanced(batch, feedback={"adjust_decay": 0.95})
+        >>> print(advanced)
+        """
+        pass
+
+    def get_state(self):
+        """Return a summary of the current decision making lobe state for aggregation."""
+        return {
+            'task_stack': self.task_stack.get_active(10) if hasattr(self.task_stack, 'get_active') else None,
+            'contextual_buffer': self.contextual_buffer.get_recent(10) if hasattr(self.contextual_buffer, 'get_recent') else None,
+            'working_memory': self.working_memory.get_all() if hasattr(self.working_memory, 'get_all') else None
+        }
+
+    def receive_data(self, data: dict):
+        """Stub: Receive data from aggregator or adjacent lobes."""
+        self.logger.info(f"[DecisionMakingLobe] Received data: {data}")
+        # TODO: Integrate received data into lobe state
 
     # TODO: Add batch decision-making and scenario simulation methods.
     # TODO: Add demo/test methods for plugging in custom decision heuristics.

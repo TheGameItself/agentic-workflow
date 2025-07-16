@@ -25,6 +25,7 @@ import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 import math
+import logging
 
 @dataclass
 class DreamScenario:
@@ -142,6 +143,8 @@ class DreamingEngine:
             'strategic_planning': 'Strategic planning or decision-making insight'
         }
         
+        self.logger = logging.getLogger("DreamingEngine")
+        
         self._init_database()
         self._start_background_processing()
     
@@ -150,82 +153,85 @@ class DreamingEngine:
         try:
             conn = sqlite3.connect(self.db_path)
         except Exception as e:
-            print(f"[DreamingEngine] Warning: Could not connect to DB at {self.db_path}, using in-memory DB. Error: {e}")
+            self.logger.error(f"[DreamingEngine] Warning: Could not connect to DB at {self.db_path}, using in-memory DB. Error: {e}")
             conn = sqlite3.connect(':memory:')
-        cursor = conn.cursor()
-        
-        # Dream scenarios table
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS dream_scenarios (
-                id TEXT PRIMARY KEY,
-                context TEXT NOT NULL,
-                dream_type TEXT NOT NULL,
-                simulation_data TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                completed_at TIMESTAMP,
-                quality_score REAL DEFAULT 0.0,
-                learning_value REAL DEFAULT 0.0,
-                status TEXT DEFAULT 'pending'
-            )
-        """)
-        
-        # Dream insights table
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS dream_insights (
-                id TEXT PRIMARY KEY,
-                scenario_id TEXT NOT NULL,
-                insight_type TEXT NOT NULL,
-                content TEXT NOT NULL,
-                confidence REAL DEFAULT 0.5,
-                applicability TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                applied BOOLEAN DEFAULT FALSE,
-                application_context TEXT,
-                feedback_score REAL DEFAULT 0.0,
-                FOREIGN KEY (scenario_id) REFERENCES dream_scenarios (id)
-            )
-        """)
-        
-        # Dream patterns table for learning
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS dream_patterns (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                pattern_type TEXT NOT NULL,
-                pattern_data TEXT NOT NULL,
-                success_rate REAL DEFAULT 0.0,
-                usage_count INTEGER DEFAULT 0,
-                last_used TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-        
-        # Dream feedback table
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS dream_feedback (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                scenario_id TEXT,
-                insight_id TEXT,
-                feedback_type TEXT NOT NULL,
-                feedback_score REAL DEFAULT 0.0,
-                feedback_text TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (scenario_id) REFERENCES dream_scenarios (id),
-                FOREIGN KEY (insight_id) REFERENCES dream_insights (id)
-            )
-        """)
-        
-        # Dream statistics table
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS dream_statistics (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                metric_name TEXT UNIQUE NOT NULL,
-                metric_value REAL DEFAULT 0.0,
-                last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-        
-        conn.commit()
-        conn.close()
+        try:
+            cursor = conn.cursor()
+            # Dream scenarios table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS dream_scenarios (
+                    id TEXT PRIMARY KEY,
+                    context TEXT NOT NULL,
+                    dream_type TEXT NOT NULL,
+                    simulation_data TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    completed_at TIMESTAMP,
+                    quality_score REAL DEFAULT 0.0,
+                    learning_value REAL DEFAULT 0.0,
+                    status TEXT DEFAULT 'pending'
+                )
+            """)
+            
+            # Dream insights table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS dream_insights (
+                    id TEXT PRIMARY KEY,
+                    scenario_id TEXT NOT NULL,
+                    insight_type TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    confidence REAL DEFAULT 0.5,
+                    applicability TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    applied BOOLEAN DEFAULT FALSE,
+                    application_context TEXT,
+                    feedback_score REAL DEFAULT 0.0,
+                    FOREIGN KEY (scenario_id) REFERENCES dream_scenarios (id)
+                )
+            """)
+            
+            # Dream patterns table for learning
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS dream_patterns (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    pattern_type TEXT NOT NULL,
+                    pattern_data TEXT NOT NULL,
+                    success_rate REAL DEFAULT 0.0,
+                    usage_count INTEGER DEFAULT 0,
+                    last_used TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            # Dream feedback table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS dream_feedback (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    scenario_id TEXT,
+                    insight_id TEXT,
+                    feedback_type TEXT NOT NULL,
+                    feedback_score REAL DEFAULT 0.0,
+                    feedback_text TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (scenario_id) REFERENCES dream_scenarios (id),
+                    FOREIGN KEY (insight_id) REFERENCES dream_insights (id)
+                )
+            """)
+            
+            # Dream statistics table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS dream_statistics (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    metric_name TEXT UNIQUE NOT NULL,
+                    metric_value REAL DEFAULT 0.0,
+                    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            conn.commit()
+        except Exception as e:
+            self.logger.error(f"[DreamingEngine] Error initializing database schema: {e}")
+        finally:
+            conn.close()
     
     def _queue_put(self, queue, item):
         """Helper to put item in queue or append to list."""
@@ -693,193 +699,220 @@ class DreamingEngine:
     
     def _store_dream_scenario(self, scenario: DreamScenario, dream_result: Dict[str, Any], 
                             insights: List[DreamInsight], quality_score: float, learning_value: float):
-        """Store the dream scenario and results in the database."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        # Store scenario
-        cursor.execute("""
-            INSERT OR REPLACE INTO dream_scenarios 
-            (id, context, dream_type, simulation_data, created_at, completed_at, quality_score, learning_value, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            scenario.id,
-            scenario.context,
-            scenario.dream_type,
-            json.dumps(scenario.simulation_data),
-            scenario.created_at.isoformat(),
-            datetime.now().isoformat(),
-            quality_score,
-            learning_value,
-            'completed'
-        ))
-        
-        # Store insights
-        for insight in insights:
+        """Store the dream scenario and results in the database. Fallback: logs error if DB access fails."""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            # Store scenario
             cursor.execute("""
-                INSERT OR REPLACE INTO dream_insights 
-                (id, scenario_id, insight_type, content, confidence, applicability, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT OR REPLACE INTO dream_scenarios 
+                (id, context, dream_type, simulation_data, created_at, completed_at, quality_score, learning_value, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
-                insight.id,
-                insight.scenario_id,
-                insight.insight_type,
-                insight.content,
-                insight.confidence,
-                json.dumps(insight.applicability),
-                insight.created_at.isoformat()
+                scenario.id,
+                scenario.context,
+                scenario.dream_type,
+                json.dumps(scenario.simulation_data),
+                scenario.created_at.isoformat(),
+                datetime.now().isoformat(),
+                quality_score,
+                learning_value,
+                'completed'
             ))
-        
-        conn.commit()
-        conn.close()
+            
+            # Store insights
+            for insight in insights:
+                cursor.execute("""
+                    INSERT OR REPLACE INTO dream_insights 
+                    (id, scenario_id, insight_type, content, confidence, applicability, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    insight.id,
+                    insight.scenario_id,
+                    insight.insight_type,
+                    insight.content,
+                    insight.confidence,
+                    json.dumps(insight.applicability),
+                    insight.created_at.isoformat()
+                ))
+            
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            self.logger.error(f"[DreamingEngine] Error storing dream scenario: {e}")
     
     def get_dream_statistics(self) -> Dict[str, Any]:
-        """Get comprehensive statistics about dreaming activity."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        # Get basic statistics
-        cursor.execute("SELECT COUNT(*) FROM dream_scenarios")
-        total_scenarios = cursor.fetchone()[0]
-        
-        cursor.execute("SELECT COUNT(*) FROM dream_insights")
-        total_insights = cursor.fetchone()[0]
-        
-        cursor.execute("SELECT AVG(quality_score) FROM dream_scenarios WHERE quality_score > 0")
-        avg_quality = cursor.fetchone()[0] or 0.0
-        
-        cursor.execute("SELECT AVG(learning_value) FROM dream_scenarios WHERE learning_value > 0")
-        avg_learning = cursor.fetchone()[0] or 0.0
-        
-        # Get insights by type
-        cursor.execute("""
-            SELECT insight_type, COUNT(*) 
-            FROM dream_insights 
-            GROUP BY insight_type
-        """)
-        insights_by_type = dict(cursor.fetchall())
-        
-        # Get dream types distribution
-        cursor.execute("""
-            SELECT dream_type, COUNT(*) 
-            FROM dream_scenarios 
-            GROUP BY dream_type
-        """)
-        dreams_by_type = dict(cursor.fetchall())
-        
-        conn.close()
-        
-        return {
-            'total_scenarios': total_scenarios,
-            'total_insights': total_insights,
-            'average_quality_score': avg_quality,
-            'average_learning_value': avg_learning,
-            'insights_by_type': insights_by_type,
-            'dreams_by_type': dreams_by_type,
-            'insights_per_scenario': total_insights / total_scenarios if total_scenarios > 0 else 0
-        }
+        """Get comprehensive statistics about dreaming activity. Fallback: returns zeros/defaults if DB access fails."""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            # Get basic statistics
+            cursor.execute("SELECT COUNT(*) FROM dream_scenarios")
+            total_scenarios = cursor.fetchone()[0]
+            
+            cursor.execute("SELECT COUNT(*) FROM dream_insights")
+            total_insights = cursor.fetchone()[0]
+            
+            cursor.execute("SELECT AVG(quality_score) FROM dream_scenarios WHERE quality_score > 0")
+            avg_quality = cursor.fetchone()[0] or 0.0
+            
+            cursor.execute("SELECT AVG(learning_value) FROM dream_scenarios WHERE learning_value > 0")
+            avg_learning = cursor.fetchone()[0] or 0.0
+            
+            # Get insights by type
+            cursor.execute("""
+                SELECT insight_type, COUNT(*) 
+                FROM dream_insights 
+                GROUP BY insight_type
+            """)
+            insights_by_type = dict(cursor.fetchall())
+            
+            # Get dream types distribution
+            cursor.execute("""
+                SELECT dream_type, COUNT(*) 
+                FROM dream_scenarios 
+                GROUP BY dream_type
+            """)
+            dreams_by_type = dict(cursor.fetchall())
+            
+            conn.close()
+            
+            return {
+                'total_scenarios': total_scenarios,
+                'total_insights': total_insights,
+                'average_quality_score': avg_quality,
+                'average_learning_value': avg_learning,
+                'insights_by_type': insights_by_type,
+                'dreams_by_type': dreams_by_type,
+                'insights_per_scenario': total_insights / total_scenarios if total_scenarios > 0 else 0
+            }
+        except Exception as e:
+            self.logger.error(f"[DreamingEngine] Error getting dream statistics: {e}")
+            return {
+                'total_scenarios': 0,
+                'total_insights': 0,
+                'average_quality_score': 0.0,
+                'average_learning_value': 0.0,
+                'insights_by_type': {},
+                'dreams_by_type': {},
+                'insights_per_scenario': 0.0
+            }
     
     def get_learning_insights(self, limit: int = 50) -> List[Dict[str, Any]]:
-        """Get insights with high learning value."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        cursor.execute("""
-            SELECT di.id, di.content, di.insight_type, di.confidence, di.applicability,
-                   ds.context, ds.dream_type, ds.created_at
-            FROM dream_insights di
-            JOIN dream_scenarios ds ON di.scenario_id = ds.id
-            WHERE di.confidence > 0.6
-            ORDER BY di.confidence DESC, ds.created_at DESC
-            LIMIT ?
-        """, (limit,))
-        
-        insights = []
-        for row in cursor.fetchall():
-            insight = {
-                'id': row[0],
-                'content': row[1],
-                'insight_type': row[2],
-                'confidence': row[3],
-                'applicability': json.loads(row[4]),
-                'context': row[5],
-                'dream_type': row[6],
-                'created_at': row[7]
-            }
-            insights.append(insight)
-        
-        conn.close()
-        return insights
+        """Get insights with high learning value. Fallback: returns empty list if DB access fails."""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT di.id, di.content, di.insight_type, di.confidence, di.applicability,
+                       ds.context, ds.dream_type, ds.created_at
+                FROM dream_insights di
+                JOIN dream_scenarios ds ON di.scenario_id = ds.id
+                WHERE di.confidence > 0.6
+                ORDER BY di.confidence DESC, ds.created_at DESC
+                LIMIT ?
+            """, (limit,))
+            
+            insights = []
+            for row in cursor.fetchall():
+                insight = {
+                    'id': row[0],
+                    'content': row[1],
+                    'insight_type': row[2],
+                    'confidence': row[3],
+                    'applicability': json.loads(row[4]),
+                    'context': row[5],
+                    'dream_type': row[6],
+                    'created_at': row[7]
+                }
+                insights.append(insight)
+            
+            conn.close()
+            return insights
+        except Exception as e:
+            self.logger.error(f"[DreamingEngine] Error getting learning insights: {e}")
+            return []
     
-    def apply_insight(self, insight_id: str, application_context: str = None) -> bool:
-        """Mark an insight as applied and store application context."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        # Ensure application_context is a string
-        if application_context is None:
-            application_context = ""
-        cursor.execute("""
-            UPDATE dream_insights 
-            SET applied = TRUE, application_context = ?
-            WHERE id = ?
-        """, (application_context, insight_id))
-        success = cursor.rowcount > 0
-        conn.commit()
-        conn.close()
-        return success
-    
-    def provide_feedback(self, scenario_id: str = None, insight_id: str = None, 
-                        feedback_score: float = 0.0, feedback_text: str = "") -> bool:
-        """Provide feedback on dream scenarios or insights."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        # Ensure scenario_id and insight_id are strings
-        if scenario_id is None:
-            scenario_id = ""
-        if insight_id is None:
-            insight_id = ""
-        cursor.execute("""
-            INSERT INTO dream_feedback 
-            (scenario_id, insight_id, feedback_type, feedback_score, feedback_text)
-            VALUES (?, ?, ?, ?, ?)
-        """, (scenario_id, insight_id, 'user_feedback', feedback_score, feedback_text))
-        # Update insight feedback score if applicable
-        if insight_id:
+    def apply_insight(self, insight_id: Optional[str], application_context: Optional[str] = None) -> bool:
+        """Mark an insight as applied and store application context. Fallback: returns False if DB access fails. Ensures parameters are always strings."""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            # Ensure application_context and insight_id are strings
+            application_context_str = application_context if application_context is not None else ""
+            insight_id_str = insight_id if insight_id is not None else ""
             cursor.execute("""
                 UPDATE dream_insights 
-                SET feedback_score = ?
+                SET applied = TRUE, application_context = ?
                 WHERE id = ?
-            """, (feedback_score, insight_id))
-        success = cursor.rowcount > 0
-        conn.commit()
-        conn.close()
-        return success
+            """, (application_context_str, insight_id_str))
+            success = cursor.rowcount > 0
+            conn.commit()
+            conn.close()
+            return success
+        except Exception as e:
+            self.logger.error(f"[DreamingEngine] Error applying insight: {e}")
+            return False
+    
+    def provide_feedback(self, scenario_id: Optional[str] = None, insight_id: Optional[str] = None, 
+                        feedback_score: float = 0.0, feedback_text: str = "") -> bool:
+        """Provide feedback on dream scenarios or insights. Fallback: returns False if DB access fails. Ensures scenario_id and insight_id are always strings."""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            # Ensure scenario_id and insight_id are strings
+            scenario_id_str = scenario_id if scenario_id is not None else ""
+            insight_id_str = insight_id if insight_id is not None else ""
+            cursor.execute("""
+                INSERT INTO dream_feedback 
+                (scenario_id, insight_id, feedback_type, feedback_score, feedback_text)
+                VALUES (?, ?, ?, ?, ?)
+            """, (scenario_id_str, insight_id_str, 'user_feedback', feedback_score, feedback_text))
+            # Update insight feedback score if applicable
+            if insight_id_str:
+                cursor.execute("""
+                    UPDATE dream_insights 
+                    SET feedback_score = ?
+                    WHERE id = ?
+                """, (feedback_score, insight_id_str))
+            success = cursor.rowcount > 0
+            conn.commit()
+            conn.close()
+            return success
+        except Exception as e:
+            self.logger.error(f"[DreamingEngine] Error providing feedback: {e}")
+            return False
     
     def clear_dreams(self, older_than_days: int = 30):
-        """Clear old dream data to manage storage."""
-        cutoff_date = datetime.now() - timedelta(days=older_than_days)
-        
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        # Delete old scenarios and related data
-        cursor.execute("""
-            DELETE FROM dream_scenarios 
-            WHERE created_at < ?
-        """, (cutoff_date.isoformat(),))
-        
-        cursor.execute("""
-            DELETE FROM dream_insights 
-            WHERE created_at < ?
-        """, (cutoff_date.isoformat(),))
-        
-        cursor.execute("""
-            DELETE FROM dream_feedback 
-            WHERE created_at < ?
-        """, (cutoff_date.isoformat(),))
-        
-        conn.commit()
-        conn.close()
+        """Clear old dream data to manage storage. Fallback: logs error if DB access fails."""
+        try:
+            cutoff_date = datetime.now() - timedelta(days=older_than_days)
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            # Delete old scenarios and related data
+            cursor.execute("""
+                DELETE FROM dream_scenarios 
+                WHERE created_at < ?
+            """, (cutoff_date.isoformat(),))
+            
+            cursor.execute("""
+                DELETE FROM dream_insights 
+                WHERE created_at < ?
+            """, (cutoff_date.isoformat(),))
+            
+            cursor.execute("""
+                DELETE FROM dream_feedback 
+                WHERE created_at < ?
+            """, (cutoff_date.isoformat(),))
+            
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            self.logger.error(f"[DreamingEngine] Error clearing dreams: {e}")
     
     def _generate_scenario_id(self, context: str, dream_type: str) -> str:
         """Generate a unique scenario ID."""
@@ -989,11 +1022,11 @@ class DreamingEngine:
         return base_applications
     
     def _process_dream_scenario(self, scenario: DreamScenario):
-        """Process a dream scenario in the background."""
-        # This would be called by the background processor
-        pass
+        """Process a dream scenario in the background. Fallback: logs not implemented."""
+        self.logger.warning("[DreamingEngine] _process_dream_scenario is not implemented.")
+        raise NotImplementedError("Dream scenario processing is not implemented.")
     
     def _process_insight(self, insight: DreamInsight):
-        """Process an insight in the background."""
-        # This would be called by the background processor
-        pass 
+        """Process an insight in the background. Fallback: logs not implemented."""
+        self.logger.warning("[DreamingEngine] _process_insight is not implemented.")
+        raise NotImplementedError("Insight processing is not implemented.") 

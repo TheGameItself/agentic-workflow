@@ -143,6 +143,76 @@ class ErrorDetectionLobe:
         """
         return self.scan_for_anomalies(data)
 
+    def demo_custom_static_analysis(self, code: str, custom_analyzer: Callable) -> List[Dict[str, Any]]:
+        """
+        Demo/test method: run a custom static analysis function on code and return issues.
+        Usage: lobe.demo_custom_static_analysis(code, lambda c: [...])
+        """
+        try:
+            result = custom_analyzer(code)
+            self.logger.info(f"[ErrorDetectionLobe] Custom static analysis result: {result}")
+            return result
+        except Exception as ex:
+            self.logger.error(f"[ErrorDetectionLobe] Custom static analysis error: {ex}")
+            return []
+
+    def demo_custom_anomaly_detection(self, data: Any, custom_detector: Callable) -> List[Dict[str, Any]]:
+        """
+        Demo/test method: run a custom anomaly detection function on data and return anomalies.
+        Usage: lobe.demo_custom_anomaly_detection(data, lambda d: [...])
+        """
+        try:
+            result = custom_detector(data)
+            self.logger.info(f"[ErrorDetectionLobe] Custom anomaly detection result: {result}")
+            return result
+        except Exception as ex:
+            self.logger.error(f"[ErrorDetectionLobe] Custom anomaly detection error: {ex}")
+            return []
+
+    def advanced_feedback_integration(self, feedback: Any):
+        """
+        Advanced feedback integration and continual learning for error detection.
+        Updates internal heuristics or anomaly detector parameters based on feedback.
+        Supports cross-lobe research and adaptation.
+        """
+        self.logger.info(f"[ErrorDetectionLobe] Advanced feedback integration: {feedback}")
+        # Example: adjust anomaly detector parameters or log for research
+        if isinstance(feedback, dict) and 'adjust_sensitivity' in feedback:
+            if self.anomaly_detector is not None and hasattr(self.anomaly_detector, 'set_sensitivity'):
+                try:
+                    self.anomaly_detector.set_sensitivity(feedback['adjust_sensitivity'])
+                    self.logger.info(f"[ErrorDetectionLobe] Anomaly detector sensitivity adjusted to {feedback['adjust_sensitivity']}")
+                except Exception as ex:
+                    self.logger.error(f"[ErrorDetectionLobe] Error adjusting sensitivity: {ex}")
+        self.working_memory.add({"advanced_feedback": feedback})
+
+    def cross_lobe_integration(self, data: Any, lobe_name: str = "") -> List[Dict[str, Any]]:
+        """
+        Integrate with other lobes for cross-engine research and feedback.
+        Example: call PatternRecognitionEngine or MindMapEngine for additional context.
+        See idea.txt, README.md, ARCHITECTURE.md.
+        """
+        self.logger.info(f"[ErrorDetectionLobe] Cross-lobe integration called with {lobe_name}.")
+        # Placeholder: simulate integration
+        return self.scan_for_errors(data)
+
+    def usage_example(self):
+        """
+        Usage example for error detection lobe:
+        >>> lobe = ErrorDetectionLobe()
+        >>> code = 'def foo():\n    pass\n# TODO: implement'
+        >>> issues = lobe.demo_static_analysis(code)
+        >>> print(issues)
+        >>> # Custom static analysis
+        >>> custom_issues = lobe.demo_custom_static_analysis(code, lambda c: [{'line': 1, 'description': 'Demo'}])
+        >>> print(custom_issues)
+        >>> # Advanced feedback integration
+        >>> lobe.advanced_feedback_integration({'adjust_sensitivity': 0.8})
+        >>> # Cross-lobe integration
+        >>> lobe.cross_lobe_integration(code, lobe_name='PatternRecognitionEngine')
+        """
+        pass
+
     # TODO: Add demo/test methods for plugging in custom static analysis and anomaly detection.
     # TODO: Document extension points and provide usage examples in README.md.
     # TODO: Integrate with other lobes for cross-engine research and feedback.

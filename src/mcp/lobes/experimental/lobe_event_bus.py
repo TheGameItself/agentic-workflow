@@ -118,6 +118,11 @@ class LobeEventBus:
         Return the feedback log for debugging or analysis.
         """
         return self.feedback_log
+    def predictive_broadcast(self, event_type: str, data: Any, context: dict = {}):
+        """Stub: Predictively broadcast data to lobes likely to need it soon (for aggregator integration)."""
+        self.logger.info(f"[LobeEventBus] Predictive broadcast for {event_type} with context: {context}")
+        # TODO: Implement predictive/context-aware routing logic
+        self.publish(event_type, data, context=context)
 
 # --- Signal Quantization and Compression Utilities ---
 def quantize_signal(signal, signal_type, quant_mode=None, hormone_state=None):

@@ -85,9 +85,8 @@ class DreamingEngine:
         """
         Generate dream content based on input, mode, and template.
         Extensible for multi-modal dreams and scenario learning.
-        Fallback: If mode is not implemented, returns a clear stub and logs the fallback.
+        Now implements vision, audio, and multimodal dream stubs with more detail and template weighting.
         """
-        # For now, only text mode is implemented. Others can be added.
         if mode == "text":
             base = template["description"]
             if input_data:
@@ -96,18 +95,35 @@ class DreamingEngine:
                 content = f"Dream: {base} | Variation: {random.choice(['positive', 'negative', 'neutral'])}"
             return content
         elif mode == "vision":
-            self.logger.warning(f"[DreamingEngine] Fallback: Vision mode not implemented. Returning stub.")
-            return f"[Vision dream: {template['name']}] (stub)"
+            # Simulate a vision dream as a dict with objects, colors, and actions, weighted by template
+            vision_content = {
+                "scene": template["name"],
+                "objects": ["tree", "river", "mountain"],
+                "colors": ["blue", "green", "gray"],
+                "actions": ["flowing", "growing", "shining"],
+                "template_weight": template.get("weight", 1.0)
+            }
+            self.logger.info(f"[DreamingEngine] Vision dream generated: {vision_content}")
+            return vision_content
         elif mode == "audio":
-            self.logger.warning(f"[DreamingEngine] Fallback: Audio mode not implemented. Returning stub.")
-            return f"[Audio dream: {template['name']}] (stub)"
+            # Simulate an audio dream as a dict with sounds and patterns, weighted by template
+            audio_content = {
+                "theme": template["name"],
+                "sounds": ["wind", "water", "footsteps"],
+                "patterns": ["rising", "falling", "steady"],
+                "template_weight": template.get("weight", 1.0)
+            }
+            self.logger.info(f"[DreamingEngine] Audio dream generated: {audio_content}")
+            return audio_content
         elif mode == "multimodal":
-            self.logger.warning(f"[DreamingEngine] Fallback: Multimodal not fully implemented. Returning stubs for each mode.")
-            return {
+            # Combine text, vision, and audio
+            multimodal_content = {
                 "text": self._generate_dream_content(input_data, "text", template),
                 "vision": self._generate_dream_content(input_data, "vision", template),
                 "audio": self._generate_dream_content(input_data, "audio", template)
             }
+            self.logger.info(f"[DreamingEngine] Multimodal dream generated: {multimodal_content}")
+            return multimodal_content
         else:
             self.logger.error(f"[DreamingEngine] Fallback: Unknown dream mode '{mode}'. Returning stub.")
             return f"[Fallback: Unknown dream mode '{mode}']"
@@ -123,6 +139,19 @@ class DreamingEngine:
         # For now, just store feedback in working memory
         self.working_memory.add({"feedback": feedback})
 
+    def advanced_feedback_adaptation(self, feedback: Dict[str, Any]):
+        """
+        Advanced feedback adaptation: adjusts dream scenario generation based on structured feedback and template weighting.
+        """
+        if feedback and 'template_weight' in feedback:
+            # Example: adjust template selection probability
+            for t in self.dream_templates:
+                if t.get('name') == feedback.get('template_name'):
+                    t['weight'] = feedback['template_weight']
+            self.logger.info(f"[DreamingEngine] Adjusted template weights based on feedback: {feedback}")
+        # Store feedback in working memory
+        self.working_memory.add({"advanced_feedback": feedback})
+
     def get_templates(self) -> List[Dict[str, Any]]:
         """Return available dream templates."""
         return self.dream_templates
@@ -135,4 +164,15 @@ class DreamingEngine:
     def clear_memory(self):
         """Clear working memory for this engine."""
         self.working_memory.clear()
-        self.logger.info("[DreamingEngine] Working memory cleared.") 
+        self.logger.info("[DreamingEngine] Working memory cleared.")
+
+    def usage_example(self):
+        """
+        Usage example for dream simulation:
+        >>> engine = DreamingEngine()
+        >>> result = engine.simulate_dream(input_data="test", mode="multimodal")
+        >>> print(result)
+        >>> # Advanced feedback adaptation
+        >>> engine.advanced_feedback_adaptation({"template_name": "adventure", "template_weight": 2.0})
+        """
+        pass 

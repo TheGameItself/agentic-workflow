@@ -51,6 +51,8 @@ The MCP Server is designed as a modular, extensible system that provides intelli
 └─────────────────────────────────────────────────────────────┘
 ```
 
+For the full, up-to-date project file tree, see [`docs/FILETREE.txt`](FILETREE.txt).
+
 ## Core Components
 
 ### 1. API Layer
@@ -366,5 +368,43 @@ Performance Assessment → Optimization → Deployment
 - **Industry Best Practices**: Adoption of industry standards
 - **Open Source Contributions**: Community-driven development
 - **Continuous Innovation**: Ongoing research and development
+
+# Memory Architecture (Updated)
+
+## Overview
+The MCP system now uses a three-tier memory architecture:
+- **WorkingMemory**: Context-sensitive, temporary storage for feedback, adaptation, and short-lived data. Used by all lobes/engines for immediate, volatile information.
+- **ShortTermMemory**: Stores recent, high-priority, or volatile information (e.g., recent tasks, user interactions, session data). Used for short-term recall and rapid adaptation.
+- **LongTermMemory**: Persistent, structured, and research-driven storage (e.g., vector DBs, engrams, knowledge, historical logs). Used for long-term retention, research, and analytics.
+
+## Integration
+All lobes/engines should:
+- Use **WorkingMemory** for context-sensitive, feedback, and temporary storage.
+- Use **ShortTermMemory** for recent, high-priority, or volatile information.
+- Use **LongTermMemory** for persistent, structured, and research-driven storage.
+
+## Extensibility & Fallbacks
+- Each memory type supports robust fallbacks and extensibility hooks.
+- See `src/mcp/lobes/shared_lobes/working_memory.py` for implementation details.
+
+## Research References
+- See `idea.txt` for requirements and research sources.
+- See `README.md` and `RESEARCH_SOURCES.md` for further reading.
+
+## Example Usage
+```
+from src.mcp.lobes.shared_lobes.working_memory import WorkingMemory, ShortTermMemory, LongTermMemory
+
+wm = WorkingMemory()
+wm.add({"context": "session", "data": "temp"})
+
+stm = ShortTermMemory()
+stm.add({"task": "recent", "priority": 1})
+
+ltm = LongTermMemory()
+ltm.add("knowledge_1", {"fact": "persistent"})
+```
+
+All lobes/engines should be updated to use the appropriate memory type for their needs.
 
 This architecture documentation provides a comprehensive overview of the MCP server's design, implementation, and future direction. 

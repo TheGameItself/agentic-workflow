@@ -18,11 +18,14 @@ import os
 import logging
 from typing import List, Dict, Any, Optional
 from datetime import datetime
+from src.mcp.lobes.shared_lobes.working_memory import WorkingMemory, ShortTermMemory, LongTermMemory
 
 class ScientificProcessEngine:
     """
     Advanced scientific process engine for hypothesis management, experiment design,
-    evidence tracking, and dynamic self-tuning. Integrates feedback loops and robust error handling.
+    evidence tracking, and dynamic self-tuning. Integrates feedback loops, robust error handling,
+    and the MCP memory architecture (WorkingMemory, ShortTermMemory, LongTermMemory).
+    See idea.txt, README.md, and research sources for requirements.
     """
     def __init__(self, db_path: Optional[str] = None):
         if db_path is None:
@@ -33,6 +36,10 @@ class ScientificProcessEngine:
             db_path = os.path.join(data_dir, 'scientific_process.db')
         self.db_path = db_path
         self.logger = logging.getLogger("ScientificProcessEngine")
+        # Integrate memory architecture
+        self.working_memory = WorkingMemory()
+        self.short_term_memory = ShortTermMemory()
+        self.long_term_memory = LongTermMemory()
         self._init_database()
 
     def _init_database(self):
@@ -73,6 +80,11 @@ class ScientificProcessEngine:
         conn.close()
 
     def propose_hypothesis(self, statement: str) -> int:
+        # Store context-sensitive proposal in working memory
+        self.working_memory.add({"action": "propose_hypothesis", "statement": statement, "timestamp": datetime.now().isoformat()})
+        # Store recent proposal in short-term memory
+        self.short_term_memory.add({"statement": statement, "timestamp": datetime.now().isoformat()})
+        # Store persistent hypothesis in long-term memory after DB insert
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         cursor.execute("""
@@ -82,9 +94,15 @@ class ScientificProcessEngine:
         conn.commit()
         conn.close()
         self.logger.info(f"[ScientificProcessEngine] Proposed hypothesis: {statement} (id={hypothesis_id})")
+        # Add to long-term memory
+        self.long_term_memory.add(str(hypothesis_id), {"statement": statement, "created_at": datetime.now().isoformat()})
         return hypothesis_id
 
     def design_experiment(self, hypothesis_id: int, design: str) -> int:
+        # Store context-sensitive design in working memory
+        self.working_memory.add({"action": "design_experiment", "hypothesis_id": hypothesis_id, "design": design, "timestamp": datetime.now().isoformat()})
+        # Store recent design in short-term memory
+        self.short_term_memory.add({"hypothesis_id": hypothesis_id, "design": design, "timestamp": datetime.now().isoformat()})
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         cursor.execute("""
@@ -94,9 +112,15 @@ class ScientificProcessEngine:
         conn.commit()
         conn.close()
         self.logger.info(f"[ScientificProcessEngine] Designed experiment for hypothesis {hypothesis_id} (id={experiment_id})")
+        # Add to long-term memory
+        self.long_term_memory.add(str(experiment_id), {"hypothesis_id": hypothesis_id, "design": design, "created_at": datetime.now().isoformat()})
         return experiment_id
 
     def add_evidence(self, experiment_id: int, data: str, quality_score: float = 0.5) -> int:
+        # Store context-sensitive evidence in working memory
+        self.working_memory.add({"action": "add_evidence", "experiment_id": experiment_id, "data": data, "timestamp": datetime.now().isoformat()})
+        # Store recent evidence in short-term memory
+        self.short_term_memory.add({"experiment_id": experiment_id, "data": data, "quality_score": quality_score, "timestamp": datetime.now().isoformat()})
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         cursor.execute("""
@@ -106,6 +130,8 @@ class ScientificProcessEngine:
         conn.commit()
         conn.close()
         self.logger.info(f"[ScientificProcessEngine] Added evidence for experiment {experiment_id} (id={evidence_id})")
+        # Add to long-term memory
+        self.long_term_memory.add(str(evidence_id), {"experiment_id": experiment_id, "data": data, "quality_score": quality_score, "created_at": datetime.now().isoformat()})
         return evidence_id
 
     def analyze_hypothesis(self, hypothesis_id: int) -> Dict[str, Any]:
@@ -203,4 +229,74 @@ class ScientificProcessEngine:
             self.confidence_threshold = float(feedback['adjust_threshold'])
             self.logger.info(f"[ScientificProcessEngine] Confidence threshold adjusted to {self.confidence_threshold} by feedback.")
         # Trigger self-tuning after feedback
-        self.dynamic_self_tune() 
+        self.dynamic_self_tune()
+
+    def demo_custom_hypothesis_analysis(self, custom_analyzer: Any, *args, **kwargs):
+        """
+        Demo/test method: run a custom hypothesis analysis function.
+        Usage: engine.demo_custom_hypothesis_analysis(lambda e: {...})
+        Returns the result of the custom analyzer.
+        """
+        try:
+            result = custom_analyzer(self.get_hypotheses(), *args, **kwargs)
+            self.logger.info(f"[ScientificProcessEngine] Custom hypothesis analysis result: {result}")
+            return result
+        except Exception as ex:
+            self.logger.error(f"[ScientificProcessEngine] Custom hypothesis analysis error: {ex}")
+            return None
+
+    def demo_custom_experiment_design(self, custom_designer: Any, *args, **kwargs):
+        """
+        Demo/test method: run a custom experiment design function.
+        Usage: engine.demo_custom_experiment_design(lambda h: {...})
+        Returns the result of the custom designer.
+        """
+        try:
+            result = custom_designer(self.get_hypotheses(), *args, **kwargs)
+            self.logger.info(f"[ScientificProcessEngine] Custom experiment design result: {result}")
+            return result
+        except Exception as ex:
+            self.logger.error(f"[ScientificProcessEngine] Custom experiment design error: {ex}")
+            return None
+
+    def demo_custom_evidence_evaluation(self, custom_evaluator: Any, *args, **kwargs):
+        """
+        Demo/test method: run a custom evidence evaluation function.
+        Usage: engine.demo_custom_evidence_evaluation(lambda e: {...})
+        Returns the result of the custom evaluator.
+        """
+        try:
+            result = custom_evaluator(self.get_evidence(), *args, **kwargs)
+            self.logger.info(f"[ScientificProcessEngine] Custom evidence evaluation result: {result}")
+            return result
+        except Exception as ex:
+            self.logger.error(f"[ScientificProcessEngine] Custom evidence evaluation error: {ex}")
+            return None
+
+    def usage_example(self):
+        """
+        Usage example for scientific process engine. Demonstrates the full workflow:
+        - Propose a hypothesis
+        - Design an experiment
+        - Add evidence
+        - Analyze the hypothesis
+        - Run a custom analysis
+        All steps are logged and printed. See idea.txt and research sources for requirements.
+        """
+        try:
+            print("[ScientificProcessEngine] === USAGE EXAMPLE START ===")
+            h_id = self.propose_hypothesis('The sky is blue.')
+            print(f"Proposed hypothesis ID: {h_id}")
+            e_id = self.design_experiment(h_id, 'Observe sky color at noon.')
+            print(f"Designed experiment ID: {e_id}")
+            v_id = self.add_evidence(e_id, 'Observed blue sky.', 0.9)
+            print(f"Added evidence ID: {v_id}")
+            analysis = self.analyze_hypothesis(h_id)
+            print(f"Hypothesis analysis: {analysis}")
+            # Custom analysis: count hypotheses
+            count = self.demo_custom_hypothesis_analysis(lambda hs: len(hs))
+            print(f"Total hypotheses in system: {count}")
+            print("[ScientificProcessEngine] === USAGE EXAMPLE END ===")
+        except Exception as ex:
+            self.logger.error(f"[ScientificProcessEngine] Usage example error: {ex}")
+            print(f"[ScientificProcessEngine] Usage example error: {ex}") 

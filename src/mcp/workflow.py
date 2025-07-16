@@ -6,30 +6,46 @@ This module implements the WorkflowLobe, responsible for orchestrating workflows
 See src/mcp/lobes.py for the lobe registry and architecture overview.
 """
 
-import os
 import json
+import logging
+import os
 import sqlite3
-from typing import List, Dict, Any, Optional
-from enum import Enum
-from .task_manager import TaskManager
 import threading
 import time
 from datetime import datetime
+from enum import Enum
+from typing import Any, Dict, List, Optional
+
+from src.mcp.lobes.shared_lobes.working_memory import (
+    LongTermMemory,
+    ShortTermMemory,
+    WorkingMemory,
+)
+
+from .task_manager import TaskManager
 from .unified_memory import UnifiedMemoryManager
-import logging
+
 
 class WorkflowStatus(Enum):
     """Workflow status enumeration."""
+
     NOT_STARTED = "not_started"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
     BLOCKED = "blocked"
     FAILED = "failed"
 
+
 class WorkflowStep:
     """Base class for workflow steps, now with meta/partial support."""
-    
-    def __init__(self, name: str, description: str, dependencies: Optional[List[str]] = None, is_meta: bool = False):
+
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        dependencies: Optional[List[str]] = None,
+        is_meta: bool = False,
+    ):
         self.name = name
         self.description = description
         self.dependencies: List[str] = dependencies or []
@@ -44,49 +60,51 @@ class WorkflowStep:
         self.guidance = []  # Proactive guidance suggestions
         self.engram_ids = []  # Linked engram IDs for advanced context/recall
         self.next_steps = []  # Possible next steps for branching/parallel workflows
-    
+
     def can_start(self, completed_steps: List[str]) -> bool:
         """Check if this step can start based on dependencies."""
         return all(dep in completed_steps for dep in self.dependencies)
-    
+
     def start(self):
         """Start the workflow step."""
         self.status = WorkflowStatus.IN_PROGRESS
         self.started_at = datetime.now()
-    
+
     def complete(self):
         """Complete the workflow step."""
         self.status = WorkflowStatus.COMPLETED
         self.completed_at = datetime.now()
         self.partial_progress = 1.0
-    
-    def add_feedback(self, feedback: str, impact: int = 0, principle: Optional[str] = None):
+
+    def add_feedback(
+        self, feedback: str, impact: int = 0, principle: Optional[str] = None
+    ):
         """Add feedback to the step."""
-        self.feedback.append({
-            'text': feedback,
-            'impact': impact,
-            'principle': principle,
-            'timestamp': datetime.now()
-        })
-    
+        self.feedback.append(
+            {
+                "text": feedback,
+                "impact": impact,
+                "principle": principle,
+                "timestamp": datetime.now(),
+            }
+        )
+
     def add_artifact(self, artifact_type: str, artifact_data: Any):
         """Add an artifact to the step."""
-        self.artifacts.append({
-            'type': artifact_type,
-            'data': artifact_data,
-            'timestamp': datetime.now()
-        })
-    
+        self.artifacts.append(
+            {"type": artifact_type, "data": artifact_data, "timestamp": datetime.now()}
+        )
+
     def set_partial_progress(self, progress: float):
         """Set partial progress (0.0-1.0)."""
         self.partial_progress = max(0.0, min(1.0, progress))
         if self.partial_progress == 1.0:
             self.complete()
-    
+
     def get_partial_progress(self) -> float:
         """Get partial progress (0.0-1.0)."""
         return self.partial_progress
-    
+
     def mark_as_meta(self, is_meta: bool = True):
         """Mark this step as a meta-step."""
         self.is_meta = is_meta
@@ -116,37 +134,35 @@ class WorkflowStep:
         """Get all linked engram IDs for this step."""
         return self.engram_ids
 
+
 class InitStep(WorkflowStep):
     """Project initialization step."""
-    
+
     def __init__(self):
         super().__init__(
-            name="init",
-            description="Project initialization and setup",
-            dependencies=[]
+            name="init", description="Project initialization and setup", dependencies=[]
         )
         self.project_name = None
         self.project_path = None
         self.requirements = []
         self.questions = []
-    
+
     def setup_project(self, name: str, path: str):
         """Setup the project with basic information."""
         self.project_name = name
         self.project_path = path
-        self.add_artifact("project_info", {
-            "name": name,
-            "path": path,
-            "created_at": datetime.now()
-        })
-    
+        self.add_artifact(
+            "project_info", {"name": name, "path": path, "created_at": datetime.now()}
+        )
+
     def add_requirement(self, requirement: str):
         """Add a project requirement."""
         self.requirements.append(requirement)
-    
+
     def add_question(self, question: str):
         """Add a question for user/LLM alignment."""
         self.questions.append(question)
+
 
 class ResearchStep(WorkflowStep):
     """
@@ -155,78 +171,97 @@ class ResearchStep(WorkflowStep):
     See: https://library.nwacc.edu/sourceevaluation/craap, https://merritt.libguides.com/CRAAP_Test
     See: NeurIPS 2025 (Neural Column Pattern Recognition), ICLR 2025 (Dynamic Coding and Vector Compression), arXiv:2405.12345 (Feedback-Driven Synthetic Selection), Nature 2024 (Split-Brain Architectures for AI), README.md, idea.txt
     """
-    
+
     def __init__(self):
         super().__init__(
             name="research",
             description="Research project requirements, technologies, and best practices",
-            dependencies=["init"]
+            dependencies=["init"],
         )
         self.research_topics = []
         self.findings = []
         self.sources = []
-    
+
     def add_research_topic(self, topic: str, priority: float = 0.5):
         """Add a research topic."""
-        self.research_topics.append({
-            "topic": topic,
-            "priority": priority,
-            "status": "pending"
-        })
-    
-    def add_finding(self, topic: str, finding: str, source: str = '', metadata: dict = {}):
+        self.research_topics.append(
+            {"topic": topic, "priority": priority, "status": "pending"}
+        )
+
+    def add_finding(
+        self, topic: str, finding: str, source: str = "", metadata: dict = {}
+    ):
         """Add a research finding."""
-        safe_source = source or ''
+        safe_source = source or ""
         safe_metadata = metadata or {}
-        self.findings.append({
-            "topic": topic,
-            "finding": finding,
-            "source": safe_source,
-            "timestamp": datetime.now()
-        })
+        self.findings.append(
+            {
+                "topic": topic,
+                "finding": finding,
+                "source": safe_source,
+                "timestamp": datetime.now(),
+            }
+        )
         if safe_source:
             self.add_source(safe_source, safe_metadata)
-    
+
     def add_source(self, source: str, metadata: dict = {}):
         """Add a research source. Only sources passing the CRAAP test are accepted."""
         safe_metadata = metadata or {}
         if not self._is_credible_source(source):
-            raise ValueError(f"Source '{source}' is not from a recognized academic or authoritative domain. See README.md for standards.")
+            raise ValueError(
+                f"Source '{source}' is not from a recognized academic or authoritative domain. See README.md for standards."
+            )
         if not self._passes_craap_test(source, safe_metadata):
-            raise ValueError(f"Source '{source}' does not pass the CRAAP test. See https://library.nwacc.edu/sourceevaluation/craap for details.")
+            raise ValueError(
+                f"Source '{source}' does not pass the CRAAP test. See https://library.nwacc.edu/sourceevaluation/craap for details."
+            )
         if source not in self.sources:
             self.sources.append(source)
 
     def _is_credible_source(self, source: str) -> bool:
         """Basic check for credible source domains."""
         credible_domains = [
-            'scholar.google.com', 'jstor.org', 'pubmed.ncbi.nlm.nih.gov', 'webofscience.com',
-            'scopus.com', 'ieeexplore.ieee.org', 'sciencedirect.com', 'doaj.org', 'worldcat.org',
-            'aresearchguide.com', 'arxiv.org', 'acm.org', 'ieee.org', 'nist.gov', 'gov', 'edu'
+            "scholar.google.com",
+            "jstor.org",
+            "pubmed.ncbi.nlm.nih.gov",
+            "webofscience.com",
+            "scopus.com",
+            "ieeexplore.ieee.org",
+            "sciencedirect.com",
+            "doaj.org",
+            "worldcat.org",
+            "aresearchguide.com",
+            "arxiv.org",
+            "acm.org",
+            "ieee.org",
+            "nist.gov",
+            "gov",
+            "edu",
         ]
         return any(domain in source for domain in credible_domains)
 
     def _passes_craap_test(self, source: str, metadata: dict = {}):
         """Evaluate the source using the CRAAP test. Metadata should include publication date, author, evidence, and purpose."""
         # Currency
-        currency = metadata.get('publication_date', '')
+        currency = metadata.get("publication_date", "")
         if not currency or not self._is_recent(currency):
             return False
         # Relevance
-        relevance = metadata.get('relevance', True)
+        relevance = metadata.get("relevance", True)
         if not relevance:
             return False
         # Authority
-        author = metadata.get('author', '')
+        author = metadata.get("author", "")
         if not author or not self._is_authoritative(author):
             return False
         # Accuracy
-        evidence = metadata.get('evidence', '')
+        evidence = metadata.get("evidence", "")
         if not evidence or not self._is_evidence_based(evidence):
             return False
         # Purpose
-        purpose = metadata.get('purpose', 'inform')
-        if purpose not in ['inform', 'educate', 'research']:
+        purpose = metadata.get("purpose", "inform")
+        if purpose not in ["inform", "educate", "research"]:
             return False
         return True
 
@@ -248,218 +283,249 @@ class ResearchStep(WorkflowStep):
         """Check if the source provides evidence, citations, or data."""
         return bool(evidence and len(evidence) > 10)
 
+
 class PlanningStep(WorkflowStep):
     """Project planning step."""
-    
+
     def __init__(self):
         super().__init__(
             name="planning",
             description="Create comprehensive project plan and architecture",
-            dependencies=["research"]
+            dependencies=["research"],
         )
         self.architecture = {}
         self.tasks = []
         self.milestones = []
         self.risks = []
-    
+
     def set_architecture(self, arch: Dict[str, Any]):
         """Set the project architecture."""
         self.architecture = arch
         self.add_artifact("architecture", arch)
-    
-    def add_task(self, task: str, priority: int = 0, dependencies: Optional[List[str]] = None):
+
+    def add_task(
+        self, task: str, priority: int = 0, dependencies: Optional[List[str]] = None
+    ):
         """Add a project task."""
-        self.tasks.append({
-            "description": task,
-            "priority": priority,
-            "dependencies": dependencies or [],
-            "status": "pending"
-        })
-    
+        self.tasks.append(
+            {
+                "description": task,
+                "priority": priority,
+                "dependencies": dependencies or [],
+                "status": "pending",
+            }
+        )
+
     def add_milestone(self, milestone: str, target_date: datetime):
         """Add a project milestone."""
-        self.milestones.append({
-            "description": milestone,
-            "target_date": target_date,
-            "status": "pending"
-        })
-    
+        self.milestones.append(
+            {"description": milestone, "target_date": target_date, "status": "pending"}
+        )
+
     def add_risk(self, risk: str, impact: str, mitigation: str):
         """Add a project risk."""
-        self.risks.append({
-            "description": risk,
-            "impact": impact,
-            "mitigation": mitigation,
-            "status": "open"
-        })
+        self.risks.append(
+            {
+                "description": risk,
+                "impact": impact,
+                "mitigation": mitigation,
+                "status": "open",
+            }
+        )
+
 
 class DevelopmentStep(WorkflowStep):
     """Development and implementation step."""
-    
+
     def __init__(self):
         super().__init__(
             name="development",
             description="Implement the project according to the plan",
-            dependencies=["planning"]
+            dependencies=["planning"],
         )
         self.features = []
         self.bugs = []
         self.decisions = []
-    
+
     def add_feature(self, feature: str, status: str = "planned"):
         """Add a feature to implement."""
-        self.features.append({
-            "description": feature,
-            "status": status,
-            "started_at": None,
-            "completed_at": None
-        })
-    
+        self.features.append(
+            {
+                "description": feature,
+                "status": status,
+                "started_at": None,
+                "completed_at": None,
+            }
+        )
+
     def add_bug(self, bug: str, severity: str = "medium"):
         """Add a bug to track."""
-        self.bugs.append({
-            "description": bug,
-            "severity": severity,
-            "status": "open",
-            "reported_at": datetime.now()
-        })
-    
+        self.bugs.append(
+            {
+                "description": bug,
+                "severity": severity,
+                "status": "open",
+                "reported_at": datetime.now(),
+            }
+        )
+
     def add_decision(self, decision: str, rationale: str):
         """Add a development decision."""
-        self.decisions.append({
-            "decision": decision,
-            "rationale": rationale,
-            "timestamp": datetime.now()
-        })
+        self.decisions.append(
+            {"decision": decision, "rationale": rationale, "timestamp": datetime.now()}
+        )
+
 
 class TestingStep(WorkflowStep):
     """Testing and quality assurance step."""
-    
+
     def __init__(self):
         super().__init__(
             name="testing",
             description="Test the implementation and ensure quality",
-            dependencies=["development"]
+            dependencies=["development"],
         )
         self.test_cases = []
         self.test_results = []
         self.issues = []
-    
+
     def add_test_case(self, test_case: str, category: str = "functional"):
         """Add a test case."""
-        self.test_cases.append({
-            "description": test_case,
-            "category": category,
-            "status": "pending"
-        })
-    
+        self.test_cases.append(
+            {"description": test_case, "category": category, "status": "pending"}
+        )
+
     def add_test_result(self, test_case: str, result: str, notes: Optional[str] = None):
         """Add a test result."""
         safe_notes = notes or ""
-        self.test_results.append({
-            "test_case": test_case,
-            "result": result,
-            "notes": safe_notes,
-            "timestamp": datetime.now()
-        })
-    
+        self.test_results.append(
+            {
+                "test_case": test_case,
+                "result": result,
+                "notes": safe_notes,
+                "timestamp": datetime.now(),
+            }
+        )
+
     def add_issue(self, issue: str, severity: str = "medium"):
         """Add a testing issue."""
-        self.issues.append({
-            "description": issue,
-            "severity": severity,
-            "status": "open",
-            "reported_at": datetime.now()
-        })
+        self.issues.append(
+            {
+                "description": issue,
+                "severity": severity,
+                "status": "open",
+                "reported_at": datetime.now(),
+            }
+        )
+
 
 class DeploymentStep(WorkflowStep):
     """Deployment and release step."""
-    
+
     def __init__(self):
         super().__init__(
             name="deployment",
             description="Deploy the project to production",
-            dependencies=["testing"]
+            dependencies=["testing"],
         )
         self.environments = []
         self.deployments = []
         self.rollbacks = []
-    
+
     def add_environment(self, env: str, config: Dict[str, Any]):
         """Add a deployment environment."""
-        self.environments.append({
-            "name": env,
-            "config": config,
-            "status": "configured"
-        })
-    
+        self.environments.append(
+            {"name": env, "config": config, "status": "configured"}
+        )
+
     def add_deployment(self, env: str, version: str, status: str = "pending"):
         """Add a deployment record."""
-        self.deployments.append({
-            "environment": env,
-            "version": version,
-            "status": status,
-            "timestamp": datetime.now()
-        })
-    
+        self.deployments.append(
+            {
+                "environment": env,
+                "version": version,
+                "status": status,
+                "timestamp": datetime.now(),
+            }
+        )
+
     def add_rollback(self, env: str, from_version: str, to_version: str, reason: str):
         """Add a rollback record."""
-        self.rollbacks.append({
-            "environment": env,
-            "from_version": from_version,
-            "to_version": to_version,
-            "reason": reason,
-            "timestamp": datetime.now()
-        })
+        self.rollbacks.append(
+            {
+                "environment": env,
+                "from_version": from_version,
+                "to_version": to_version,
+                "reason": reason,
+                "timestamp": datetime.now(),
+            }
+        )
+
 
 class IterationCheckpoint(WorkflowStep):
     """Iteration checkpoint: Document, reflect, and plan next steps.
     See: https://handbook.zaposa.com/articles/iterative-design/, https://rmcad.libguides.com/blogs/system/Research-is-an-iterative-process, https://dovetail.com/product-development/iterative-design/, https://medium.com/researchops-community/breaking-the-double-diamond-with-iterative-discovery-7cd1c71c4f59
     """
+
     def run(self, context):
         # Prompt for documentation of what was learned
-        print("[Iteration Checkpoint] Please document what was learned in this iteration.")
+        print(
+            "[Iteration Checkpoint] Please document what was learned in this iteration."
+        )
         # Prompt for reflection
-        print("[Iteration Checkpoint] Reflect on surprises, challenges, and opportunities for emergence.")
+        print(
+            "[Iteration Checkpoint] Reflect on surprises, challenges, and opportunities for emergence."
+        )
         # Prompt for team feedback and shared output
-        print("[Iteration Checkpoint] Gather team feedback and ensure outputs are shared and collaborative.")
+        print(
+            "[Iteration Checkpoint] Gather team feedback and ensure outputs are shared and collaborative."
+        )
         # Prompt for explicit review of iteration goals and boundaries
-        print("[Iteration Checkpoint] Review if iteration goals were met and if scope is controlled (avoid over-iteration).")
+        print(
+            "[Iteration Checkpoint] Review if iteration goals were met and if scope is controlled (avoid over-iteration)."
+        )
         # Optionally, store this in the context or a log
-        context['iteration_log'] = context.get('iteration_log', []) + [
-            {'summary': 'Documented, reflected, gathered feedback, and reviewed iteration boundaries.'}
+        context["iteration_log"] = context.get("iteration_log", []) + [
+            {
+                "summary": "Documented, reflected, gathered feedback, and reviewed iteration boundaries."
+            }
         ]
         return context
 
+
 class WorkflowManager:
-    """Main workflow orchestration manager with dynamic step registration."""
-    
+    """Main workflow orchestration manager with dynamic step registration and integrated memory architecture (WorkingMemory, ShortTermMemory, LongTermMemory). See idea.txt and research sources for requirements."""
+
     def __init__(self, db_path: Optional[str] = None):
         """Initialize the workflow manager."""
         if db_path is None:
             current_dir = os.path.dirname(os.path.abspath(__file__))
-            project_root = os.path.join(current_dir, '..', '..')
-            data_dir = os.path.join(project_root, 'data')
+            project_root = os.path.join(current_dir, "..", "..")
+            data_dir = os.path.join(project_root, "data")
             os.makedirs(data_dir, exist_ok=True)
-            db_path_str = os.path.join(data_dir, 'workflow.db')
+            db_path_str = os.path.join(data_dir, "workflow.db")
         else:
             db_path_str = db_path
         self.db_path = db_path_str
         self.steps = {}
         self.current_step = None
         self.completed_steps = []
+        # Integrate memory architecture
+        self.working_memory = WorkingMemory()
+        self.short_term_memory = ShortTermMemory()
+        self.long_term_memory = LongTermMemory()
         self._migrate_schema()
         self._init_database()
         self.task_manager = TaskManager(db_path=db_path_str)
         self._load_step_status_from_db()
         # Register default steps
-        self.register_step('init', InitStep())
-        self.register_step('research', ResearchStep())
-        self.register_step('planning', PlanningStep())
-        self.register_step('development', DevelopmentStep())
-        self.register_step('testing', TestingStep())
-        self.register_step('deployment', DeploymentStep())
-    
+        self.register_step("init", InitStep())
+        self.register_step("research", ResearchStep())
+        self.register_step("planning", PlanningStep())
+        self.register_step("development", DevelopmentStep())
+        self.register_step("testing", TestingStep())
+        self.register_step("deployment", DeploymentStep())
+
     def _migrate_schema(self):
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -467,17 +533,23 @@ class WorkflowManager:
         cursor.execute("PRAGMA table_info(workflow_steps);")
         columns = [row[1] for row in cursor.fetchall()]
         migration_needed = False
-        if 'created_at' not in columns:
-            cursor.execute("ALTER TABLE workflow_steps ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;")
+        if "created_at" not in columns:
+            cursor.execute(
+                "ALTER TABLE workflow_steps ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;"
+            )
             migration_needed = True
-        if 'updated_at' not in columns:
-            cursor.execute("ALTER TABLE workflow_steps ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;")
+        if "updated_at" not in columns:
+            cursor.execute(
+                "ALTER TABLE workflow_steps ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;"
+            )
             migration_needed = True
         if migration_needed:
-            print("[MCP] Migrated workflow_steps table: ensured created_at and updated_at columns exist.")
+            print(
+                "[MCP] Migrated workflow_steps table: ensured created_at and updated_at columns exist."
+            )
         conn.commit()
         conn.close()
-    
+
     def _init_database(self):
         """Initialize the workflow database and perform schema migrations."""
         conn = sqlite3.connect(self.db_path)
@@ -490,7 +562,8 @@ class WorkflowManager:
                 cursor.execute(f"ALTER TABLE {table} ADD COLUMN {column} {coltype}")
 
         # Workflow instances table
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS workflow_instances (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 project_name TEXT NOT NULL,
@@ -499,10 +572,12 @@ class WorkflowManager:
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """)
+        """
+        )
 
         # Workflow steps table
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS workflow_steps (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 workflow_id INTEGER,
@@ -512,15 +587,19 @@ class WorkflowManager:
                 completed_at TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """)
+        """
+        )
         # Ensure updated_at column exists (migration)
         cursor.execute("PRAGMA table_info(workflow_steps)")
         columns = [row[1] for row in cursor.fetchall()]
-        if 'updated_at' not in columns:
-            cursor.execute("ALTER TABLE workflow_steps ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+        if "updated_at" not in columns:
+            cursor.execute(
+                "ALTER TABLE workflow_steps ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+            )
 
         # Workflow feedback table
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS workflow_feedback (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 step_id INTEGER,
@@ -530,10 +609,12 @@ class WorkflowManager:
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (step_id) REFERENCES workflow_steps (id)
             )
-        """)
+        """
+        )
 
         # Workflow artifacts table
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS workflow_artifacts (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 step_id INTEGER,
@@ -542,58 +623,125 @@ class WorkflowManager:
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (step_id) REFERENCES workflow_steps (id)
             )
-        """)
+        """
+        )
 
         conn.commit()
         conn.close()
-    
+
     def create_workflow(self, project_name: str, project_path: str) -> int:
-        """Create a new workflow instance."""
+        """Create a new workflow instance and store context in memory architecture."""
+        # Store context-sensitive creation in working memory
+        self.working_memory.add(
+            {
+                "action": "create_workflow",
+                "project_name": project_name,
+                "project_path": project_path,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
+        # Store recent workflow creation in short-term memory
+        self.short_term_memory.add(
+            {
+                "project_name": project_name,
+                "project_path": project_path,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO workflow_instances (project_name, project_path)
             VALUES (?, ?)
-        """, (project_name, project_path))
-        
+        """,
+            (project_name, project_path),
+        )
         workflow_id = cursor.lastrowid
-        
         # Initialize steps for this workflow
         for step_name in self.steps.keys():
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO workflow_steps (workflow_id, step_name)
                 VALUES (?, ?)
-            """, (workflow_id, step_name))
-        
+            """,
+                (workflow_id, step_name),
+            )
         conn.commit()
         conn.close()
-        
+        # Store persistent workflow in long-term memory
+        self.long_term_memory.add(
+            str(workflow_id),
+            {
+                "project_name": project_name,
+                "project_path": project_path,
+                "created_at": datetime.now().isoformat(),
+            },
+        )
         return workflow_id or -1
-    
+
     def get_next_step(self) -> list:
         """Get all next steps that can be started from the current step (non-sequential)."""
         if self.current_step is None:
             return []
         return self.get_next_steps(self.current_step)
-    
+
     def start_step(self, step_name: str) -> bool:
-        print(f"[DEBUG] Attempting to start step: {step_name}, completed_steps: {self.completed_steps}")
+        # Store context-sensitive step start in working memory
+        self.working_memory.add(
+            {
+                "action": "start_step",
+                "step_name": step_name,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
+        # Store recent step start in short-term memory
+        self.short_term_memory.add(
+            {"step_name": step_name, "timestamp": datetime.now().isoformat()}
+        )
+        print(
+            f"[DEBUG] Attempting to start step: {step_name}, completed_steps: {self.completed_steps}"
+        )
         if step_name not in self.steps:
             print(f"[DEBUG] Step {step_name} not in steps.")
             return False
         step = self.steps[step_name]
         if not step.can_start(self.completed_steps):
-            print(f"[DEBUG] Step {step_name} cannot start, dependencies: {step.dependencies}, completed_steps: {self.completed_steps}")
+            print(
+                f"[DEBUG] Step {step_name} cannot start, dependencies: {step.dependencies}, completed_steps: {self.completed_steps}"
+            )
             return False
         step.start()
         self.current_step = step_name
-        self._update_step_status(step_name, 'in_progress')
+        self._update_step_status(step_name, "in_progress")
         print(f"[DEBUG] Step {step_name} started.")
+        # Store persistent step start in long-term memory
+        self.long_term_memory.add(
+            f"step_start_{step_name}_{datetime.now().isoformat()}",
+            {
+                "step_name": step_name,
+                "status": "in_progress",
+                "timestamp": datetime.now().isoformat(),
+            },
+        )
         return True
-    
+
     def complete_step(self, step_name: str) -> bool:
-        print(f"[DEBUG] Attempting to complete step: {step_name}, current status: {self.steps[step_name].status if step_name in self.steps else 'N/A'}")
+        # Store context-sensitive step completion in working memory
+        self.working_memory.add(
+            {
+                "action": "complete_step",
+                "step_name": step_name,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
+        # Store recent step completion in short-term memory
+        self.short_term_memory.add(
+            {"step_name": step_name, "timestamp": datetime.now().isoformat()}
+        )
+        print(
+            f"[DEBUG] Attempting to complete step: {step_name}, current status: {self.steps[step_name].status if step_name in self.steps else 'N/A'}"
+        )
         if step_name not in self.steps:
             print(f"[DEBUG] Step {step_name} not in steps.")
             return False
@@ -604,11 +752,28 @@ class WorkflowManager:
         step.complete()
         self.completed_steps.append(step_name)
         self.current_step = None
-        self._update_step_status(step_name, 'completed')
-        print(f"[DEBUG] Step {step_name} completed. completed_steps: {self.completed_steps}")
+        self._update_step_status(step_name, "completed")
+        print(
+            f"[DEBUG] Step {step_name} completed. completed_steps: {self.completed_steps}"
+        )
+        # Store persistent step completion in long-term memory
+        self.long_term_memory.add(
+            f"step_complete_{step_name}_{datetime.now().isoformat()}",
+            {
+                "step_name": step_name,
+                "status": "completed",
+                "timestamp": datetime.now().isoformat(),
+            },
+        )
         return True
-    
-    def add_step_feedback(self, step_name: str, feedback: str, impact: int = 0, principle: Optional[str] = None):
+
+    def add_step_feedback(
+        self,
+        step_name: str,
+        feedback: str,
+        impact: int = 0,
+        principle: Optional[str] = None,
+    ):
         """Add feedback to a workflow step."""
         if step_name not in self.steps:
             return
@@ -616,160 +781,186 @@ class WorkflowManager:
         step.add_feedback(feedback, impact, principle)
         # Update database
         self._add_step_feedback_db(step_name, feedback, impact, principle or "")
-    
+
     def get_workflow_status(self) -> Dict[str, Any]:
         """Get the current workflow status."""
         status = {
-            'current_step': self.current_step,
-            'completed_steps': self.completed_steps,
-            'total_steps': len(self.steps),
-            'progress': len(self.completed_steps) / len(self.steps),
-            'steps': {}
+            "current_step": self.current_step,
+            "completed_steps": self.completed_steps,
+            "total_steps": len(self.steps),
+            "progress": len(self.completed_steps) / len(self.steps),
+            "steps": {},
         }
-        
+
         for step_name, step in self.steps.items():
-            status['steps'][step_name] = {
-                'name': step.name,
-                'description': step.description,
-                'status': step.status.value,
-                'started_at': step.started_at.isoformat() if step.started_at else None,
-                'completed_at': step.completed_at.isoformat() if step.completed_at else None,
-                'feedback_count': len(step.feedback),
-                'artifact_count': len(step.artifacts)
+            status["steps"][step_name] = {
+                "name": step.name,
+                "description": step.description,
+                "status": step.status.value,
+                "started_at": step.started_at.isoformat() if step.started_at else None,
+                "completed_at": (
+                    step.completed_at.isoformat() if step.completed_at else None
+                ),
+                "feedback_count": len(step.feedback),
+                "artifact_count": len(step.artifacts),
             }
-        
+
         return status
-    
+
     def get_step_details(self, step_name: str) -> Optional[Dict[str, Any]]:
         """Get detailed information about a specific step, including meta/partial fields."""
         if step_name not in self.steps:
             return None
-        
+
         step = self.steps[step_name]
         details = {
-            'name': step.name,
-            'description': step.description,
-            'status': step.status.value,
-            'dependencies': step.dependencies,
-            'started_at': step.started_at.isoformat() if step.started_at else None,
-            'completed_at': step.completed_at.isoformat() if step.completed_at else None,
-            'feedback': step.feedback,
-            'artifacts': step.artifacts,
-            'is_meta': getattr(step, 'is_meta', False),
-            'partial_progress': getattr(step, 'partial_progress', 0.0),
-            'statistics': getattr(step, 'statistics', {}),
-            'guidance': getattr(step, 'guidance', []),
-            'engram_links': getattr(step, 'engram_ids', [])
+            "name": step.name,
+            "description": step.description,
+            "status": step.status.value,
+            "dependencies": step.dependencies,
+            "started_at": step.started_at.isoformat() if step.started_at else None,
+            "completed_at": (
+                step.completed_at.isoformat() if step.completed_at else None
+            ),
+            "feedback": step.feedback,
+            "artifacts": step.artifacts,
+            "is_meta": getattr(step, "is_meta", False),
+            "partial_progress": getattr(step, "partial_progress", 0.0),
+            "statistics": getattr(step, "statistics", {}),
+            "guidance": getattr(step, "guidance", []),
+            "engram_links": getattr(step, "engram_ids", []),
         }
-        
+
         # Add step-specific details
         if isinstance(step, InitStep):
-            details.update({
-                'project_name': step.project_name,
-                'project_path': step.project_path,
-                'requirements': step.requirements,
-                'questions': step.questions
-            })
+            details.update(
+                {
+                    "project_name": step.project_name,
+                    "project_path": step.project_path,
+                    "requirements": step.requirements,
+                    "questions": step.questions,
+                }
+            )
         elif isinstance(step, ResearchStep):
-            details.update({
-                'research_topics': step.research_topics,
-                'findings': step.findings,
-                'sources': step.sources
-            })
+            details.update(
+                {
+                    "research_topics": step.research_topics,
+                    "findings": step.findings,
+                    "sources": step.sources,
+                }
+            )
         elif isinstance(step, PlanningStep):
-            details.update({
-                'architecture': step.architecture,
-                'tasks': step.tasks,
-                'milestones': step.milestones,
-                'risks': step.risks
-            })
+            details.update(
+                {
+                    "architecture": step.architecture,
+                    "tasks": step.tasks,
+                    "milestones": step.milestones,
+                    "risks": step.risks,
+                }
+            )
         elif isinstance(step, DevelopmentStep):
-            details.update({
-                'features': step.features,
-                'bugs': step.bugs,
-                'decisions': step.decisions
-            })
+            details.update(
+                {
+                    "features": step.features,
+                    "bugs": step.bugs,
+                    "decisions": step.decisions,
+                }
+            )
         elif isinstance(step, TestingStep):
-            details.update({
-                'test_cases': step.test_cases,
-                'test_results': step.test_results,
-                'issues': step.issues
-            })
+            details.update(
+                {
+                    "test_cases": step.test_cases,
+                    "test_results": step.test_results,
+                    "issues": step.issues,
+                }
+            )
         elif isinstance(step, DeploymentStep):
-            details.update({
-                'environments': step.environments,
-                'deployments': step.deployments,
-                'rollbacks': step.rollbacks
-            })
-        
+            details.update(
+                {
+                    "environments": step.environments,
+                    "deployments": step.deployments,
+                    "rollbacks": step.rollbacks,
+                }
+            )
+
         return details
-    
+
     def _update_step_status(self, step_name: str, status: str):
         """Update step status in database."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
+
         cursor.execute(
             """
             UPDATE workflow_steps
             SET status = ?, updated_at = CURRENT_TIMESTAMP
             WHERE step_name = ?
             """,
-            (status, step_name)
+            (status, step_name),
         )
-        
+
         conn.commit()
         conn.close()
-    
-    def _add_step_feedback_db(self, step_name: str, feedback: str, impact: int, principle: str):
+
+    def _add_step_feedback_db(
+        self, step_name: str, feedback: str, impact: int, principle: str
+    ):
         """Add step feedback to database."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
+
         # Get step ID
-        cursor.execute("SELECT id FROM workflow_steps WHERE step_name = ?", (step_name,))
+        cursor.execute(
+            "SELECT id FROM workflow_steps WHERE step_name = ?", (step_name,)
+        )
         step_id = cursor.fetchone()
-        
+
         if step_id:
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO workflow_feedback (step_id, feedback, impact, principle)
                 VALUES (?, ?, ?, ?)
-            """, (step_id[0], feedback, impact, principle))
-        
+            """,
+                (step_id[0], feedback, impact, principle),
+            )
+
         conn.commit()
         conn.close()
-    
+
     def complete_init_step(self) -> bool:
         """Complete the initialization step and allow progression to research."""
         # Allow completion regardless of current state for init step
-        if 'init' in self.steps:
-            step = self.steps['init']
+        if "init" in self.steps:
+            step = self.steps["init"]
             step.complete()
-            self.completed_steps.append('init')
+            self.completed_steps.append("init")
             self.current_step = None
-            
+
             # Update database
-            self._update_step_status('init', 'completed')
+            self._update_step_status("init", "completed")
             return True
         return False
-    
+
     def get_step_status(self, step_name: str) -> str:
         """Get the status of a specific step."""
         if step_name not in self.steps:
-            return 'not_found'
+            return "not_found"
         return self.steps[step_name].status.value
-    
+
     def can_start_research(self) -> bool:
         """Check if research phase can be started."""
         # Allow research to start if init is completed OR if we have basic project info
-        init_completed = self.get_step_status('init') == 'completed'
+        init_completed = self.get_step_status("init") == "completed"
         # For now, allow research to start if init step exists
-        return init_completed or 'init' in self.steps 
+        return init_completed or "init" in self.steps
 
     def _get_latest_workflow_id(self, project_path: str) -> int:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        cursor.execute("SELECT id FROM workflow_instances WHERE project_path = ? ORDER BY id DESC LIMIT 1", (project_path,))
+        cursor.execute(
+            "SELECT id FROM workflow_instances WHERE project_path = ? ORDER BY id DESC LIMIT 1",
+            (project_path,),
+        )
         row = cursor.fetchone()
         conn.close()
         return row[0] if row else 1
@@ -781,11 +972,16 @@ class WorkflowManager:
         workflow_id = self._get_latest_workflow_id(project_path)
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        cursor.execute("SELECT step_name, status, started_at, completed_at FROM workflow_steps WHERE workflow_id = ?", (workflow_id,))
+        cursor.execute(
+            "SELECT step_name, status, started_at, completed_at FROM workflow_steps WHERE workflow_id = ?",
+            (workflow_id,),
+        )
         for row in cursor.fetchall():
             step_name, status, started_at, completed_at = row
             if step_name not in self.steps:
-                self.steps[step_name] = WorkflowStep(name=step_name, description=step_name.capitalize())
+                self.steps[step_name] = WorkflowStep(
+                    name=step_name, description=step_name.capitalize()
+                )
             step = self.steps[step_name]
             try:
                 step.status = WorkflowStatus(status)
@@ -801,28 +997,39 @@ class WorkflowManager:
             if step.status == WorkflowStatus.IN_PROGRESS:
                 self.current_step = step_name
         # Load feedback for each step
-        cursor.execute("SELECT ws.step_name, wf.feedback, wf.impact, wf.principle, wf.created_at FROM workflow_feedback wf JOIN workflow_steps ws ON wf.step_id = ws.id WHERE ws.workflow_id = ?", (workflow_id,))
+        cursor.execute(
+            "SELECT ws.step_name, wf.feedback, wf.impact, wf.principle, wf.created_at FROM workflow_feedback wf JOIN workflow_steps ws ON wf.step_id = ws.id WHERE ws.workflow_id = ?",
+            (workflow_id,),
+        )
         for row in cursor.fetchall():
             step_name, feedback, impact, principle, created_at = row
             if step_name in self.steps:
                 step = self.steps[step_name]
-                step.feedback.append({
-                    'text': feedback,
-                    'impact': impact,
-                    'principle': principle,
-                    'timestamp': created_at
-                })
+                step.feedback.append(
+                    {
+                        "text": feedback,
+                        "impact": impact,
+                        "principle": principle,
+                        "timestamp": created_at,
+                    }
+                )
         conn.close()
 
-    def flag_misunderstanding(self, step_name: str, description: str, clarification: str = '', resolved: bool = False):
+    def flag_misunderstanding(
+        self,
+        step_name: str,
+        description: str,
+        clarification: str = "",
+        resolved: bool = False,
+    ):
         """Flag a misunderstanding at a workflow step, with optional clarification and resolution status."""
         if step_name not in self.steps:
             return False
         event = {
-            'text': f"MISUNDERSTANDING: {description}",
-            'clarification': clarification or '',
-            'resolved': resolved,
-            'timestamp': datetime.now()
+            "text": f"MISUNDERSTANDING: {description}",
+            "clarification": clarification or "",
+            "resolved": resolved,
+            "timestamp": datetime.now(),
         }
         self.steps[step_name].feedback.append(event)
         # Optionally, persist to DB if needed
@@ -833,10 +1040,12 @@ class WorkflowManager:
         if step_name not in self.steps:
             return False
         for fb in reversed(self.steps[step_name].feedback):
-            if 'MISUNDERSTANDING:' in fb.get('text', '') and not fb.get('resolved', False):
-                fb['clarification'] = clarification
-                fb['resolved'] = True
-                fb['resolved_at'] = datetime.now()
+            if "MISUNDERSTANDING:" in fb.get("text", "") and not fb.get(
+                "resolved", False
+            ):
+                fb["clarification"] = clarification
+                fb["resolved"] = True
+                fb["resolved_at"] = datetime.now()
                 return True
         return False
 
@@ -845,28 +1054,41 @@ class WorkflowManager:
         misunderstandings = []
         for step_name, step in self.steps.items():
             for fb in step.feedback:
-                if 'MISUNDERSTANDING:' in fb.get('text', '') or 'REASSESSMENT REQUESTED:' in fb.get('text', ''):
-                    misunderstandings.append({
-                        'step': step_name,
-                        'text': fb.get('text', ''),
-                        'clarification': fb.get('clarification', ''),
-                        'resolved': fb.get('resolved', False),
-                        'timestamp': fb.get('timestamp'),
-                        'resolved_at': fb.get('resolved_at', None)
-                    })
+                if "MISUNDERSTANDING:" in fb.get(
+                    "text", ""
+                ) or "REASSESSMENT REQUESTED:" in fb.get("text", ""):
+                    misunderstandings.append(
+                        {
+                            "step": step_name,
+                            "text": fb.get("text", ""),
+                            "clarification": fb.get("clarification", ""),
+                            "resolved": fb.get("resolved", False),
+                            "timestamp": fb.get("timestamp"),
+                            "resolved_at": fb.get("resolved_at", None),
+                        }
+                    )
         return misunderstandings
 
     def trigger_reassessment(self, step_name: str, reason: str) -> None:
         """Trigger a reassessment at a workflow step and log it for future review and learning."""
-        self.add_step_feedback(step_name, f"REASSESSMENT REQUESTED: {reason}", impact=0, principle="reassessment")
+        self.add_step_feedback(
+            step_name,
+            f"REASSESSMENT REQUESTED: {reason}",
+            impact=0,
+            principle="reassessment",
+        )
 
-    def add_step(self, step_name: str, after: Optional[str] = None, config: Optional[dict] = None) -> bool:
+    def add_step(
+        self, step_name: str, after: Optional[str] = None, config: Optional[dict] = None
+    ) -> bool:
         """Dynamically add a new workflow step after a given step (or at end if after is None)."""
         if step_name in self.steps:
             return False  # Step already exists
-        description = (config or {}).get('description', step_name.capitalize())
-        dependencies = (config or {}).get('dependencies', [])
-        step = WorkflowStep(name=step_name, description=description, dependencies=dependencies)
+        description = (config or {}).get("description", step_name.capitalize())
+        dependencies = (config or {}).get("dependencies", [])
+        step = WorkflowStep(
+            name=step_name, description=description, dependencies=dependencies
+        )
         # Insert step in order
         step_names = list(self.steps.keys())
         if after and after in step_names:
@@ -889,9 +1111,15 @@ class WorkflowManager:
         row = cursor.fetchone()
         workflow_id = row[0] if row else 1
         # Insert step if not exists
-        cursor.execute("SELECT id FROM workflow_steps WHERE step_name = ? AND workflow_id = ?", (step_name, workflow_id))
+        cursor.execute(
+            "SELECT id FROM workflow_steps WHERE step_name = ? AND workflow_id = ?",
+            (step_name, workflow_id),
+        )
         if not cursor.fetchone():
-            cursor.execute("INSERT INTO workflow_steps (workflow_id, step_name, status) VALUES (?, ?, ?)", (workflow_id, step_name, 'not_started'))
+            cursor.execute(
+                "INSERT INTO workflow_steps (workflow_id, step_name, status) VALUES (?, ?, ?)",
+                (workflow_id, step_name, "not_started"),
+            )
         conn.commit()
         conn.close()
 
@@ -908,18 +1136,18 @@ class WorkflowManager:
         if step_name not in self.steps:
             return False
         step = self.steps[step_name]
-        if 'description' in config:
-            step.description = config['description']
-        if 'dependencies' in config:
-            step.dependencies = config['dependencies']
-        if 'status' in config:
+        if "description" in config:
+            step.description = config["description"]
+        if "dependencies" in config:
+            step.dependencies = config["dependencies"]
+        if "status" in config:
             try:
-                step.status = WorkflowStatus(config['status'])
+                step.status = WorkflowStatus(config["status"])
             except Exception:
                 pass
         # Add any custom attributes
         for k, v in config.items():
-            if k not in ('description', 'dependencies', 'status'):
+            if k not in ("description", "dependencies", "status"):
                 setattr(step, k, v)
         self._persist_steps()
         return True
@@ -930,13 +1158,25 @@ class WorkflowManager:
         cursor = conn.cursor()
         for name, step in self.steps.items():
             # Store status as string value
-            status_str = step.status.value if hasattr(step.status, 'value') else str(step.status)
+            status_str = (
+                step.status.value if hasattr(step.status, "value") else str(step.status)
+            )
             cursor.execute(
                 """
                 INSERT OR REPLACE INTO workflow_steps (workflow_id, step_name, status, metadata)
                 VALUES (?, ?, ?, ?)
                 """,
-                (self._get_latest_workflow_id(os.getcwd()), name, status_str, json.dumps({'description': step.description, 'dependencies': step.dependencies}))
+                (
+                    self._get_latest_workflow_id(os.getcwd()),
+                    name,
+                    status_str,
+                    json.dumps(
+                        {
+                            "description": step.description,
+                            "dependencies": step.dependencies,
+                        }
+                    ),
+                ),
             )
         conn.commit()
         conn.close()
@@ -957,14 +1197,14 @@ class WorkflowManager:
         if step_name not in self.steps:
             return []
         step = self.steps[step_name]
-        return getattr(step, 'next_steps', [])
+        return getattr(step, "next_steps", [])
 
     def add_next_step(self, step_name: str, next_step: str) -> bool:
         """Add a possible next step to a given step."""
         if step_name not in self.steps:
             return False
         step = self.steps[step_name]
-        if not hasattr(step, 'next_steps'):
+        if not hasattr(step, "next_steps"):
             step.next_steps = []
         if next_step not in step.next_steps:
             step.next_steps.append(next_step)
@@ -976,7 +1216,7 @@ class WorkflowManager:
         if step_name not in self.steps:
             return False
         step = self.steps[step_name]
-        if hasattr(step, 'next_steps') and next_step in step.next_steps:
+        if hasattr(step, "next_steps") and next_step in step.next_steps:
             step.next_steps.remove(next_step)
             self._persist_steps()
             return True
@@ -992,10 +1232,23 @@ class WorkflowManager:
         """Persist step metadata in the DB for dynamic steps."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT OR IGNORE INTO workflow_steps (workflow_id, step_name, status, metadata)
             VALUES (?, ?, ?, ?)
-        """, (self._get_latest_workflow_id(os.getcwd()), name, 'not_started', json.dumps({'description': step_obj.description, 'dependencies': step_obj.dependencies})))
+        """,
+            (
+                self._get_latest_workflow_id(os.getcwd()),
+                name,
+                "not_started",
+                json.dumps(
+                    {
+                        "description": step_obj.description,
+                        "dependencies": step_obj.dependencies,
+                    }
+                ),
+            ),
+        )
         conn.commit()
         conn.close()
 
@@ -1004,15 +1257,15 @@ class WorkflowManager:
         feedback_scores = {}
         for name, step in self.steps.items():
             score = 0
-            for fb in getattr(step, 'feedback', []):
-                impact = fb.get('impact', 0)
+            for fb in getattr(step, "feedback", []):
+                impact = fb.get("impact", 0)
                 # Negative impact = higher priority
                 score -= impact
             feedback_scores[name] = score
         # Sort steps by score (lower = higher priority)
         prioritized = sorted(
             [s for s in self.steps if self.steps[s].status != WorkflowStatus.COMPLETED],
-            key=lambda n: feedback_scores.get(n, 0)
+            key=lambda n: feedback_scores.get(n, 0),
         )
         return prioritized
 
@@ -1022,13 +1275,23 @@ class WorkflowManager:
         suggestions = []
         for step_name in prioritized:
             step = self.steps[step_name]
-            suggestions.append({
-                'step': step_name,
-                'description': step.description,
-                'priority': 'high' if prioritized.index(step_name) == 0 else 'normal',
-                'feedback_score': sum(-fb.get('impact', 0) for fb in getattr(step, 'feedback', [])),
-                'status': step.status.name if hasattr(step.status, 'name') else str(step.status)
-            })
+            suggestions.append(
+                {
+                    "step": step_name,
+                    "description": step.description,
+                    "priority": (
+                        "high" if prioritized.index(step_name) == 0 else "normal"
+                    ),
+                    "feedback_score": sum(
+                        -fb.get("impact", 0) for fb in getattr(step, "feedback", [])
+                    ),
+                    "status": (
+                        step.status.name
+                        if hasattr(step.status, "name")
+                        else str(step.status)
+                    ),
+                }
+            )
         return suggestions
 
     def get_all_step_statistics(self) -> Dict[str, dict]:
@@ -1051,6 +1314,7 @@ class WorkflowManager:
 
     def start_autonomous_reorganization(self, interval_seconds: int = 3600):
         """Start a background thread that periodically reorganizes and optimizes the workflow and tasks."""
+
         def reorg_loop():
             while True:
                 try:
@@ -1058,6 +1322,7 @@ class WorkflowManager:
                 except Exception as e:
                     logging.error(f"[AutonomousReorg] Error: {e}")
                 time.sleep(interval_seconds)
+
         t = threading.Thread(target=reorg_loop, daemon=True)
         t.start()
 
@@ -1066,12 +1331,12 @@ class WorkflowManager:
         Perform autonomous workflow reorganization using feedback, dependency analysis, and context compression.
         Implements: dynamic reordering, step merging/splitting, and proactive guidance based on feedback and project state.
         See idea.txt, AutoFlow/AFlow research, and README.md for details.
+        Fallback: returns current order and logs stub status if advanced logic not implemented.
         """
-        # Example: log current state for traceability
         logging.info(f"[AutonomousReorg] Current steps: {list(self.steps.keys())}")
         logging.info(f"[AutonomousReorg] Completed steps: {self.completed_steps}")
-        # TODO: Implement advanced reorganization logic (research-driven)
-        # For now, just return the current order
+        # Minimal implementation: just return current order
+        logging.warning("[AutonomousReorg] Advanced reorganization logic not yet implemented. Returning current order (stub fallback). See idea.txt.")
         return list(self.steps.keys())
 
     def rl_optimize_workflow(self):
@@ -1079,50 +1344,68 @@ class WorkflowManager:
         RL-based workflow optimization using reward models for correctness and efficiency.
         Implements: reward models, test-based feedback, and failstate detection.
         See idea.txt, arXiv:2505.11480, arXiv:2412.17264, arXiv:2502.01718, arXiv:2506.03136, arXiv:2506.20495, README.md.
+        Fallback: returns simulated optimization and logs stub status.
         """
-        logging.info("[RL-Optimize] Running RL-based workflow optimization (stub, research-driven).")
-        # Placeholder: reward model, test-based feedback, failstate detection
-        reward_model = lambda step: sum(-fb.get('impact', 0) for fb in getattr(step, 'feedback', []))
+        logging.info("[RL-Optimize] Running RL-based workflow optimization (stub, research-driven fallback). See idea.txt.")
+        reward_model = lambda step: sum(-fb.get("impact", 0) for fb in getattr(step, "feedback", []))
         prioritized = self.get_prioritized_next_steps()
-        # Simulate RL: prioritize steps with most negative feedback (lowest reward)
         optimized_order = sorted(prioritized, key=lambda n: reward_model(self.steps[n]))
-        # Simulate test-based feedback
-        test_results = {n: 'passed' for n in optimized_order}
-        # Simulate failstate detection
+        test_results = {n: "passed" for n in optimized_order}
         failstates = [n for n in optimized_order if reward_model(self.steps[n]) < -5]
         logging.info(f"[RL-Optimize] Optimized order: {optimized_order}, Failstates: {failstates}")
-        return {"status": "stub", "optimized_order": optimized_order, "failstates": failstates, "test_results": test_results}
+        return {
+            "status": "stub",
+            "optimized_order": optimized_order,
+            "failstates": failstates,
+            "test_results": test_results,
+        }
 
     def slm_optimize_workflow(self):
         """
         SLM-based RL optimization for resource-constrained/portable deployments.
         Implements: lightweight reward models and test-based feedback.
         See idea.txt, arXiv:2312.05657, README.md (PerfRL, SLM-based optimization).
+        Fallback: returns simulated optimization and logs stub status.
         """
-        logging.info("[SLM-Optimize] Running SLM-based workflow optimization (stub, research-driven).")
-        # Placeholder: lightweight reward model
-        reward_model = lambda step: sum(-fb.get('impact', 0) for fb in getattr(step, 'feedback', []))
+        logging.info("[SLM-Optimize] Running SLM-based workflow optimization (stub, research-driven fallback). See idea.txt.")
+        reward_model = lambda step: sum(-fb.get("impact", 0) for fb in getattr(step, "feedback", []))
         prioritized = self.get_prioritized_next_steps()
-        # Simulate SLM: prioritize steps with most recent feedback
-        optimized_order = sorted(prioritized, key=lambda n: len(getattr(self.steps[n], 'feedback', [])), reverse=True)
-        test_results = {n: 'passed' for n in optimized_order}
+        optimized_order = sorted(
+            prioritized,
+            key=lambda n: len(getattr(self.steps[n], "feedback", [])),
+            reverse=True,
+        )
+        test_results = {n: "passed" for n in optimized_order}
         logging.info(f"[SLM-Optimize] Optimized order: {optimized_order}")
-        return {"status": "stub", "optimized_order": optimized_order, "test_results": test_results}
+        return {
+            "status": "stub",
+            "optimized_order": optimized_order,
+            "test_results": test_results,
+        }
 
     def compiler_world_model_optimize(self):
         """
         Compiler world model for general code optimization and self-improvement.
         Implements: code analysis, optimization suggestions, and self-improvement.
         See idea.txt, arXiv:2404.16077, README.md (CompilerDream).
+        Fallback: returns simulated suggestions and logs stub status.
         """
-        logging.info("[Compiler-World-Model] Running compiler world model optimization (stub, research-driven).")
-        # Placeholder: code analysis and optimization
+        logging.info("[Compiler-World-Model] Running compiler world model optimization (stub, research-driven fallback). See idea.txt.")
         suggestions = [
             {"step": n, "suggestion": f"Optimize {n} for efficiency and correctness."}
             for n in self.get_prioritized_next_steps()
         ]
         logging.info(f"[Compiler-World-Model] Suggestions: {suggestions}")
         return {"status": "stub", "suggestions": suggestions}
+
+    def advanced_autonomous_reorganization(self):
+        """
+        Advanced, research-driven autonomous reorganization logic (minimal implementation).
+        See idea.txt and TODO_DEVELOPMENT_PLAN.md for requirements and future extensibility.
+        Fallback: logs stub status and returns current order.
+        """
+        logging.warning("[AdvancedAutonomousReorg] Not implemented. Returning current order (stub fallback). See idea.txt and TODO_DEVELOPMENT_PLAN.md.")
+        return list(self.steps.keys())
 
     # Expanded test stubs for workflow/task operations
     # See idea.txt and [Clean Code Best Practices](https://hackernoon.com/how-to-write-clean-code-and-save-your-sanity)
@@ -1141,37 +1424,70 @@ class WorkflowManager:
         # Complete the step
         assert workflow.complete_step(step_name), "Step not completed"
         # Add feedback
-        workflow.add_step_feedback(step_name, "Test feedback", impact=1, principle="test_principle")
+        workflow.add_step_feedback(
+            step_name, "Test feedback", impact=1, principle="test_principle"
+        )
         stats = workflow.get_all_step_statistics()
         assert step_name in stats, "Step statistics missing"
         # Add a task and mark as partial
-        task_id = task_manager.create_task("Test Task", description="Test task for workflow", priority=5)
+        task_id = task_manager.create_task(
+            "Test Task", description="Test task for workflow", priority=5
+        )
         assert task_id > 0, "Task not created"
-        task_manager.update_task_progress(task_id, 50.0, current_step="halfway", partial_completion_notes="Half done")
+        task_manager.update_task_progress(
+            task_id, 50.0, current_step="halfway", partial_completion_notes="Half done"
+        )
         progress = task_manager.get_task_progress(task_id)
-        assert progress.get('progress_percentage', 0) >= 50.0, "Task progress not updated"
+        assert (
+            progress.get("progress_percentage", 0) >= 50.0
+        ), "Task progress not updated"
         # Add engram and link to step
-        engram_id = memory.create_engram("Test Engram", description="Engram for test", memory_ids=[], tags=["test"])
+        engram_id = memory.create_engram(
+            "Test Engram", description="Engram for test", memory_ids=[], tags=["test"]
+        )
         workflow.steps[step_name].engram_ids.append(engram_id)
         assert engram_id in workflow.steps[step_name].engram_ids, "Engram not linked"
         # Test autonomous reorganization
         workflow.autonomous_reorganize()
         # Test meta/partial step
         meta_step = "meta_step"
-        workflow.add_step(meta_step, config={"description": "Meta step", "is_meta": True})
+        workflow.add_step(
+            meta_step, config={"description": "Meta step", "is_meta": True}
+        )
         assert meta_step in workflow.steps, "Meta step not added"
         workflow.steps[meta_step].set_partial_progress(0.5)
-        assert workflow.steps[meta_step].get_partial_progress() == 0.5, "Partial progress not set"
+        assert (
+            workflow.steps[meta_step].get_partial_progress() == 0.5
+        ), "Partial progress not set"
         # Test failstate handling (simulate failstate)
-        workflow.add_step_feedback(meta_step, "Simulated failstate", impact=-10, principle="failstate")
-        failstates = [n for n in workflow.steps if any(fb.get('impact', 0) < -5 for fb in getattr(workflow.steps[n], 'feedback', []))]
+        workflow.add_step_feedback(
+            meta_step, "Simulated failstate", impact=-10, principle="failstate"
+        )
+        failstates = [
+            n
+            for n in workflow.steps
+            if any(
+                fb.get("impact", 0) < -5
+                for fb in getattr(workflow.steps[n], "feedback", [])
+            )
+        ]
         assert meta_step in failstates, "Failstate not detected"
         # Test advanced dependencies
         dep_step = "dep_step"
-        workflow.add_step(dep_step, config={"description": "Dependent step", "dependencies": [step_name, meta_step]})
-        assert not workflow.start_step(dep_step), "Dependent step should not start before dependencies complete"
+        workflow.add_step(
+            dep_step,
+            config={
+                "description": "Dependent step",
+                "dependencies": [step_name, meta_step],
+            },
+        )
+        assert not workflow.start_step(
+            dep_step
+        ), "Dependent step should not start before dependencies complete"
         workflow.complete_step(meta_step)
-        assert workflow.start_step(dep_step), "Dependent step did not start after dependencies completed"
+        assert workflow.start_step(
+            dep_step
+        ), "Dependent step did not start after dependencies completed"
         # Test integration with experimental lobes (stub)
         # (Assume PatternRecognitionEngine, AlignmentEngine, etc. are available)
         print("[TEST] test_workflow_task_operations: All tests passed.")
@@ -1229,4 +1545,4 @@ class WorkflowManager:
     - API_DOCUMENTATION.md, ADVANCED_API.md: Full API and advanced features
     - CLI --help: Command-specific options and examples
     """
-    # --- END DOCUMENTATION BLOCK --- 
+    # --- END DOCUMENTATION BLOCK ---

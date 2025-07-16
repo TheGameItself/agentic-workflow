@@ -141,4 +141,85 @@ class TaskProposalLobe:
         Extensible for continual learning and feedback-driven adaptation.
         """
         self.logger.info(f"[TaskProposalLobe] Adapting from feedback: {feedback}")
-        self.working_memory.add({"feedback": feedback}) 
+        self.working_memory.add({"feedback": feedback})
+
+    def advanced_feedback_integration(self, feedback: dict):
+        """
+        Advanced feedback integration and continual learning for task proposal lobe.
+        Updates proposal heuristics or agent parameters based on structured feedback.
+        Supports cross-lobe research and adaptation.
+        """
+        try:
+            if feedback and 'agent_count' in feedback:
+                self.agent_count = int(feedback['agent_count'])
+                self.logger.info(f"[TaskProposalLobe] Agent count updated to {self.agent_count} from feedback.")
+            self.working_memory.add({"advanced_feedback": feedback})
+        except Exception as ex:
+            self.logger.error(f"[TaskProposalLobe] Error in advanced_feedback_integration: {ex}")
+
+    def cross_lobe_integration(self, lobe_name: str = "", context: Optional[dict] = None) -> Any:
+        """
+        Integrate with other lobes for cross-engine research and feedback.
+        Example: call MultiLLMOrchestrator or VesiclePool for additional context.
+        See idea.txt, README.md, ARCHITECTURE.md.
+        """
+        self.logger.info(f"[TaskProposalLobe] Cross-lobe integration called with {lobe_name}.")
+        # Placeholder: simulate integration
+        return self.propose_task(context=context)
+
+    def demo_custom_task_proposal(self, custom_proposer: Callable, context: Optional[dict] = None) -> dict:
+        """
+        Demo/test method: run a custom task proposal function and return the proposed task.
+        Usage: lobe.demo_custom_task_proposal(lambda ctx: {...}, context={'unfinished': 'foo'})
+        """
+        try:
+            result = custom_proposer(context)
+            self.logger.info(f"[TaskProposalLobe] Custom task proposal result: {result}")
+            return result
+        except Exception as ex:
+            self.logger.error(f"[TaskProposalLobe] Custom task proposal error: {ex}")
+            return {"status": "error", "error": str(ex)}
+
+    def demo_custom_test_proposal(self, custom_proposer: Callable, feature: Optional[str] = None) -> dict:
+        """
+        Demo/test method: run a custom test proposal function and return the proposed test.
+        Usage: lobe.demo_custom_test_proposal(lambda f: {...}, feature='feature_x')
+        """
+        try:
+            result = custom_proposer(feature)
+            self.logger.info(f"[TaskProposalLobe] Custom test proposal result: {result}")
+            return result
+        except Exception as ex:
+            self.logger.error(f"[TaskProposalLobe] Custom test proposal error: {ex}")
+            return {"status": "error", "error": str(ex)}
+
+    def usage_example(self):
+        """
+        Usage example for task proposal lobe:
+        >>> lobe = TaskProposalLobe()
+        >>> task = lobe.propose_task(context={'unfinished': 'foo'})
+        >>> print(task)
+        >>> # Custom task proposal: always propose a fixed task
+        >>> custom = lobe.demo_custom_task_proposal(lambda ctx: {'title': 'Custom', 'description': 'Demo'}, context={})
+        >>> print(custom)
+        >>> # Advanced feedback integration
+        >>> lobe.advanced_feedback_integration({'agent_count': 5})
+        >>> # Cross-lobe integration
+        >>> lobe.cross_lobe_integration(lobe_name='MultiLLMOrchestrator', context={'unfinished': 'bar'})
+        """
+        pass
+
+    def get_state(self):
+        """Return a summary of the current task proposal lobe state for aggregation."""
+        return {
+            'db_path': self.db_path,
+            'proposed_tasks': self.proposed_tasks,
+            'proposed_tests': self.proposed_tests,
+            'feedback_log': self.feedback_log,
+            'working_memory': self.working_memory.get_all() if hasattr(self.working_memory, 'get_all') else None
+        }
+
+    def receive_data(self, data: dict):
+        """Stub: Receive data from aggregator or adjacent lobes."""
+        self.logger.info(f"[TaskProposalLobe] Received data: {data}")
+        # TODO: Integrate received data into lobe state 

@@ -411,4 +411,34 @@ relevant = server.memory_manager.search_memories("scalability", limit=5)
 context = server.context_manager.get_relevant_context("scalability decision")
 ```
 
+# Memory API (Updated)
+
+## Overview
+The MCP API now supports a three-tier memory system:
+- **WorkingMemory**: For context-sensitive, temporary storage.
+- **ShortTermMemory**: For recent, high-priority, or volatile information.
+- **LongTermMemory**: For persistent, structured, and research-driven storage.
+
+## Usage in Lobes/Engines
+All lobes/engines should use the appropriate memory type for their needs:
+- Use `WorkingMemory.add(item)` for context-sensitive, feedback, and temporary storage.
+- Use `ShortTermMemory.add(item)` for recent, high-priority, or volatile information.
+- Use `LongTermMemory.add(key, value)` for persistent, structured, and research-driven storage.
+
+## Example
+```
+from src.mcp.lobes.shared_lobes.working_memory import WorkingMemory, ShortTermMemory, LongTermMemory
+
+wm = WorkingMemory()
+wm.add({"context": "session", "data": "temp"})
+
+stm = ShortTermMemory()
+stm.add({"task": "recent", "priority": 1})
+
+ltm = LongTermMemory()
+ltm.add("knowledge_1", {"fact": "persistent"})
+```
+
+See `ARCHITECTURE.md` and `idea.txt` for more details and research references.
+
 This API documentation provides a comprehensive guide to using all MCP Server features effectively. 

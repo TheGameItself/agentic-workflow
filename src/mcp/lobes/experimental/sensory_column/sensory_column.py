@@ -158,4 +158,56 @@ class SensoryColumn:
         Extensible for continual learning and feedback-driven adaptation.
         """
         self.logger.info(f"[SensoryColumn] Adapting from feedback: {feedback}")
-        self.feedback_log.append(feedback) 
+        self.feedback_log.append(feedback)
+
+    def demo_custom_channel(self, name: str, channel_obj: Any):
+        """
+        Demo/test method: dynamically register and test a custom sensory channel.
+        Usage: column.demo_custom_channel('tactile', CustomChannel())
+        """
+        self.register_channel(name, channel_obj)
+        self.logger.info(f"[SensoryColumn] Demo custom channel registered: {name}")
+        return self.channels[name]
+
+    def demo_custom_quantal_processing(self, channel: str, data: Any, quantal_fn: Callable):
+        """
+        Demo/test method: run a custom quantal processing function on input data for a channel.
+        Usage: column.demo_custom_quantal_processing('visual', data, lambda d: d*2)
+        """
+        if channel in self.channels:
+            try:
+                result = quantal_fn(data)
+                self.logger.info(f"[SensoryColumn] Custom quantal processing result: {result}")
+                return result
+            except Exception as ex:
+                self.logger.error(f"[SensoryColumn] Custom quantal processing error: {ex}")
+                return None
+        else:
+            self.logger.warning(f"[SensoryColumn] Unknown channel: {channel}")
+            return None
+
+    def usage_example(self):
+        """
+        Usage example for sensory column:
+        >>> column = SensoryColumn()
+        >>> result = column.process_input(1.23, channel='visual')
+        >>> print(result)
+        >>> # Custom channel: tactile
+        >>> class TactileChannel:
+        ...     def quantal_release(self, data, evoked=True):
+        ...         return QuantalVesicle(data, channel='tactile', evoked=evoked)
+        ...
+        >>> column.demo_custom_channel('tactile', TactileChannel())
+        >>> result = column.process_input(0.5, channel='tactile')
+        >>> print(result)
+        """
+        pass
+
+    def get_latest(self):
+        """Return the latest sensory data for aggregation (stub: returns feedback_log)."""
+        return self.feedback_log[-1] if self.feedback_log else None
+
+    def receive_data(self, data: dict):
+        """Stub: Receive data from aggregator or adjacent lobes."""
+        self.logger.info(f"[SensoryColumn] Received data: {data}")
+        # TODO: Integrate received data into sensory state 

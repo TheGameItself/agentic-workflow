@@ -600,4 +600,27 @@ except Exception as e:
     result = fallback_operation()
 ```
 
+## Advanced Memory API (Updated)
+
+## Extensibility & Fallbacks
+Each memory type (WorkingMemory, ShortTermMemory, LongTermMemory) supports:
+- Custom fallback hooks for error handling and extensibility.
+- Integration with feedback and adaptation mechanisms.
+
+## Integration Points
+- All lobes/engines should instantiate and use the appropriate memory type.
+- MemoryLobe provides a unified interface for storing and retrieving memories across all types.
+
+## Example: Custom Fallback
+```
+def my_fallback(*args, **kwargs):
+    print("Fallback triggered!", args, kwargs)
+
+wm = WorkingMemory(fallback=my_fallback)
+wm.add({"context": "session", "data": "temp"})
+```
+
+## Research References
+- See `idea.txt` and `ARCHITECTURE.md` for requirements and research sources.
+
 This advanced API documentation provides comprehensive coverage of all experimental lobes and advanced features in the MCP server. 

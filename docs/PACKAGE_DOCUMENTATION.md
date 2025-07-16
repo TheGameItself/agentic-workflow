@@ -12,27 +12,27 @@ This document describes all available packages for the MCP Agentic Workflow Acce
 
 
 ### Appimage
-✅ Package: /home/kalxi/Documents/agentic workflow/packages/mcp-agentic-workflow-2.0.0-x86_64.AppImage
+✅ Package: <project-root>/packages/mcp-agentic-workflow-2.0.0-x86_64.AppImage
 - Type: Self-contained Linux application
 - Size: 1.1 MB
 
 ### Flatpak
-✅ Package: /home/kalxi/Documents/agentic workflow/packages/com.mcp.agentic-workflow-2.0.0.flatpak
+✅ Package: <project-root>/packages/com.mcp.agentic-workflow-2.0.0.flatpak
 - Type: Sandboxed Linux application
 - Size: 719.0 B
 
 ### Portable
-✅ Package: /home/kalxi/Documents/agentic workflow/packages/mcp-agentic-workflow-2.0.0-linux-portable.tar.gz
+✅ Package: <project-root>/packages/mcp-agentic-workflow-2.0.0-linux-portable.tar.gz
 - Type: Extract and run without installation
 - Size: 747.7 KB
 
 ### Usb_template
-✅ Package: /home/kalxi/Documents/agentic workflow/packages/mcp-usb-template-2.0.0.tar.gz
+✅ Package: <project-root>/packages/mcp-usb-template-2.0.0.tar.gz
 - Type: USB drive installation template
 - Size: 2.2 KB
 
 ### Universal
-✅ Package: /home/kalxi/Documents/agentic workflow/packages/mcp-agentic-workflow-2.0.0-universal-portable.tar.gz
+✅ Package: <project-root>/packages/mcp-agentic-workflow-2.0.0-universal-portable.tar.gz
 - Type: Cross-platform Python package
 - Size: 741.5 KB
 

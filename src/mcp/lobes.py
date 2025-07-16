@@ -114,3 +114,39 @@ LOBES = {
 
 # Document all planned/experimental lobes as stubs or planned, referencing idea.txt and research
 # If a lobe is missing, it should be implemented as a stub in experimental_lobes.py with NotImplementedError and a docstring referencing idea.txt. 
+
+# Ensure all experimental lobes have minimal working stubs with docstrings and robust fallbacks
+class PatternRecognitionEngine:
+    """Stub: Pattern recognition, neural column simulation. See idea.txt and research for requirements."""
+    def __init__(self, *args, **kwargs):
+        pass
+    def get_description(self):
+        return "Pattern recognition lobe (stub). See idea.txt."
+
+class AlignmentEngine:
+    """Stub: Alignment engine for user/LLM alignment. See idea.txt and research for requirements."""
+    def __init__(self, *args, **kwargs):
+        pass
+    def get_description(self):
+        return "Alignment lobe (stub). See idea.txt."
+
+class SimulatedReality:
+    """Planned: Simulated external reality for deep reasoning. See idea.txt and research for requirements."""
+    def __init__(self, *args, **kwargs):
+        pass
+    def get_description(self):
+        return "Simulated reality lobe (planned). See idea.txt."
+
+class MultiLLMOrchestrator:
+    """Stub: Multi-LLM orchestration, task routing, aggregation, and AB testing. See idea.txt and research for requirements."""
+    def __init__(self, *args, **kwargs):
+        pass
+    def get_description(self):
+        return "Multi-LLM orchestrator lobe (stub). See idea.txt."
+
+class AdvancedEngramEngine:
+    """Stub: Dynamic coding models, diffusion models, and feedback-driven engram selection. See idea.txt and research for requirements."""
+    def __init__(self, *args, **kwargs):
+        pass
+    def get_description(self):
+        return "Advanced engram lobe (stub). See idea.txt." 

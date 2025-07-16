@@ -3,54 +3,58 @@ Python-based web interface for the MCP server.
 Provides a minimalist dark-themed UI for config, engines, and knowledgebase management.
 """
 
-import os
-import json
-import sqlite3
-from typing import Dict, List, Any, Optional
-from datetime import datetime
-import threading
-import webbrowser
-from http.server import HTTPServer, BaseHTTPRequestHandler
-import urllib.parse
 import base64
+import json
 import logging
+import os
+import sqlite3
+import threading
+import urllib.parse
+import webbrowser
+from datetime import datetime
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from typing import Any, Dict, List, Optional
+
 
 class MCPWebInterface:
     """Web interface for MCP server with config editor, engine controls, and knowledgebase browser."""
-    
+
     def __init__(self, mcp_server=None, port: int = 8080):
         self.mcp_server = mcp_server
         self.port = port
         self.server = None
         self.server_thread = None
-        
+
     def start(self):
         """Start the web interface server."""
         handler = MCPRequestHandler
+
         # Handler factory to inject mcp_interface into each instance
         def handler_factory(*args, **kwargs):
             h = MCPRequestHandler(*args, **kwargs)
             h.mcp_interface = self
             return h
-        
-        self.server = HTTPServer(('localhost', self.port), handler_factory)
-        self.server_thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+
+        self.server = HTTPServer(("localhost", self.port), handler_factory)
+        self.server_thread = threading.Thread(
+            target=self.server.serve_forever, daemon=True
+        )
         self.server_thread.start()
-        
+
         print(f"MCP Web Interface started at http://localhost:{self.port}")
         webbrowser.open(f"http://localhost:{self.port}")
-        
+
     def stop(self):
         """Stop the web interface server."""
         if self.server:
             self.server.shutdown()
             self.server.server_close()
-            
+
     def get_config_data(self) -> Dict[str, Any]:
         """Get current configuration data."""
         if not self.mcp_server:
             return {"error": "MCP server not connected"}
-            
+
         try:
             # Get configuration from various sources
             config = {
@@ -58,82 +62,128 @@ class MCPWebInterface:
                 "engines": self._get_engine_status(),
                 "memory_stats": self._get_memory_stats(),
                 "tasks": self._get_task_stats(),
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
             return config
         except Exception as e:
             return {"error": str(e)}
-            
+
     def _get_engine_status(self) -> Dict[str, Any]:
         """Get status of all engines."""
         engines = {}
-        
+
         # Check if experimental lobes are available
         try:
             from .experimental_lobes import (
-                AlignmentEngine, PatternRecognitionEngine, SimulatedReality,
-                DreamingEngine, MindMapEngine, ScientificProcessEngine,
-                AdvancedEngramEngine
+                AdvancedEngramEngine,
+                AlignmentEngine,
+                DreamingEngine,
+                MindMapEngine,
+                PatternRecognitionEngine,
+                ScientificProcessEngine,
+                SimulatedReality,
             )
+
             # Optionally import SpeculationEngine if it exists
             try:
                 from .experimental_lobes import SpeculationEngine
+
                 speculation_status = {"status": "available", "type": "experimental"}
             except ImportError:
                 speculation_status = {"status": "unavailable", "error": "Import failed"}
 
-            engines.update({
-                "alignment": {"status": "available", "type": "experimental"},
-                "pattern_recognition": {"status": "available", "type": "experimental"},
-                "simulated_reality": {"status": "available", "type": "experimental"},
-                "dreaming": {"status": "available", "type": "experimental"},
-                "mind_map": {"status": "available", "type": "experimental"},
-                "scientific_process": {"status": "available", "type": "experimental"},
-                "advanced_engram": {"status": "available", "type": "experimental"},
-                "speculation": speculation_status
-            })
+            engines.update(
+                {
+                    "alignment": {"status": "available", "type": "experimental"},
+                    "pattern_recognition": {
+                        "status": "available",
+                        "type": "experimental",
+                    },
+                    "simulated_reality": {
+                        "status": "available",
+                        "type": "experimental",
+                    },
+                    "dreaming": {"status": "available", "type": "experimental"},
+                    "mind_map": {"status": "available", "type": "experimental"},
+                    "scientific_process": {
+                        "status": "available",
+                        "type": "experimental",
+                    },
+                    "advanced_engram": {"status": "available", "type": "experimental"},
+                    "speculation": speculation_status,
+                }
+            )
         except ImportError:
-            engines.update({
-                "experimental_lobes": {"status": "unavailable", "error": "Import failed"}
-            })
-            
+            engines.update(
+                {
+                    "experimental_lobes": {
+                        "status": "unavailable",
+                        "error": "Import failed",
+                    }
+                }
+            )
+
         return engines
-        
+
     def _get_memory_stats(self) -> Dict[str, Any]:
         """Get memory statistics."""
         try:
             # Get database sizes
-            data_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'data')
+            data_dir = os.path.join(os.path.dirname(__file__), "..", "..", "data")
             if os.path.exists(data_dir):
-                db_files = [f for f in os.listdir(data_dir) if f.endswith('.db')]
-                total_size = sum(os.path.getsize(os.path.join(data_dir, f)) for f in db_files)
-                
+                db_files = [f for f in os.listdir(data_dir) if f.endswith(".db")]
+                total_size = sum(
+                    os.path.getsize(os.path.join(data_dir, f)) for f in db_files
+                )
+
                 return {
                     "total_size_bytes": total_size,
                     "total_size_mb": round(total_size / (1024 * 1024), 2),
                     "database_count": len(db_files),
-                    "databases": db_files
+                    "databases": db_files,
                 }
         except Exception:
             pass
-            
+
         return {"error": "Unable to get memory stats"}
-        
+
     def _get_task_stats(self) -> Dict[str, Any]:
         """Get task statistics."""
         try:
-            if self.mcp_server and hasattr(self.mcp_server, 'task_manager'):
+            if self.mcp_server and hasattr(self.mcp_server, "task_manager"):
                 task_manager = self.mcp_server.task_manager
                 return {
-                    "total_tasks": len(task_manager.tasks) if hasattr(task_manager, 'tasks') else 0,
-                    "active_tasks": len([t for t in task_manager.tasks if t.get('status') == 'active']) if hasattr(task_manager, 'tasks') else 0,
-                    "completed_tasks": len([t for t in task_manager.tasks if t.get('status') == 'completed']) if hasattr(task_manager, 'tasks') else 0
+                    "total_tasks": (
+                        len(task_manager.tasks) if hasattr(task_manager, "tasks") else 0
+                    ),
+                    "active_tasks": (
+                        len(
+                            [
+                                t
+                                for t in task_manager.tasks
+                                if t.get("status") == "active"
+                            ]
+                        )
+                        if hasattr(task_manager, "tasks")
+                        else 0
+                    ),
+                    "completed_tasks": (
+                        len(
+                            [
+                                t
+                                for t in task_manager.tasks
+                                if t.get("status") == "completed"
+                            ]
+                        )
+                        if hasattr(task_manager, "tasks")
+                        else 0
+                    ),
                 }
         except Exception:
             pass
-            
+
         return {"error": "Unable to get task stats"}
-        
+
     def update_config(self, config_data: Dict[str, Any]) -> Dict[str, Any]:
         """Update configuration."""
         try:
@@ -142,14 +192,20 @@ class MCPWebInterface:
             return {"status": "success", "message": "Configuration updated"}
         except Exception as e:
             return {"status": "error", "message": str(e)}
-            
+
     def get_knowledgebase_data(self, query: str = "") -> Dict[str, Any]:
         """Get knowledgebase data using RegexSearchEngine for code and documentation search."""
         try:
             if not query.strip():
                 return {"query": query, "results": [], "total_results": 0}
 
-            from .regex_search import RegexSearchEngine, SearchQuery, SearchType, SearchScope
+            from .regex_search import (
+                RegexSearchEngine,
+                SearchQuery,
+                SearchScope,
+                SearchType,
+            )
+
             # Search code and documentation files (py, md, txt, etc.)
             search_engine = RegexSearchEngine()
             search_query = SearchQuery(
@@ -160,7 +216,7 @@ class MCPWebInterface:
                 max_results=30,
                 context_lines=2,
                 file_patterns=["*.py", "*.md", "*.txt", "*.rst", "*.js", "*.ts"],
-                exclude_patterns=None
+                exclude_patterns=None,
             )
             results = search_engine.search(search_query)
             # Format results for the web UI
@@ -168,148 +224,158 @@ class MCPWebInterface:
                 {
                     "id": idx + 1,
                     "content": r.content,
-                    "type": "code" if (r.file_path and r.file_path.endswith('.py')) else "doc",
+                    "type": (
+                        "code"
+                        if (r.file_path and r.file_path.endswith(".py"))
+                        else "doc"
+                    ),
                     "file": r.file_path,
                     "line": r.line_number,
                     "match": r.match_text,
                     "context_before": r.context_before,
-                    "context_after": r.context_after
+                    "context_after": r.context_after,
                 }
                 for idx, r in enumerate(results)
             ]
-            return {"query": query, "results": formatted, "total_results": len(formatted)}
+            return {
+                "query": query,
+                "results": formatted,
+                "total_results": len(formatted),
+            }
         except Exception as e:
             return {"error": str(e)}
 
     def some_web_method(self):
-        """Minimal fallback for web interface. TODO: Expand with research-driven logic per idea.txt."""
-        logging.warning('[WebInterface] This method is a placeholder. See idea.txt for future improvements.')
-        return {'status': 'not_implemented', 'web': {}}
+        """Minimal fallback for web interface. See idea.txt and TODO_DEVELOPMENT_PLAN.md for future improvements."""
+        logging.warning('[WebInterface] This method is a placeholder. See idea.txt and TODO_DEVELOPMENT_PLAN.md for future improvements.')
+        raise NotImplementedError("Web interface logic not yet implemented. See idea.txt and TODO_DEVELOPMENT_PLAN.md.")
 
 
 class MCPRequestHandler(BaseHTTPRequestHandler):
     """HTTP request handler for MCP web interface."""
-    mcp_interface: 'Optional[Any]' = None
+
+    mcp_interface: "Optional[Any]" = None
+
     def __init__(self, *args, **kwargs):
         self.mcp_interface = None
         super().__init__(*args, **kwargs)
-    
+
     def do_GET(self):
         """Handle GET requests."""
         try:
-            if self.path == '/':
+            if self.path == "/":
                 self._serve_main_page()
-            elif self.path == '/api/config':
+            elif self.path == "/api/config":
                 self._serve_config_api()
-            elif self.path == '/api/knowledgebase':
+            elif self.path == "/api/knowledgebase":
                 self._serve_knowledgebase_api()
-            elif self.path.startswith('/static/'):
+            elif self.path.startswith("/static/"):
                 self._serve_static_file()
             else:
                 self._serve_404()
         except Exception as e:
             self._serve_error(str(e))
-            
+
     def do_POST(self):
         """Handle POST requests."""
         try:
-            if self.path == '/api/config/update':
+            if self.path == "/api/config/update":
                 self._handle_config_update()
-            elif self.path == '/api/engine/control':
+            elif self.path == "/api/engine/control":
                 self._handle_engine_control()
             else:
                 self._serve_404()
         except Exception as e:
             self._serve_error(str(e))
-            
+
     def _serve_main_page(self):
         """Serve the main HTML page."""
         html = self._get_main_html()
         self.send_response(200)
-        self.send_header('Content-type', 'text/html')
+        self.send_header("Content-type", "text/html")
         self.end_headers()
-        self.wfile.write(html.encode('utf-8'))
-        
+        self.wfile.write(html.encode("utf-8"))
+
     def _serve_config_api(self):
         """Serve configuration API."""
         if not self.mcp_interface:
             self._serve_json({"error": "MCP interface not available"})
             return
-            
+
         config_data = self.mcp_interface.get_config_data()
         self._serve_json(config_data)
-        
+
     def _serve_knowledgebase_api(self):
         """Serve knowledgebase API."""
         if not self.mcp_interface:
             self._serve_json({"error": "MCP interface not available"})
             return
-            
+
         # Parse query parameters
         parsed_url = urllib.parse.urlparse(self.path)
         query_params = urllib.parse.parse_qs(parsed_url.query)
-        query = query_params.get('q', [''])[0]
-        
+        query = query_params.get("q", [""])[0]
+
         kb_data = self.mcp_interface.get_knowledgebase_data(query)
         self._serve_json(kb_data)
-        
+
     def _handle_config_update(self):
         """Handle configuration update."""
         if not self.mcp_interface:
             self._serve_json({"error": "MCP interface not available"})
             return
-            
-        content_length = int(self.headers['Content-Length'])
+
+        content_length = int(self.headers["Content-Length"])
         post_data = self.rfile.read(content_length)
-        config_data = json.loads(post_data.decode('utf-8'))
-        
+        config_data = json.loads(post_data.decode("utf-8"))
+
         result = self.mcp_interface.update_config(config_data)
         self._serve_json(result)
-        
+
     def _handle_engine_control(self):
         """Handle engine control commands."""
-        content_length = int(self.headers['Content-Length'])
+        content_length = int(self.headers["Content-Length"])
         post_data = self.rfile.read(content_length)
-        control_data = json.loads(post_data.decode('utf-8'))
-        
+        control_data = json.loads(post_data.decode("utf-8"))
+
         # Here you would implement actual engine control
         result = {"status": "success", "message": f"Engine control: {control_data}"}
         self._serve_json(result)
-        
+
     def _serve_json(self, data: Dict[str, Any]):
         """Serve JSON response."""
         self.send_response(200)
-        self.send_header('Content-type', 'application/json')
-        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header("Content-type", "application/json")
+        self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
-        self.wfile.write(json.dumps(data).encode('utf-8'))
-        
+        self.wfile.write(json.dumps(data).encode("utf-8"))
+
     def _serve_static_file(self):
         """Serve static files (CSS, JS)."""
         # For now, serve inline CSS/JS
-        if self.path == '/static/style.css':
+        if self.path == "/static/style.css":
             css = self._get_css()
             self.send_response(200)
-            self.send_header('Content-type', 'text/css')
+            self.send_header("Content-type", "text/css")
             self.end_headers()
-            self.wfile.write(css.encode('utf-8'))
+            self.wfile.write(css.encode("utf-8"))
         else:
             self._serve_404()
-            
+
     def _serve_404(self):
         """Serve 404 error."""
         self.send_response(404)
-        self.send_header('Content-type', 'text/plain')
+        self.send_header("Content-type", "text/plain")
         self.end_headers()
-        self.wfile.write(b'404 Not Found')
-        
+        self.wfile.write(b"404 Not Found")
+
     def _serve_error(self, error_msg: str):
         """Serve error response."""
         self.send_response(500)
-        self.send_header('Content-type', 'application/json')
+        self.send_header("Content-type", "application/json")
         self.end_headers()
-        self.wfile.write(json.dumps({"error": error_msg}).encode('utf-8'))
-        
+        self.wfile.write(json.dumps({"error": error_msg}).encode("utf-8"))
+
     def _get_main_html(self) -> str:
         """Get main HTML content."""
         return f"""
@@ -521,7 +587,7 @@ class MCPRequestHandler(BaseHTTPRequestHandler):
 </body>
 </html>
         """
-        
+
     def _get_css(self) -> str:
         """Get CSS styles."""
         return """
@@ -797,4 +863,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         pass
     finally:
-        interface.stop() 
+        interface.stop()

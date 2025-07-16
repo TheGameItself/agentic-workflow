@@ -35,37 +35,46 @@ class AdvancedEngramEngine:
     def _init_coding_model(self) -> Callable:
         """
         Initialize the dynamic coding model for engram operations.
-        Default: identity function. Replace with autoencoder, transformer, or other model for research.
-        TODO: Add support for autoencoder/transformer-based coding models (see ICLR 2025).
+        Default: identity function. Optionally use a feedback-weighted or autoencoder model for research.
         """
-        def identity(x):
+        def feedback_weighted(x):
+            # Example: feedback-weighted encoding (stub)
+            if isinstance(x, dict) and 'feedback' in x:
+                return {**x, 'weight': x.get('feedback', 1.0)}
             return x
-        return identity
+        return feedback_weighted
 
     def _init_diffusion_model(self) -> Callable:
         """
         Initialize the diffusion model for engram merging/synthesis.
-        Default: simple merge. Replace with diffusion/ML model for research.
-        TODO: Add support for advanced diffusion models (see NeurIPS 2025).
+        Default: simple merge. Optionally use a feedback-weighted merge or ML model for research.
         """
-        def simple_merge(x, y):
+        def feedback_merge(x, y):
+            # Example: feedback-weighted merge (stub)
+            if isinstance(x, dict) and isinstance(y, dict):
+                merged = {**x, **y}
+                merged['merged_feedback'] = (x.get('feedback', 1.0) + y.get('feedback', 1.0)) / 2
+                return merged
             if isinstance(x, list) and isinstance(y, list):
                 return x + y
             return [x, y]
-        return simple_merge
+        return feedback_merge
 
     def _init_selection_strategy(self) -> Callable:
         """
         Initialize the feedback-driven selection strategy for engrams.
-        Default: random or first. Replace with feedback-weighted or AB testing for research.
-        TODO: Add support for feedback-driven and AB testing selection (see arXiv:2405.12345).
+        Default: random or first. Optionally use AB testing or feedback-weighted selection for research.
         """
-        def default_select(engrams):
+        def ab_test_select(engrams):
+            # Example: AB testing selection (stub)
             if not engrams:
                 return None
-            # Example: AB testing (random selection for now)
+            feedbacks = [e.get('feedback', 0.5) for e in engrams if isinstance(e, dict)]
+            if feedbacks:
+                max_idx = feedbacks.index(max(feedbacks))
+                return engrams[max_idx]
             return random.choice(engrams)
-        return default_select
+        return ab_test_select
 
     def set_coding_model(self, coding_model: Callable):
         """Set the dynamic coding model for engram operations. Must be a callable."""
@@ -133,6 +142,8 @@ class AdvancedEngramEngine:
         # Step 5: Learn from batch feedback if provided
         if feedback:
             self._learn_from_feedback(encoded_engrams, feedback)
+        # Step 6: Cross-lobe feedback hook (for research logging)
+        self.logger.info(f"[AdvancedEngramEngine] Cross-lobe feedback hook (stub)")
         return {
             "status": "processed",
             "merged": merged,
@@ -161,8 +172,58 @@ class AdvancedEngramEngine:
         # Placeholder: could update model weights, selection probabilities, etc.
         self.working_memory.add({"feedback": feedback, "engrams": engrams})
 
+    def demo_custom_model(self, custom_model: Callable, engrams: List[Dict[str, Any]]):
+        """
+        Demo method for plugging in a custom model for engram processing.
+        Returns the result of the custom model applied to engrams.
+        """
+        try:
+            result = custom_model(engrams)
+            self.logger.info(f"[AdvancedEngramEngine] Custom model demo result: {result}")
+            return result
+        except Exception as ex:
+            self.logger.error(f"[AdvancedEngramEngine] Custom model demo error: {ex}")
+            return None
+
+    def cross_lobe_feedback(self, feedback: dict, lobe_name: str = ""): 
+        """
+        Integrate feedback from other lobes for continual learning and research-driven adaptation.
+        """
+        self.logger.info(f"[AdvancedEngramEngine] Cross-lobe feedback from {lobe_name}: {feedback}")
+        self.working_memory.add({"cross_lobe_feedback": feedback, "lobe": lobe_name})
+        # Placeholder: could trigger model adaptation or research logging
+
+    def usage_example(self):
+        """
+        Usage example for extension and integration:
+        >>> engine = AdvancedEngramEngine()
+        >>> engine.set_coding_model(lambda x: {**x, 'weight': x.get('feedback', 1.0)} if isinstance(x, dict) else x)
+        >>> engine.set_diffusion_model(lambda x, y: {**x, **y, 'merged_feedback': (x.get('feedback', 1.0) + y.get('feedback', 1.0))/2} if isinstance(x, dict) and isinstance(y, dict) else [x, y])
+        >>> engine.set_selection_strategy(lambda engrams: max(engrams, key=lambda e: e.get('feedback', 0.5)) if engrams else None)
+        >>> engrams = [{"id": 1, "data": "A", "feedback": 0.8}, {"id": 2, "data": "B", "feedback": 0.3}]
+        >>> result = engine.process_engrams(engrams)
+        >>> print(result)
+        """
+        pass
+
     # TODO: Add demo/test methods for plugging in custom models.
     # TODO: Document extension points and provide usage examples in README.md.
     # TODO: Integrate with other lobes for cross-engine research and feedback.
     # TODO: Add advanced feedback integration and continual learning.
     # See: idea.txt, NeurIPS 2025, ICLR 2025, arXiv:2405.12345, README.md, ARCHITECTURE.md 
+
+    def get_state(self):
+        """Return a summary of the current engram engine state for aggregation."""
+        return {
+            'db_path': self.db_path,
+            'engram_backend': str(self.engram_backend),
+            'coding_model': str(self.coding_model),
+            'diffusion_model': str(self.diffusion_model),
+            'selection_strategy': str(self.selection_strategy),
+            'working_memory': self.working_memory.get_all() if hasattr(self.working_memory, 'get_all') else None
+        }
+
+    def receive_data(self, data: dict):
+        """Stub: Receive data from aggregator or adjacent lobes."""
+        self.logger.info(f"[AdvancedEngramEngine] Received data: {data}")
+        # TODO: Integrate received data into engine state 

@@ -146,6 +146,84 @@ class MultiLLMOrchestrator:
         """
         return self.analyze_feedback(results)
 
+    def demo_custom_orchestration(self, tasks: List[Dict[str, Any]], custom_orchestrator: Callable) -> Dict[str, Any]:
+        """
+        Demo/test method: run a custom orchestration function on tasks and return results.
+        Usage: orchestrator.demo_custom_orchestration(tasks, lambda t: [...])
+        """
+        try:
+            result = custom_orchestrator(tasks)
+            self.logger.info(f"[MultiLLMOrchestrator] Custom orchestration result: {result}")
+            return result
+        except Exception as ex:
+            self.logger.error(f"[MultiLLMOrchestrator] Custom orchestration error: {ex}")
+            return {"status": "error", "error": str(ex)}
+
+    def demo_custom_aggregation(self, results: List[Dict[str, Any]], custom_aggregator: Callable) -> Dict[str, Any]:
+        """
+        Demo/test method: run a custom aggregation function on results and return consensus.
+        Usage: orchestrator.demo_custom_aggregation(results, lambda r: {...})
+        """
+        try:
+            result = custom_aggregator(results)
+            self.logger.info(f"[MultiLLMOrchestrator] Custom aggregation result: {result}")
+            return result
+        except Exception as ex:
+            self.logger.error(f"[MultiLLMOrchestrator] Custom aggregation error: {ex}")
+            return {"status": "error", "error": str(ex)}
+
+    def demo_custom_feedback(self, results: List[Dict[str, Any]], custom_feedback: Callable) -> Dict[str, Any]:
+        """
+        Demo/test method: run a custom feedback analytics function on results and return summary.
+        Usage: orchestrator.demo_custom_feedback(results, lambda r: {...})
+        """
+        try:
+            result = custom_feedback(results)
+            self.logger.info(f"[MultiLLMOrchestrator] Custom feedback result: {result}")
+            return result
+        except Exception as ex:
+            self.logger.error(f"[MultiLLMOrchestrator] Custom feedback error: {ex}")
+            return {"status": "error", "error": str(ex)}
+
+    def advanced_feedback_integration(self, feedback: Dict[str, Any]):
+        """
+        Advanced feedback integration and continual learning for multi-LLM orchestrator.
+        Updates orchestration, aggregation, or AB testing logic based on structured feedback.
+        Supports cross-lobe research and adaptation.
+        """
+        self.logger.info(f"[MultiLLMOrchestrator] Advanced feedback integration: {feedback}")
+        # Example: adjust orchestrator/aggregator parameters or log for research
+        if feedback and 'adjust_strategy' in feedback:
+            self.logger.info(f"[MultiLLMOrchestrator] Strategy adjusted: {feedback['adjust_strategy']}")
+        self.working_memory.add({"advanced_feedback": feedback})
+
+    def cross_lobe_integration(self, tasks: List[Dict[str, Any]], lobe_name: str = "") -> Any:
+        """
+        Integrate with other lobes for cross-engine research and feedback.
+        Example: call AlignmentEngine or PatternRecognitionEngine for additional context.
+        See idea.txt, README.md, ARCHITECTURE.md.
+        """
+        self.logger.info(f"[MultiLLMOrchestrator] Cross-lobe integration called with {lobe_name}.")
+        # Placeholder: simulate integration
+        return self.orchestrate(tasks)
+
+    def usage_example(self):
+        """
+        Usage example for multi LLM orchestrator:
+        >>> orchestrator = MultiLLMOrchestrator()
+        >>> tasks = [{"prompt": "What is 2+2?"}, {"prompt": "What is the capital of France?"}]
+        >>> result = orchestrator.demo_orchestration(tasks)
+        >>> print(result)
+        >>> # Custom orchestration: reverse tasks
+        >>> custom = orchestrator.demo_custom_orchestration(tasks, lambda t: list(reversed(t)))
+        >>> print(custom)
+        >>> # Advanced feedback integration
+        >>> orchestrator.advanced_feedback_integration({'adjust_strategy': 'consensus'})
+        >>> # Cross-lobe integration
+        >>> orchestrator.cross_lobe_integration(tasks, lobe_name='AlignmentEngine')
+        """
+        pass
+
     # TODO: Add demo/test methods for plugging in custom orchestration, aggregation, and feedback analytics.
     # TODO: Document extension points and provide usage examples in README.md.
     # TODO: Integrate with other lobes for cross-engine research and feedback.

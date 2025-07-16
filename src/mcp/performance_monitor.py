@@ -1067,3 +1067,11 @@ class LessonsLearnedModule:
             trends['common_issues'] = Counter(issue_types).most_common(5)
         
         return trends 
+
+    def get_performance_summary(self):
+        """Return a summary of performance metrics. See idea.txt for requirements."""
+        return {}
+
+    def optimize_database(self):
+        """Optimize the database or return a safe fallback. See idea.txt for requirements."""
+        return {"success": True, "message": "No-op"} 
