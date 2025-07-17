@@ -75,6 +75,17 @@ The API layer provides multiple interfaces for client interaction:
 
 ### 2. Core Services
 
+#### Implementation Switching Monitor
+- **Purpose**: Manages automatic switching between algorithmic and neural implementations
+- **Key Features**:
+  - Performance metrics tracking and comparison
+  - Automatic implementation selection based on performance
+  - Fallback mechanisms for neural network failures
+  - Model persistence and loading
+  - Configurable switching thresholds
+  - Stability period enforcement to prevent oscillation
+- **Data Model**: Component → Implementation → Performance Metrics → Switching History
+
 #### Workflow Manager
 - **Purpose**: Manages project workflows and step progression
 - **Key Features**:

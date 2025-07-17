@@ -1,1113 +1,692 @@
 """
-Training Engine for Neural Network Models component.
+Advanced Training Engine with Genetic Evolution
 
-This module provides incremental training functionality for neural network models,
-including training data collection, background training, and performance monitoring.
-It implements requirements 1.7 and 6.3 for incremental and background training.
+Implements sophisticated training algorithms that integrate with the genetic
+data exchange system for continuous evolution and P2P learning optimization.
 """
 
-import asyncio
-import json
-import logging
-import os
-import threading
-import time
-from collections import defaultdict, deque
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple, Union
-from dataclasses import dataclass, asdict
-from enum import Enum
-
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import DataLoader, Dataset
 import numpy as np
+from typing import Dict, List, Tuple, Optional, Any, Callable
+import asyncio
+import time
+import json
+from dataclasses import dataclass, field
+from collections import defaultdict, deque
+import random
+import math
 
-
-class TrainingStatus(Enum):
-    """Training status enumeration."""
-    IDLE = "idle"
-    COLLECTING = "collecting"
-    TRAINING = "training"
-    EVALUATING = "evaluating"
-    COMPLETED = "completed"
-    FAILED = "failed"
+from .genetic_diffusion_model import GeneticDiffusionModel, NetworkGene
+from ..genetic_data_exchange import GeneticDataExchange
+from ..hormone_system_integration import HormoneSystem
 
 
 @dataclass
-class TrainingData:
-    """Training data point for neural network models."""
-    function_name: str
-    input_data: Any
-    expected_output: Any
-    algorithmic_output: Any
-    timestamp: datetime
-    context: Dict[str, Any]
-    performance_metrics: Dict[str, float]
+class TrainingConfiguration:
+    """Configuration for genetic training process"""
+    # Basic training parameters
+    learning_rate: float = 0.001
+    batch_size: int = 32
+    epochs: int = 100
+    weight_decay: float = 1e-4
     
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary for serialization."""
+    # Genetic evolution parameters
+    evolution_frequency: int = 10  # Evolve every N epochs
+    mutation_rate: float = 0.1
+    crossover_rate: float = 0.3
+    selection_pressure: float = 0.7
+    
+    # Population parameters
+    population_size: int = 5
+    elite_ratio: float = 0.2
+    diversity_threshold: float = 0.1
+    
+    # Hormone-influenced parameters
+    hormone_influence: bool = True
+    stress_adaptation: bool = True
+    reward_modulation: bool = True
+    
+    # P2P learning parameters
+    p2p_sharing: bool = True
+    sharing_frequency: int = 20  # Share every N epochs
+    fitness_threshold: float = 0.8
+    
+    # Advanced optimization
+    adaptive_learning_rate: bool = True
+    gradient_clipping: float = 1.0
+    early_stopping_patience: int = 20
+    
+    # Diffusion training parameters
+    diffusion_training: bool = False
+    diffusion_weight: float = 0.1
+
+
+@dataclass
+class TrainingMetrics:
+    """Comprehensive training metrics"""
+    epoch: int
+    train_loss: float
+    val_loss: float
+    train_accuracy: float
+    val_accuracy: float
+    learning_rate: float
+    
+    # Genetic metrics
+    generation: int
+    population_diversity: float
+    best_fitness: float
+    mutation_count: int
+    crossover_count: int
+    
+    # Hormone metrics
+    dopamine_level: float = 0.0
+    serotonin_level: float = 0.0
+    cortisol_level: float = 0.0
+    
+    # Performance metrics
+    training_time: float = 0.0
+    memory_usage: float = 0.0
+    gradient_norm: float = 0.0
+    
+    # P2P metrics
+    shared_improvements: int = 0
+    received_improvements: int = 0
+    network_fitness: float = 0.0
+
+
+class GeneticPopulation:
+    """Manages population of genetic neural networks"""
+    
+    def __init__(self, config: TrainingConfiguration, input_dim: int, output_dim: int,
+                 genetic_exchange: Optional[GeneticDataExchange] = None):
+        self.config = config
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        self.genetic_exchange = genetic_exchange
+        
+        # Initialize population
+        self.population: List[GeneticDiffusionModel] = []
+        self.fitness_scores: List[float] = []
+        self.generation = 0
+        
+        # Performance tracking
+        self.best_individual = None
+        self.best_fitness = 0.0
+        self.diversity_history = []
+        
+        # Initialize population
+        self._initialize_population()
+    
+    def _initialize_population(self):
+        """Initialize population with diverse individuals"""
+        for i in range(self.config.population_size):
+            model = GeneticDiffusionModel(self.input_dim, self.output_dim, self.genetic_exchange)
+            
+            # Add some initial diversity
+            if i > 0:
+                # Mutate from base architecture
+                asyncio.run(model.evolve_architecture())
+            
+            self.population.append(model)
+            self.fitness_scores.append(0.0)
+    
+    def evaluate_fitness(self, model: GeneticDiffusionModel, 
+                        train_loader: DataLoader, val_loader: DataLoader,
+                        criterion: nn.Module) -> float:
+        """Evaluate fitness of an individual model"""
+        model.eval()
+        total_loss = 0.0
+        total_correct = 0
+        total_samples = 0
+        
+        with torch.no_grad():
+            for batch_x, batch_y in val_loader:
+                outputs = model(batch_x)
+                loss = criterion(outputs, batch_y)
+                total_loss += loss.item()
+                
+                # Calculate accuracy
+                _, predicted = torch.max(outputs.data, 1)
+                total_samples += batch_y.size(0)
+                total_correct += (predicted == batch_y).sum().item()
+        
+        accuracy = total_correct / total_samples if total_samples > 0 else 0.0
+        avg_loss = total_loss / len(val_loader) if len(val_loader) > 0 else float('inf')
+        
+        # Fitness combines accuracy and efficiency
+        parameter_count = sum(p.numel() for p in model.parameters())
+        efficiency_factor = 1.0 / (1.0 + parameter_count / 1000000)  # Prefer smaller models
+        
+        fitness = accuracy * 0.8 + efficiency_factor * 0.2
+        
+        # Add genetic diversity bonus
+        diversity_bonus = self._calculate_diversity_bonus(model)
+        fitness += diversity_bonus * 0.1
+        
+        return max(0.0, min(1.0, fitness))
+    
+    def _calculate_diversity_bonus(self, model: GeneticDiffusionModel) -> float:
+        """Calculate diversity bonus for maintaining population diversity"""
+        if len(self.population) <= 1:
+            return 0.0
+        
+        # Compare genetic similarity with other individuals
+        similarities = []
+        model_genes = [gene.gene_id for gene in model.genes]
+        
+        for other_model in self.population:
+            if other_model is model:
+                continue
+            
+            other_genes = [gene.gene_id for gene in other_model.genes]
+            
+            # Calculate Jaccard similarity
+            intersection = len(set(model_genes) & set(other_genes))
+            union = len(set(model_genes) | set(other_genes))
+            similarity = intersection / union if union > 0 else 0.0
+            similarities.append(similarity)
+        
+        # Diversity bonus is inverse of average similarity
+        avg_similarity = sum(similarities) / len(similarities)
+        diversity_bonus = 1.0 - avg_similarity
+        
+        return diversity_bonus
+    
+    def selection(self) -> List[GeneticDiffusionModel]:
+        """Select parents for reproduction using tournament selection"""
+        parents = []
+        tournament_size = max(2, int(self.config.population_size * 0.3))
+        
+        for _ in range(self.config.population_size):
+            # Tournament selection
+            tournament_indices = random.sample(range(len(self.population)), tournament_size)
+            tournament_fitness = [self.fitness_scores[i] for i in tournament_indices]
+            
+            # Select best from tournament
+            best_idx = tournament_indices[np.argmax(tournament_fitness)]
+            parents.append(self.population[best_idx])
+        
+        return parents
+    
+    def crossover(self, parent1: GeneticDiffusionModel, 
+                  parent2: GeneticDiffusionModel) -> GeneticDiffusionModel:
+        """Perform genetic crossover between two parents"""
+        if random.random() < self.config.crossover_rate:
+            offspring = parent1.crossover_with_model(parent2)
+            return offspring
+        else:
+            # Return copy of better parent
+            if self.fitness_scores[self.population.index(parent1)] > \
+               self.fitness_scores[self.population.index(parent2)]:
+                return parent1
+            else:
+                return parent2
+    
+    def mutation(self, individual: GeneticDiffusionModel) -> GeneticDiffusionModel:
+        """Apply mutations to an individual"""
+        if random.random() < self.config.mutation_rate:
+            # Evolve architecture
+            asyncio.run(individual.evolve_architecture())
+        
+        return individual
+    
+    async def evolve_generation(self, train_loader: DataLoader, val_loader: DataLoader,
+                              criterion: nn.Module) -> Dict[str, float]:
+        """Evolve population for one generation"""
+        # Evaluate current population
+        for i, model in enumerate(self.population):
+            fitness = self.evaluate_fitness(model, train_loader, val_loader, criterion)
+            self.fitness_scores[i] = fitness
+        
+        # Track best individual
+        best_idx = np.argmax(self.fitness_scores)
+        if self.fitness_scores[best_idx] > self.best_fitness:
+            self.best_fitness = self.fitness_scores[best_idx]
+            self.best_individual = self.population[best_idx]
+        
+        # Calculate population diversity
+        diversity = self._calculate_population_diversity()
+        self.diversity_history.append(diversity)
+        
+        # Selection
+        parents = self.selection()
+        
+        # Create new generation
+        new_population = []
+        crossover_count = 0
+        mutation_count = 0
+        
+        # Keep elite individuals
+        elite_count = max(1, int(self.config.population_size * self.config.elite_ratio))
+        elite_indices = np.argsort(self.fitness_scores)[-elite_count:]
+        
+        for idx in elite_indices:
+            new_population.append(self.population[idx])
+        
+        # Generate offspring
+        while len(new_population) < self.config.population_size:
+            parent1 = random.choice(parents)
+            parent2 = random.choice(parents)
+            
+            offspring = self.crossover(parent1, parent2)
+            if offspring != parent1 and offspring != parent2:
+                crossover_count += 1
+            
+            offspring = self.mutation(offspring)
+            if random.random() < self.config.mutation_rate:
+                mutation_count += 1
+            
+            new_population.append(offspring)
+        
+        # Replace population
+        self.population = new_population[:self.config.population_size]
+        self.fitness_scores = [0.0] * len(self.population)
+        self.generation += 1
+        
         return {
-            "function_name": self.function_name,
-            "input_data": self.input_data,
-            "expected_output": self.expected_output,
-            "algorithmic_output": self.algorithmic_output,
-            "timestamp": self.timestamp.isoformat(),
-            "context": self.context,
-            "performance_metrics": self.performance_metrics
+            'generation': self.generation,
+            'best_fitness': self.best_fitness,
+            'avg_fitness': np.mean([self.evaluate_fitness(model, train_loader, val_loader, criterion) 
+                                  for model in self.population]),
+            'diversity': diversity,
+            'crossover_count': crossover_count,
+            'mutation_count': mutation_count
         }
     
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'TrainingData':
-        """Create from dictionary."""
-        return cls(
-            function_name=data["function_name"],
-            input_data=data["input_data"],
-            expected_output=data["expected_output"],
-            algorithmic_output=data["algorithmic_output"],
-            timestamp=datetime.fromisoformat(data["timestamp"]),
-            context=data["context"],
-            performance_metrics=data["performance_metrics"]
-        )
+    def _calculate_population_diversity(self) -> float:
+        """Calculate overall population diversity"""
+        if len(self.population) <= 1:
+            return 0.0
+        
+        # Calculate pairwise genetic distances
+        distances = []
+        for i in range(len(self.population)):
+            for j in range(i + 1, len(self.population)):
+                distance = self._calculate_genetic_distance(self.population[i], self.population[j])
+                distances.append(distance)
+        
+        return np.mean(distances) if distances else 0.0
+    
+    def _calculate_genetic_distance(self, model1: GeneticDiffusionModel, 
+                                  model2: GeneticDiffusionModel) -> float:
+        """Calculate genetic distance between two models"""
+        genes1 = [gene.gene_id for gene in model1.genes]
+        genes2 = [gene.gene_id for gene in model2.genes]
+        
+        # Hamming distance normalized by maximum possible distance
+        max_len = max(len(genes1), len(genes2))
+        if max_len == 0:
+            return 0.0
+        
+        # Pad shorter list
+        genes1.extend([''] * (max_len - len(genes1)))
+        genes2.extend([''] * (max_len - len(genes2)))
+        
+        differences = sum(g1 != g2 for g1, g2 in zip(genes1, genes2))
+        return differences / max_len
+    
+    def get_best_model(self) -> GeneticDiffusionModel:
+        """Get the best model from current population"""
+        if self.best_individual is not None:
+            return self.best_individual
+        
+        best_idx = np.argmax(self.fitness_scores)
+        return self.population[best_idx]
 
 
-@dataclass
-class TrainingResult:
-    """Result of a training session."""
-    function_name: str
-    status: TrainingStatus
-    training_time: float
-    samples_processed: int
-    performance_improvement: float
-    error_message: Optional[str] = None
-    metrics: Optional[Dict[str, float]] = None
+class AdvancedTrainingEngine:
+    """Advanced training engine with genetic evolution and P2P learning"""
     
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary for serialization."""
-        return asdict(self)
-
-
-class TrainingDataCollector:
-    """
-    Collects training data from algorithmic implementations.
-    
-    This class monitors algorithmic implementations and collects input/output
-    pairs along with performance metrics for training neural network alternatives.
-    """
-    
-    def __init__(self, max_samples_per_function: int = 10000):
-        """
-        Initialize the training data collector.
-        
-        Args:
-            max_samples_per_function: Maximum number of samples to keep per function.
-        """
-        self.logger = logging.getLogger("TrainingDataCollector")
-        self.max_samples_per_function = max_samples_per_function
-        self.training_data: Dict[str, deque] = defaultdict(lambda: deque(maxlen=max_samples_per_function))
-        self.collection_stats: Dict[str, Dict[str, Any]] = defaultdict(dict)
-        self._lock = threading.Lock()
-        
-        # Initialize collection statistics
-        self._initialize_stats()
-    
-    def _initialize_stats(self):
-        """Initialize collection statistics."""
-        for function_name in self.training_data.keys():
-            self.collection_stats[function_name] = {
-                "total_samples": 0,
-                "samples_today": 0,
-                "last_collection": None,
-                "average_performance": 0.0,
-                "collection_rate": 0.0
-            }
-    
-    def collect_sample(self, 
-                      function_name: str,
-                      input_data: Any,
-                      expected_output: Any,
-                      algorithmic_output: Any,
-                      performance_metrics: Dict[str, float],
-                      context: Dict[str, Any] = None) -> bool:
-        """
-        Collect a training sample from an algorithmic implementation.
-        
-        Args:
-            function_name: Name of the function being sampled.
-            input_data: Input data for the function.
-            expected_output: Expected output (ground truth if available).
-            algorithmic_output: Output from the algorithmic implementation.
-            performance_metrics: Performance metrics for this sample.
-            context: Additional context information.
-            
-        Returns:
-            True if the sample was collected successfully, False otherwise.
-        """
-        try:
-            with self._lock:
-                # Create training data point
-                training_point = TrainingData(
-                    function_name=function_name,
-                    input_data=input_data,
-                    expected_output=expected_output,
-                    algorithmic_output=algorithmic_output,
-                    timestamp=datetime.now(),
-                    context=context or {},
-                    performance_metrics=performance_metrics
-                )
-                
-                # Add to collection
-                self.training_data[function_name].append(training_point)
-                
-                # Update statistics
-                stats = self.collection_stats[function_name]
-                stats["total_samples"] += 1
-                stats["last_collection"] = datetime.now()
-                
-                # Update daily count
-                today = datetime.now().date()
-                if stats.get("last_date") != today:
-                    stats["samples_today"] = 1
-                    stats["last_date"] = today
-                else:
-                    stats["samples_today"] += 1
-                
-                # Update average performance
-                if "accuracy" in performance_metrics:
-                    current_avg = stats.get("average_performance", 0.0)
-                    total_samples = stats["total_samples"]
-                    new_avg = ((current_avg * (total_samples - 1)) + performance_metrics["accuracy"]) / total_samples
-                    stats["average_performance"] = new_avg
-                
-                # Calculate collection rate (samples per hour)
-                if stats["total_samples"] > 1:
-                    first_sample_time = self.training_data[function_name][0].timestamp
-                    time_diff = (datetime.now() - first_sample_time).total_seconds() / 3600  # hours
-                    stats["collection_rate"] = stats["total_samples"] / max(time_diff, 0.001)
-                
-                self.logger.debug(f"Collected training sample for {function_name}. "
-                                f"Total samples: {stats['total_samples']}")
-                return True
-                
-        except Exception as e:
-            self.logger.error(f"Error collecting training sample for {function_name}: {e}")
-            return False
-    
-    def get_training_data(self, function_name: str, max_samples: int = None) -> List[TrainingData]:
-        """
-        Get training data for a specific function.
-        
-        Args:
-            function_name: Name of the function.
-            max_samples: Maximum number of samples to return.
-            
-        Returns:
-            List of training data points.
-        """
-        with self._lock:
-            if function_name not in self.training_data:
-                return []
-            
-            data = list(self.training_data[function_name])
-            
-            if max_samples and len(data) > max_samples:
-                # Return most recent samples
-                data = data[-max_samples:]
-            
-            return data
-    
-    def get_collection_stats(self, function_name: str = None) -> Dict[str, Any]:
-        """
-        Get collection statistics.
-        
-        Args:
-            function_name: Specific function name, or None for all functions.
-            
-        Returns:
-            Dictionary of collection statistics.
-        """
-        with self._lock:
-            if function_name:
-                return self.collection_stats.get(function_name, {})
-            else:
-                return dict(self.collection_stats)
-    
-    def clear_training_data(self, function_name: str) -> bool:
-        """
-        Clear training data for a specific function.
-        
-        Args:
-            function_name: Name of the function.
-            
-        Returns:
-            True if data was cleared successfully, False otherwise.
-        """
-        try:
-            with self._lock:
-                if function_name in self.training_data:
-                    self.training_data[function_name].clear()
-                    self.collection_stats[function_name] = {
-                        "total_samples": 0,
-                        "samples_today": 0,
-                        "last_collection": None,
-                        "average_performance": 0.0,
-                        "collection_rate": 0.0
-                    }
-                    self.logger.info(f"Cleared training data for {function_name}")
-                    return True
-                return False
-        except Exception as e:
-            self.logger.error(f"Error clearing training data for {function_name}: {e}")
-            return False
-    
-    def save_training_data(self, function_name: str, filepath: str) -> bool:
-        """
-        Save training data to a file.
-        
-        Args:
-            function_name: Name of the function.
-            filepath: Path to save the data.
-            
-        Returns:
-            True if data was saved successfully, False otherwise.
-        """
-        try:
-            with self._lock:
-                data = self.get_training_data(function_name)
-                
-                # Convert to serializable format
-                serializable_data = [point.to_dict() for point in data]
-                
-                # Save to file
-                os.makedirs(os.path.dirname(filepath), exist_ok=True)
-                with open(filepath, 'w') as f:
-                    json.dump({
-                        "function_name": function_name,
-                        "saved_at": datetime.now().isoformat(),
-                        "sample_count": len(serializable_data),
-                        "data": serializable_data
-                    }, f, indent=2)
-                
-                self.logger.info(f"Saved {len(serializable_data)} training samples for {function_name} to {filepath}")
-                return True
-                
-        except Exception as e:
-            self.logger.error(f"Error saving training data for {function_name}: {e}")
-            return False
-    
-    def load_training_data(self, function_name: str, filepath: str) -> bool:
-        """
-        Load training data from a file.
-        
-        Args:
-            function_name: Name of the function.
-            filepath: Path to load the data from.
-            
-        Returns:
-            True if data was loaded successfully, False otherwise.
-        """
-        try:
-            if not os.path.exists(filepath):
-                self.logger.warning(f"Training data file not found: {filepath}")
-                return False
-            
-            with open(filepath, 'r') as f:
-                saved_data = json.load(f)
-            
-            # Validate data format
-            if saved_data.get("function_name") != function_name:
-                self.logger.error(f"Function name mismatch in saved data: "
-                                f"expected {function_name}, got {saved_data.get('function_name')}")
-                return False
-            
-            with self._lock:
-                # Clear existing data
-                self.training_data[function_name].clear()
-                
-                # Load data points
-                for point_data in saved_data.get("data", []):
-                    training_point = TrainingData.from_dict(point_data)
-                    self.training_data[function_name].append(training_point)
-                
-                # Update statistics
-                self.collection_stats[function_name]["total_samples"] = len(saved_data.get("data", []))
-                
-                self.logger.info(f"Loaded {len(saved_data.get('data', []))} training samples for {function_name}")
-                return True
-                
-        except Exception as e:
-            self.logger.error(f"Error loading training data for {function_name}: {e}")
-            return False
-
-
-class BackgroundTrainer:
-    """
-    Handles background training of neural network models.
-    
-    This class implements background training functionality that runs during
-    idle periods to train neural network alternatives using collected data.
-    """
-    
-    def __init__(self, 
-                 data_collector: TrainingDataCollector,
-                 min_samples_for_training: int = 100,
-                 training_interval: int = 300,  # 5 minutes
-                 max_training_time: int = 1800):  # 30 minutes
-        """
-        Initialize the background trainer.
-        
-        Args:
-            data_collector: Training data collector instance.
-            min_samples_for_training: Minimum samples needed before training.
-            training_interval: Interval between training sessions (seconds).
-            max_training_time: Maximum time for a single training session (seconds).
-        """
-        self.logger = logging.getLogger("BackgroundTrainer")
-        self.data_collector = data_collector
-        self.min_samples_for_training = min_samples_for_training
-        self.training_interval = training_interval
-        self.max_training_time = max_training_time
+    def __init__(self, config: TrainingConfiguration, 
+                 genetic_exchange: Optional[GeneticDataExchange] = None,
+                 hormone_system: Optional[HormoneSystem] = None):
+        self.config = config
+        self.genetic_exchange = genetic_exchange
+        self.hormone_system = hormone_system
         
         # Training state
-        self.training_status: Dict[str, TrainingStatus] = defaultdict(lambda: TrainingStatus.IDLE)
-        self.training_results: Dict[str, List[TrainingResult]] = defaultdict(list)
-        self.last_training_time: Dict[str, datetime] = {}
+        self.current_epoch = 0
+        self.best_val_loss = float('inf')
+        self.patience_counter = 0
+        self.training_history: List[TrainingMetrics] = []
         
-        # Background training control
-        self.is_running = False
-        self.training_thread: Optional[threading.Thread] = None
-        self._stop_event = threading.Event()
+        # Genetic population
+        self.population: Optional[GeneticPopulation] = None
         
-        # Resource monitoring
-        self.system_idle_threshold = 0.3  # CPU usage below 30% considered idle
-        self.memory_usage_threshold = 0.8  # Don't train if memory usage above 80%
+        # Hormone levels
+        self.hormone_levels = {
+            'dopamine': 0.5,
+            'serotonin': 0.5,
+            'cortisol': 0.3,
+            'adrenaline': 0.2
+        }
+        
+        # P2P learning state
+        self.shared_improvements = 0
+        self.received_improvements = 0
+        
+    def initialize_population(self, input_dim: int, output_dim: int):
+        """Initialize genetic population"""
+        self.population = GeneticPopulation(
+            self.config, input_dim, output_dim, self.genetic_exchange
+        )
     
-    def start_background_training(self) -> bool:
-        """
-        Start background training thread.
+    async def train(self, train_loader: DataLoader, val_loader: DataLoader,
+                   criterion: nn.Module, device: torch.device = torch.device('cpu')) -> Dict[str, Any]:
+        """Main training loop with genetic evolution"""
+        if self.population is None:
+            # Infer dimensions from data
+            sample_batch = next(iter(train_loader))
+            input_dim = sample_batch[0].shape[-1]
+            output_dim = len(torch.unique(sample_batch[1]))
+            self.initialize_population(input_dim, output_dim)
         
-        Returns:
-            True if background training was started successfully, False otherwise.
-        """
-        if self.is_running:
-            self.logger.warning("Background training is already running")
-            return False
+        training_start_time = time.time()
         
-        try:
-            self.is_running = True
-            self._stop_event.clear()
-            self.training_thread = threading.Thread(target=self._background_training_loop, daemon=True)
-            self.training_thread.start()
+        for epoch in range(self.config.epochs):
+            self.current_epoch = epoch
+            epoch_start_time = time.time()
             
-            self.logger.info("Started background training thread")
-            return True
+            # Get current best model
+            best_model = self.population.get_best_model()
             
-        except Exception as e:
-            self.logger.error(f"Error starting background training: {e}")
-            self.is_running = False
-            return False
-    
-    def stop_background_training(self) -> bool:
-        """
-        Stop background training thread.
-        
-        Returns:
-            True if background training was stopped successfully, False otherwise.
-        """
-        if not self.is_running:
-            return True
-        
-        try:
-            self._stop_event.set()
-            self.is_running = False
+            # Train current best model
+            train_metrics = await self._train_epoch(best_model, train_loader, criterion, device)
+            val_metrics = await self._validate_epoch(best_model, val_loader, criterion, device)
             
-            if self.training_thread and self.training_thread.is_alive():
-                self.training_thread.join(timeout=10)
+            # Update hormone levels based on performance
+            if self.config.hormone_influence:
+                self._update_hormone_levels(train_metrics, val_metrics)
             
-            self.logger.info("Stopped background training thread")
-            return True
-            
-        except Exception as e:
-            self.logger.error(f"Error stopping background training: {e}")
-            return False
-    
-    def _background_training_loop(self):
-        """Main background training loop."""
-        self.logger.info("Background training loop started")
-        
-        while not self._stop_event.is_set():
-            try:
-                # Check if system is idle and resources are available
-                if self._should_train():
-                    # Get functions that need training
-                    functions_to_train = self._get_functions_needing_training()
-                    
-                    for function_name in functions_to_train:
-                        if self._stop_event.is_set():
-                            break
-                        
-                        # Train the function
-                        self._train_function(function_name)
-                
-                # Wait for next training interval
-                self._stop_event.wait(self.training_interval)
-                
-            except Exception as e:
-                self.logger.error(f"Error in background training loop: {e}")
-                time.sleep(60)  # Wait a minute before retrying
-        
-        self.logger.info("Background training loop stopped")
-    
-    def _should_train(self) -> bool:
-        """
-        Check if the system should perform background training.
-        
-        Returns:
-            True if training should proceed, False otherwise.
-        """
-        try:
-            # Check system resource usage
-            cpu_usage = self._get_cpu_usage()
-            memory_usage = self._get_memory_usage()
-            
-            # Only train if system is relatively idle
-            if cpu_usage > self.system_idle_threshold:
-                self.logger.debug(f"System not idle (CPU: {cpu_usage:.2f}), skipping training")
-                return False
-            
-            if memory_usage > self.memory_usage_threshold:
-                self.logger.debug(f"Memory usage too high ({memory_usage:.2f}), skipping training")
-                return False
-            
-            return True
-            
-        except Exception as e:
-            self.logger.error(f"Error checking system resources: {e}")
-            return False
-    
-    def _get_cpu_usage(self) -> float:
-        """
-        Get current CPU usage percentage.
-        
-        Returns:
-            CPU usage as a float between 0.0 and 1.0.
-        """
-        try:
-            import psutil
-            return psutil.cpu_percent(interval=1) / 100.0
-        except ImportError:
-            # If psutil is not available, assume moderate usage
-            self.logger.debug("psutil not available, assuming moderate CPU usage")
-            return 0.5
-        except Exception as e:
-            self.logger.warning(f"Error getting CPU usage: {e}")
-            return 0.5
-    
-    def _get_memory_usage(self) -> float:
-        """
-        Get current memory usage percentage.
-        
-        Returns:
-            Memory usage as a float between 0.0 and 1.0.
-        """
-        try:
-            import psutil
-            return psutil.virtual_memory().percent / 100.0
-        except ImportError:
-            # If psutil is not available, assume moderate usage
-            self.logger.debug("psutil not available, assuming moderate memory usage")
-            return 0.5
-        except Exception as e:
-            self.logger.warning(f"Error getting memory usage: {e}")
-            return 0.5
-    
-    def _get_functions_needing_training(self) -> List[str]:
-        """
-        Get list of functions that need training.
-        
-        Returns:
-            List of function names that need training.
-        """
-        functions_to_train = []
-        
-        # Get all functions with collected data
-        stats = self.data_collector.get_collection_stats()
-        
-        for function_name, function_stats in stats.items():
-            # Check if function has enough samples
-            if function_stats.get("total_samples", 0) < self.min_samples_for_training:
-                continue
-            
-            # Check if function hasn't been trained recently
-            last_training = self.last_training_time.get(function_name)
-            if last_training:
-                time_since_training = datetime.now() - last_training
-                if time_since_training.total_seconds() < self.training_interval:
-                    continue
-            
-            # Check if function is not currently being trained
-            if self.training_status[function_name] in [TrainingStatus.TRAINING, TrainingStatus.EVALUATING]:
-                continue
-            
-            functions_to_train.append(function_name)
-        
-        return functions_to_train    
-def _train_function(self, function_name: str) -> TrainingResult:
-        """
-        Train a neural model for a specific function.
-        
-        Args:
-            function_name: Name of the function to train.
-            
-        Returns:
-            Training result object.
-        """
-        self.logger.info(f"Starting training for {function_name}")
-        
-        # Update training status
-        self.training_status[function_name] = TrainingStatus.TRAINING
-        start_time = time.time()
-        
-        try:
-            # Get training data
-            training_data = self.data_collector.get_training_data(function_name)
-            if not training_data:
-                self.logger.warning(f"No training data available for {function_name}")
-                self.training_status[function_name] = TrainingStatus.IDLE
-                return TrainingResult(
-                    function_name=function_name,
-                    status=TrainingStatus.FAILED,
-                    training_time=0.0,
-                    samples_processed=0,
-                    performance_improvement=0.0,
-                    error_message="No training data available"
+            # Genetic evolution
+            if epoch % self.config.evolution_frequency == 0 and epoch > 0:
+                evolution_metrics = await self.population.evolve_generation(
+                    train_loader, val_loader, criterion
                 )
+                print(f"Evolution - Gen {evolution_metrics['generation']}: "
+                      f"Best fitness: {evolution_metrics['best_fitness']:.4f}, "
+                      f"Diversity: {evolution_metrics['diversity']:.4f}")
             
-            # Prepare training data
-            inputs = [td.input_data for td in training_data]
-            expected_outputs = [td.expected_output for td in training_data]
+            # P2P sharing
+            if (self.config.p2p_sharing and epoch % self.config.sharing_frequency == 0 
+                and epoch > 0 and self.genetic_exchange):
+                await self._share_improvements(best_model)
             
-            # Get model from model manager (would be injected in a real implementation)
-            model = self._get_model(function_name)
-            if not model:
-                self.logger.error(f"Could not get model for {function_name}")
-                self.training_status[function_name] = TrainingStatus.IDLE
-                return TrainingResult(
-                    function_name=function_name,
-                    status=TrainingStatus.FAILED,
-                    training_time=0.0,
-                    samples_processed=0,
-                    performance_improvement=0.0,
-                    error_message="Could not get model"
-                )
+            # Record metrics
+            epoch_time = time.time() - epoch_start_time
+            metrics = TrainingMetrics(
+                epoch=epoch,
+                train_loss=train_metrics['loss'],
+                val_loss=val_metrics['loss'],
+                train_accuracy=train_metrics['accuracy'],
+                val_accuracy=val_metrics['accuracy'],
+                learning_rate=train_metrics['learning_rate'],
+                generation=self.population.generation,
+                population_diversity=self.population._calculate_population_diversity(),
+                best_fitness=self.population.best_fitness,
+                mutation_count=0,  # Would be tracked in evolution
+                crossover_count=0,  # Would be tracked in evolution
+                dopamine_level=self.hormone_levels['dopamine'],
+                serotonin_level=self.hormone_levels['serotonin'],
+                cortisol_level=self.hormone_levels['cortisol'],
+                training_time=epoch_time,
+                memory_usage=torch.cuda.memory_allocated() if torch.cuda.is_available() else 0,
+                gradient_norm=train_metrics.get('gradient_norm', 0.0),
+                shared_improvements=self.shared_improvements,
+                received_improvements=self.received_improvements
+            )
             
-            # Get baseline performance before training
-            baseline_performance = self._evaluate_model(model, function_name, inputs, expected_outputs)
+            self.training_history.append(metrics)
             
-            # Train the model
-            self.logger.info(f"Training model for {function_name} with {len(training_data)} samples")
-            training_metrics = self._perform_training(model, function_name, inputs, expected_outputs)
-            
-            # Check if we've exceeded max training time
-            elapsed_time = time.time() - start_time
-            if elapsed_time > self.max_training_time:
-                self.logger.warning(f"Training for {function_name} exceeded max time ({elapsed_time:.1f}s)")
-            
-            # Evaluate model after training
-            self.training_status[function_name] = TrainingStatus.EVALUATING
-            post_performance = self._evaluate_model(model, function_name, inputs, expected_outputs)
-            
-            # Calculate performance improvement
-            performance_improvement = post_performance.get("accuracy", 0.0) - baseline_performance.get("accuracy", 0.0)
-            
-            # Save model if improved
-            if performance_improvement > 0.01:  # 1% improvement threshold
-                self._save_model(model, function_name)
-                self.logger.info(f"Model for {function_name} improved by {performance_improvement:.4f}, saved")
+            # Early stopping
+            if val_metrics['loss'] < self.best_val_loss:
+                self.best_val_loss = val_metrics['loss']
+                self.patience_counter = 0
             else:
-                self.logger.info(f"Model for {function_name} did not improve significantly ({performance_improvement:.4f})")
-            
-            # Update last training time
-            self.last_training_time[function_name] = datetime.now()
-            
-            # Create training result
-            training_time = time.time() - start_time
-            result = TrainingResult(
-                function_name=function_name,
-                status=TrainingStatus.COMPLETED,
-                training_time=training_time,
-                samples_processed=len(training_data),
-                performance_improvement=performance_improvement,
-                metrics=post_performance
-            )
-            
-            # Add to training results history
-            self.training_results[function_name].append(result)
-            
-            # Limit history size
-            if len(self.training_results[function_name]) > 10:
-                self.training_results[function_name].pop(0)
-            
-            self.logger.info(f"Completed training for {function_name} in {training_time:.1f}s with "
-                           f"{performance_improvement:.4f} improvement")
-            
-            # Reset status
-            self.training_status[function_name] = TrainingStatus.IDLE
-            
-            return result
-            
-        except Exception as e:
-            elapsed_time = time.time() - start_time
-            self.logger.error(f"Error training model for {function_name}: {e}")
-            
-            # Reset status
-            self.training_status[function_name] = TrainingStatus.IDLE
-            
-            # Create failure result
-            result = TrainingResult(
-                function_name=function_name,
-                status=TrainingStatus.FAILED,
-                training_time=elapsed_time,
-                samples_processed=0,
-                performance_improvement=0.0,
-                error_message=str(e)
-            )
-            
-            # Add to training results history
-            self.training_results[function_name].append(result)
-            
-            return result
-    
-    def _get_model(self, function_name: str) -> Any:
-        """
-        Get a model for a specific function.
-        
-        In a real implementation, this would use the ModelManager.
-        For now, we create a dummy model for demonstration.
-        
-        Args:
-            function_name: Name of the function.
-            
-        Returns:
-            Model object, or None if not available.
-        """
-        try:
-            # This is a placeholder for demonstration
-            # In a real implementation, this would get the model from ModelManager
-            
-            # Create a dummy model
-            model = {
-                "function_name": function_name,
-                "type": "neural",
-                "version": "1.0.0",
-                "weights": [0.5, 0.5, 0.5],  # Dummy weights
-                "bias": 0.1  # Dummy bias
-            }
-            
-            return model
-            
-        except Exception as e:
-            self.logger.error(f"Error getting model for {function_name}: {e}")
-            return None
-    
-    def _evaluate_model(self, model: Any, function_name: str, inputs: List[Any], expected_outputs: List[Any]) -> Dict[str, float]:
-        """
-        Evaluate a model's performance.
-        
-        Args:
-            model: Model to evaluate.
-            function_name: Name of the function.
-            inputs: List of input data.
-            expected_outputs: List of expected outputs.
-            
-        Returns:
-            Dictionary of performance metrics.
-        """
-        try:
-            # This is a placeholder for demonstration
-            # In a real implementation, this would use actual model evaluation
-            
-            # Simulate evaluation with random metrics
-            import random
-            
-            # Generate a somewhat realistic accuracy based on model "version"
-            base_accuracy = 0.7  # Start with a reasonable base accuracy
-            version_bonus = 0.0
-            if hasattr(model, "version"):
-                version_str = str(model.get("version", "1.0.0"))
-                version_parts = version_str.split(".")
-                if len(version_parts) >= 2:
-                    try:
-                        minor_version = int(version_parts[1])
-                        version_bonus = min(0.2, minor_version * 0.02)  # Up to 0.2 bonus for version
-                    except ValueError:
-                        pass
-            
-            # Add some randomness
-            accuracy = min(0.99, base_accuracy + version_bonus + random.uniform(-0.05, 0.05))
-            
-            # Generate other metrics
-            latency = random.uniform(10, 100)  # milliseconds
-            resource_usage = random.uniform(0.1, 0.5)  # 0.0-1.0 scale
-            
-            return {
-                "accuracy": accuracy,
-                "latency": latency,
-                "resource_usage": resource_usage,
-                "samples_evaluated": len(inputs)
-            }
-            
-        except Exception as e:
-            self.logger.error(f"Error evaluating model for {function_name}: {e}")
-            return {"accuracy": 0.0, "error": str(e)}
-    
-    def _perform_training(self, model: Any, function_name: str, inputs: List[Any], expected_outputs: List[Any]) -> Dict[str, float]:
-        """
-        Perform model training.
-        
-        Args:
-            model: Model to train.
-            function_name: Name of the function.
-            inputs: List of input data.
-            expected_outputs: List of expected outputs.
-            
-        Returns:
-            Dictionary of training metrics.
-        """
-        try:
-            # This is a placeholder for demonstration
-            # In a real implementation, this would use actual model training
-            
-            # Simulate training time based on data size
-            training_time = 0.01 * len(inputs)
-            time.sleep(min(training_time, 1.0))  # Sleep for a bit to simulate training, max 1 second
-            
-            # Simulate training by updating model weights
-            if "weights" in model:
-                import random
-                # Update weights with small random changes
-                model["weights"] = [w + random.uniform(-0.1, 0.1) for w in model["weights"]]
+                self.patience_counter += 1
                 
-            # Simulate version update
-            if "version" in model:
-                version_parts = model["version"].split(".")
-                if len(version_parts) >= 3:
-                    patch = int(version_parts[2]) + 1
-                    model["version"] = f"{version_parts[0]}.{version_parts[1]}.{patch}"
+                if self.patience_counter >= self.config.early_stopping_patience:
+                    print(f"Early stopping at epoch {epoch}")
+                    break
             
-            # Return metrics
-            return {
-                "epochs": 10,
-                "training_time": training_time,
-                "samples_trained": len(inputs),
-                "loss": 0.1
-            }
-            
-        except Exception as e:
-            self.logger.error(f"Error training model for {function_name}: {e}")
-            return {"error": str(e)}
+            # Progress reporting
+            if epoch % 10 == 0:
+                print(f"Epoch {epoch}: Train Loss: {train_metrics['loss']:.4f}, "
+                      f"Val Loss: {val_metrics['loss']:.4f}, "
+                      f"Val Acc: {val_metrics['accuracy']:.4f}, "
+                      f"Dopamine: {self.hormone_levels['dopamine']:.3f}")
+        
+        total_training_time = time.time() - training_start_time
+        
+        return {
+            'best_model': self.population.get_best_model(),
+            'training_history': self.training_history,
+            'total_training_time': total_training_time,
+            'final_generation': self.population.generation,
+            'best_fitness': self.population.best_fitness,
+            'population_diversity': self.population._calculate_population_diversity()
+        }
     
-    def _save_model(self, model: Any, function_name: str) -> bool:
-        """
-        Save a trained model.
+    async def _train_epoch(self, model: GeneticDiffusionModel, train_loader: DataLoader,
+                          criterion: nn.Module, device: torch.device) -> Dict[str, float]:
+        """Train model for one epoch"""
+        model.train()
         
-        Args:
-            model: Model to save.
-            function_name: Name of the function.
+        # Hormone-influenced learning rate
+        base_lr = self.config.learning_rate
+        if self.config.hormone_influence:
+            lr_modifier = 1.0 + (self.hormone_levels['dopamine'] - 0.5) * 0.5
+            lr_modifier *= 1.0 + (self.hormone_levels['adrenaline'] - 0.2) * 0.3
+            learning_rate = base_lr * lr_modifier
+        else:
+            learning_rate = base_lr
+        
+        optimizer = optim.AdamW(model.parameters(), lr=learning_rate, 
+                              weight_decay=self.config.weight_decay)
+        
+        total_loss = 0.0
+        total_correct = 0
+        total_samples = 0
+        total_gradient_norm = 0.0
+        
+        for batch_idx, (batch_x, batch_y) in enumerate(train_loader):
+            batch_x, batch_y = batch_x.to(device), batch_y.to(device)
             
-        Returns:
-            True if the model was saved successfully, False otherwise.
-        """
-        try:
-            # This is a placeholder for demonstration
-            # In a real implementation, this would use ModelManager.save_model
+            optimizer.zero_grad()
             
-            self.logger.info(f"Saved model for {function_name} (simulated)")
-            return True
+            # Forward pass
+            outputs = model(batch_x)
+            loss = criterion(outputs, batch_y)
             
-        except Exception as e:
-            self.logger.error(f"Error saving model for {function_name}: {e}")
-            return False
+            # Add diffusion loss if enabled
+            if self.config.diffusion_training:
+                diffusion_loss = model.diffusion_loss(batch_x)
+                loss = loss + self.config.diffusion_weight * diffusion_loss
+            
+            # Backward pass
+            loss.backward()
+            
+            # Gradient clipping
+            if self.config.gradient_clipping > 0:
+                gradient_norm = torch.nn.utils.clip_grad_norm_(
+                    model.parameters(), self.config.gradient_clipping
+                )
+                total_gradient_norm += gradient_norm.item()
+            
+            optimizer.step()
+            
+            # Statistics
+            total_loss += loss.item()
+            _, predicted = torch.max(outputs.data, 1)
+            total_samples += batch_y.size(0)
+            total_correct += (predicted == batch_y).sum().item()
+        
+        return {
+            'loss': total_loss / len(train_loader),
+            'accuracy': total_correct / total_samples,
+            'learning_rate': learning_rate,
+            'gradient_norm': total_gradient_norm / len(train_loader)
+        }
     
-    def get_training_status(self, function_name: str) -> TrainingStatus:
-        """
-        Get the current training status for a function.
+    async def _validate_epoch(self, model: GeneticDiffusionModel, val_loader: DataLoader,
+                             criterion: nn.Module, device: torch.device) -> Dict[str, float]:
+        """Validate model for one epoch"""
+        model.eval()
         
-        Args:
-            function_name: Name of the function.
-            
-        Returns:
-            Current training status.
-        """
-        return self.training_status.get(function_name, TrainingStatus.IDLE)
+        total_loss = 0.0
+        total_correct = 0
+        total_samples = 0
+        
+        with torch.no_grad():
+            for batch_x, batch_y in val_loader:
+                batch_x, batch_y = batch_x.to(device), batch_y.to(device)
+                
+                outputs = model(batch_x)
+                loss = criterion(outputs, batch_y)
+                
+                total_loss += loss.item()
+                _, predicted = torch.max(outputs.data, 1)
+                total_samples += batch_y.size(0)
+                total_correct += (predicted == batch_y).sum().item()
+        
+        return {
+            'loss': total_loss / len(val_loader),
+            'accuracy': total_correct / total_samples
+        }
     
-    def get_training_results(self, function_name: str) -> List[TrainingResult]:
-        """
-        Get training results for a function.
+    def _update_hormone_levels(self, train_metrics: Dict[str, float], 
+                              val_metrics: Dict[str, float]):
+        """Update hormone levels based on training performance"""
+        # Dopamine: reward signal based on improvement
+        if hasattr(self, 'prev_val_loss'):
+            if val_metrics['loss'] < self.prev_val_loss:
+                self.hormone_levels['dopamine'] = min(1.0, self.hormone_levels['dopamine'] + 0.1)
+            else:
+                self.hormone_levels['dopamine'] = max(0.0, self.hormone_levels['dopamine'] - 0.05)
+        self.prev_val_loss = val_metrics['loss']
         
-        Args:
-            function_name: Name of the function.
-            
-        Returns:
-            List of training results, most recent first.
-        """
-        return list(reversed(self.training_results.get(function_name, [])))
+        # Serotonin: confidence based on validation accuracy
+        self.hormone_levels['serotonin'] = 0.3 + 0.7 * val_metrics['accuracy']
+        
+        # Cortisol: stress based on loss magnitude and gradient norm
+        stress_factor = min(1.0, train_metrics['loss'] + train_metrics.get('gradient_norm', 0.0) / 10.0)
+        self.hormone_levels['cortisol'] = 0.1 + 0.8 * stress_factor
+        
+        # Adrenaline: urgency based on learning rate and performance change
+        if hasattr(self, 'prev_train_loss'):
+            performance_change = abs(train_metrics['loss'] - self.prev_train_loss)
+            self.hormone_levels['adrenaline'] = min(1.0, 0.2 + performance_change * 5.0)
+        self.prev_train_loss = train_metrics['loss']
+        
+        # Apply hormone system integration if available
+        if self.hormone_system:
+            self.hormone_system.update_hormone_levels(self.hormone_levels)
     
-    def force_train_function(self, function_name: str) -> TrainingResult:
-        """
-        Force training for a specific function, regardless of timing or status.
+    async def _share_improvements(self, model: GeneticDiffusionModel):
+        """Share model improvements with P2P network"""
+        if not self.genetic_exchange:
+            return
         
-        Args:
-            function_name: Name of the function to train.
-            
-        Returns:
-            Training result.
-        """
-        # Check if we have data for this function
-        data = self.data_collector.get_training_data(function_name)
-        if not data:
-            self.logger.warning(f"No training data available for {function_name}")
-            return TrainingResult(
-                function_name=function_name,
-                status=TrainingStatus.FAILED,
-                training_time=0.0,
-                samples_processed=0,
-                performance_improvement=0.0,
-                error_message="No training data available"
-            )
+        # Check if model is good enough to share
+        current_fitness = self.population.evaluate_fitness(
+            model, None, None, nn.CrossEntropyLoss()  # Simplified for sharing check
+        )
         
-        # Check if already training
-        if self.training_status.get(function_name) == TrainingStatus.TRAINING:
-            self.logger.warning(f"Already training {function_name}")
-            return TrainingResult(
-                function_name=function_name,
-                status=TrainingStatus.FAILED,
-                training_time=0.0,
-                samples_processed=0,
-                performance_improvement=0.0,
-                error_message="Already training"
-            )
+        if current_fitness >= self.config.fitness_threshold:
+            success = await model.share_genetic_improvements()
+            if success:
+                self.shared_improvements += 1
+                print(f"Shared improvements: fitness {current_fitness:.3f}")
+    
+    def get_training_summary(self) -> Dict[str, Any]:
+        """Get comprehensive training summary"""
+        if not self.training_history:
+            return {}
         
-        # Train the function
-        return self._train_function(function_name)
+        final_metrics = self.training_history[-1]
+        
+        return {
+            'total_epochs': len(self.training_history),
+            'final_train_loss': final_metrics.train_loss,
+            'final_val_loss': final_metrics.val_loss,
+            'final_train_accuracy': final_metrics.train_accuracy,
+            'final_val_accuracy': final_metrics.val_accuracy,
+            'best_val_loss': self.best_val_loss,
+            'final_generation': final_metrics.generation,
+            'final_population_diversity': final_metrics.population_diversity,
+            'best_fitness': final_metrics.best_fitness,
+            'total_shared_improvements': self.shared_improvements,
+            'total_received_improvements': self.received_improvements,
+            'final_hormone_levels': {
+                'dopamine': final_metrics.dopamine_level,
+                'serotonin': final_metrics.serotonin_level,
+                'cortisol': final_metrics.cortisol_level
+            },
+            'average_training_time_per_epoch': np.mean([m.training_time for m in self.training_history]),
+            'total_training_time': sum(m.training_time for m in self.training_history)
+        }
 
-cl
-ass IncrementalTrainingSystem:
-    """
-    Integrates training data collection and background training for neural network models.
+
+# Example usage and testing
+class SimpleDataset(Dataset):
+    """Simple dataset for testing"""
+    def __init__(self, size: int = 1000, input_dim: int = 784, num_classes: int = 10):
+        self.data = torch.randn(size, input_dim)
+        self.targets = torch.randint(0, num_classes, (size,))
     
-    This class provides a complete incremental training system that collects training data
-    from algorithmic implementations and uses it to train neural network alternatives
-    during idle periods.
-    """
+    def __len__(self):
+        return len(self.data)
     
-    def __init__(self, model_manager=None, data_dir: str = None):
-        """
-        Initialize the incremental training system.
-        
-        Args:
-            model_manager: ModelManager instance, or None to create a new one.
-            data_dir: Directory for storing training data, or None for default.
-        """
-        self.logger = logging.getLogger("IncrementalTrainingSystem")
-        
-        # Set up data directory
-        self.data_dir = data_dir or os.path.join(os.getcwd(), "training_data")
-        os.makedirs(self.data_dir, exist_ok=True)
-        
-        # Create components
-        self.data_collector = TrainingDataCollector(max_samples_per_function=10000)
-        self.background_trainer = BackgroundTrainer(
-            data_collector=self.data_collector,
-            min_samples_for_training=100,
-            training_interval=300,  # 5 minutes
-            max_training_time=1800  # 30 minutes
-        )
-        
-        # Store model manager reference
-        self.model_manager = model_manager
-        
-        # Load any existing training data
-        self._load_saved_training_data()
-        
-        self.logger.info("IncrementalTrainingSystem initialized")
+    def __getitem__(self, idx):
+        return self.data[idx], self.targets[idx]
+
+
+async def test_training_engine():
+    """Test the advanced training engine"""
+    # Create configuration
+    config = TrainingConfiguration(
+        learning_rate=0.001,
+        batch_size=32,
+        epochs=50,
+        evolution_frequency=5,
+        population_size=3,
+        p2p_sharing=True,
+        sharing_frequency=10
+    )
     
-    def _load_saved_training_data(self):
-        """Load any saved training data from disk."""
-        try:
-            if not os.path.exists(self.data_dir):
-                return
-            
-            for filename in os.listdir(self.data_dir):
-                if filename.endswith(".json"):
-                    function_name = filename.split(".")[0]
-                    filepath = os.path.join(self.data_dir, filename)
-                    
-                    if self.data_collector.load_training_data(function_name, filepath):
-                        self.logger.info(f"Loaded training data for {function_name} from {filepath}")
-        except Exception as e:
-            self.logger.error(f"Error loading saved training data: {e}")
+    # Create genetic exchange system
+    genetic_exchange = GeneticDataExchange("training_test_organism")
     
-    def start(self):
-        """Start the incremental training system."""
-        # Start background training
-        self.background_trainer.start_background_training()
-        self.logger.info("Started incremental training system")
+    # Create training engine
+    engine = AdvancedTrainingEngine(config, genetic_exchange)
     
-    def stop(self):
-        """Stop the incremental training system."""
-        # Stop background training
-        self.background_trainer.stop_background_training()
-        
-        # Save all training data
-        self._save_all_training_data()
-        
-        self.logger.info("Stopped incremental training system")
+    # Create datasets
+    train_dataset = SimpleDataset(1000, 784, 10)
+    val_dataset = SimpleDataset(200, 784, 10)
     
-    def _save_all_training_data(self):
-        """Save all training data to disk."""
-        try:
-            stats = self.data_collector.get_collection_stats()
-            
-            for function_name in stats.keys():
-                filepath = os.path.join(self.data_dir, f"{function_name}.json")
-                if self.data_collector.save_training_data(function_name, filepath):
-                    self.logger.info(f"Saved training data for {function_name} to {filepath}")
-        except Exception as e:
-            self.logger.error(f"Error saving training data: {e}")
+    train_loader = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=config.batch_size, shuffle=False)
     
-    def collect_sample(self, 
-                      function_name: str,
-                      input_data: Any,
-                      expected_output: Any,
-                      algorithmic_output: Any,
-                      performance_metrics: Dict[str, float],
-                      context: Dict[str, Any] = None) -> bool:
-        """
-        Collect a training sample from an algorithmic implementation.
-        
-        Args:
-            function_name: Name of the function being sampled.
-            input_data: Input data for the function.
-            expected_output: Expected output (ground truth if available).
-            algorithmic_output: Output from the algorithmic implementation.
-            performance_metrics: Performance metrics for this sample.
-            context: Additional context information.
-            
-        Returns:
-            True if the sample was collected successfully, False otherwise.
-        """
-        return self.data_collector.collect_sample(
-            function_name=function_name,
-            input_data=input_data,
-            expected_output=expected_output,
-            algorithmic_output=algorithmic_output,
-            performance_metrics=performance_metrics,
-            context=context
-        )
+    # Create loss function
+    criterion = nn.CrossEntropyLoss()
     
-    def force_train_function(self, function_name: str) -> TrainingResult:
-        """
-        Force training for a specific function, regardless of timing or status.
-        
-        Args:
-            function_name: Name of the function to train.
-            
-        Returns:
-            Training result.
-        """
-        return self.background_trainer.force_train_function(function_name)
+    # Train
+    print("Starting genetic training...")
+    results = await engine.train(train_loader, val_loader, criterion)
     
-    def get_training_status(self, function_name: str) -> TrainingStatus:
-        """
-        Get the current training status for a function.
-        
-        Args:
-            function_name: Name of the function.
-            
-        Returns:
-            Current training status.
-        """
-        return self.background_trainer.get_training_status(function_name)
+    # Print results
+    summary = engine.get_training_summary()
+    print("\nTraining Summary:")
+    for key, value in summary.items():
+        print(f"{key}: {value}")
     
-    def get_training_results(self, function_name: str) -> List[TrainingResult]:
-        """
-        Get training results for a function.
-        
-        Args:
-            function_name: Name of the function.
-            
-        Returns:
-            List of training results, most recent first.
-        """
-        return self.background_trainer.get_training_results(function_name)
-    
-    def get_collection_stats(self, function_name: str = None) -> Dict[str, Any]:
-        """
-        Get collection statistics.
-        
-        Args:
-            function_name: Specific function name, or None for all functions.
-            
-        Returns:
-            Dictionary of collection statistics.
-        """
-        return self.data_collector.get_collection_stats(function_name)
-    
-    def clear_training_data(self, function_name: str) -> bool:
-        """
-        Clear training data for a specific function.
-        
-        Args:
-            function_name: Name of the function.
-            
-        Returns:
-            True if data was cleared successfully, False otherwise.
-        """
-        return self.data_collector.clear_training_data(function_name)
-    
-    def save_training_data(self, function_name: str) -> bool:
-        """
-        Save training data for a specific function.
-        
-        Args:
-            function_name: Name of the function.
-            
-        Returns:
-            True if data was saved successfully, False otherwise.
-        """
-        filepath = os.path.join(self.data_dir, f"{function_name}.json")
-        return self.data_collector.save_training_data(function_name, filepath)
-    
-    def get_functions_with_data(self) -> List[str]:
-        """
-        Get list of functions that have training data.
-        
-        Returns:
-            List of function names.
-        """
-        stats = self.data_collector.get_collection_stats()
-        return [name for name, stat in stats.items() if stat.get("total_samples", 0) > 0]
-    
-    def get_trainable_functions(self) -> List[Dict[str, Any]]:
-        """
-        Get list of functions that have enough data for training.
-        
-        Returns:
-            List of dictionaries with function information.
-        """
-        stats = self.data_collector.get_collection_stats()
-        min_samples = self.background_trainer.min_samples_for_training
-        
-        trainable = []
-        for name, stat in stats.items():
-            if stat.get("total_samples", 0) >= min_samples:
-                status = self.background_trainer.get_training_status(name)
-                last_training = self.background_trainer.last_training_time.get(name)
-                
-                trainable.append({
-                    "function_name": name,
-                    "samples": stat.get("total_samples", 0),
-                    "status": status.value,
-                    "last_trained": last_training.isoformat() if last_training else None,
-                    "collection_rate": stat.get("collection_rate", 0.0)
-                })
-        
-        return trainable
+    print(f"\nBest model generation: {results['final_generation']}")
+    print(f"Best fitness: {results['best_fitness']:.4f}")
+    print(f"Population diversity: {results['population_diversity']:.4f}")
+
+
+if __name__ == "__main__":
+    asyncio.run(test_training_engine())

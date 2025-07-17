@@ -126,7 +126,43 @@ def create_task_with_context(self, title, description, context_query):
     return task_id
 ```
 
-### 3. Experimental Lobes
+### 3. Implementation Switching System
+
+The implementation switching system provides automatic selection between algorithmic and neural implementations based on performance metrics:
+
+```python
+# Example: Using the implementation switching monitor
+from src.mcp.implementation_switching_monitor import ImplementationSwitchingMonitor
+
+class HormoneCalculator:
+    def __init__(self):
+        self.monitor = ImplementationSwitchingMonitor()
+        
+        # Register both implementations
+        self.monitor.register_implementation("hormone_calc", "algorithmic")
+        self.monitor.register_implementation("hormone_calc", "neural")
+    
+    def calculate_hormone_level(self, input_data):
+        # Execute with automatic fallback
+        return self.monitor.execute_with_fallback(
+            "hormone_calc",
+            neural_func=self._neural_calculate,
+            algorithmic_func=self._algorithmic_calculate,
+            input_data
+        )
+    
+    def _neural_calculate(self, input_data):
+        # Neural network implementation
+        result = self.neural_model.predict(input_data)
+        return result
+    
+    def _algorithmic_calculate(self, input_data):
+        # Traditional algorithmic implementation
+        result = self.traditional_algorithm(input_data)
+        return result
+```
+
+### 4. Experimental Lobes
 
 The experimental lobes implement advanced cognitive functions:
 

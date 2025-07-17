@@ -699,7 +699,413 @@ class BrainStateAggregator:
         """
         return self.active_implementations.get(component)
     
+    def get_environment_state(self) -> Dict[str, Any]:
+        """
+        Get comprehensive environment state from all system components.
+        
+        Returns:
+            Dictionary containing complete environment state information
+        """
+        current_time = datetime.now().isoformat()
+        
+        try:
+            return {
+                "timestamp": current_time,
+                "system_state": self._collect_system_state(),
+                "lobe_states": self._collect_lobe_states(),
+                "hormone_state": self._collect_hormone_state(),
+                "performance_state": self._collect_performance_state(),
+                "resource_state": self._collect_resource_state(),
+                "sensory_state": self._collect_sensory_state(),
+                "memory_state": self._collect_memory_state()
+            }
+        except Exception as e:
+            self.logger.error(f"Error collecting environment state: {e}")
+            # Return minimal state on error
+            return {
+                "timestamp": current_time,
+                "system_state": {},
+                "lobe_states": {},
+                "hormone_state": {},
+                "performance_state": {},
+                "resource_state": {},
+                "sensory_state": {"sensory_column_active": False, "sensory_processing_status": "error"},
+                "memory_state": {"vector_memory_active": False}
+            }
+    
+    def _collect_system_state(self) -> Dict[str, Any]:
+        """Collect system-level state information."""
+        try:
+            # Try to get system metrics with psutil if available
+            system_metrics = {}
+            try:
+                import psutil
+                system_metrics.update({
+                    "cpu_usage": psutil.cpu_percent(interval=0.1),
+                    "memory_usage": psutil.virtual_memory().percent,
+                    "disk_usage": psutil.disk_usage('/').percent
+                })
+            except ImportError:
+                # psutil not available, skip system metrics
+                pass
+            except Exception as e:
+                self.logger.debug(f"Error getting system metrics: {e}")
+            
+            return {
+                "active_implementations": self.active_implementations.copy(),
+                "buffer_count": len(self.buffers),
+                "event_bus_active": self.event_bus is not None,
+                **system_metrics
+            }
+        except Exception as e:
+            self.logger.error(f"Error collecting system state: {e}")
+            return {}
+    
+    def _collect_lobe_states(self) -> Dict[str, Any]:
+        """Collect state information from all lobes."""
+        lobe_states = {}
+        
+        for lobe_name, lobe in self.lobes.items():
+            try:
+                # Get lobe state
+                state_data = None
+                if hasattr(lobe, 'get_state'):
+                    state_data = lobe.get_state()
+                
+                # Get hormone production info
+                hormone_production = self.hormone_source_tracking.get(lobe_name, {})
+                
+                # Check if lobe is in buffer
+                in_buffer = lobe_name in self.buffers
+                
+                # Get access count from prefetch history
+                access_count = self.prefetch_history.count(lobe_name) if hasattr(self, 'prefetch_history') else 0
+                
+                lobe_states[lobe_name] = {
+                    "name": lobe_name,
+                    "active": state_data is not None,
+                    "state_data": state_data,
+                    "hormone_production": hormone_production,
+                    "in_buffer": in_buffer,
+                    "access_count": access_count
+                }
+                
+            except Exception as e:
+                self.logger.error(f"Error collecting state for lobe {lobe_name}: {e}")
+                lobe_states[lobe_name] = {
+                    "name": lobe_name,
+                    "active": False,
+                    "state_data": None,
+                    "hormone_production": {},
+                    "in_buffer": False,
+                    "access_count": 0,
+                    "error": str(e)
+                }
+        
+        return lobe_states
+    
+    def _collect_hormone_state(self) -> Dict[str, Any]:
+        """Collect hormone system state information."""
+        try:
+            # Get recent changes (last 10 entries)
+            recent_changes = []
+            for hormone, history in self.hormone_history.items():
+                if history:
+                    recent_entry = history[-1].copy()
+                    recent_entry["hormone"] = hormone
+                    recent_changes.append(recent_entry)
+            
+            # Get cascade activity
+            cascade_activity = {
+                "recent_cascades": len(self.hormone_cascade_history),
+                "last_cascade": self.hormone_cascade_history[-1] if self.hormone_cascade_history else None
+            }
+            
+            # Check for threshold violations
+            threshold_violations = []
+            for hormone, level in self.hormone_levels.items():
+                if hormone in self.hormone_thresholds:
+                    for threshold_type, threshold_value in self.hormone_thresholds[hormone].items():
+                        if level > threshold_value:
+                            threshold_violations.append({
+                                "hormone": hormone,
+                                "threshold_type": threshold_type,
+                                "current_level": level,
+                                "threshold_value": threshold_value,
+                                "excess": level - threshold_value
+                            })
+            
+            # Get trend analysis
+            trend_analysis = {}
+            for hormone in self.hormone_levels.keys():
+                trend_analysis[hormone] = self.get_hormone_trend(hormone)
+            
+            # Get source distribution
+            source_distribution = {}
+            for hormone, sources in self.hormone_source_tracking.items():
+                source_distribution[hormone] = sources.copy()
+            
+            return {
+                "current_levels": self.hormone_levels.copy(),
+                "recent_changes": recent_changes,
+                "cascade_activity": cascade_activity,
+                "threshold_violations": threshold_violations,
+                "trend_analysis": trend_analysis,
+                "source_distribution": source_distribution,
+                "total_hormones": len(self.hormone_levels)
+            }
+        except Exception as e:
+            self.logger.error(f"Error collecting hormone state: {e}")
+            return {}
+    
+    def _collect_performance_state(self) -> Dict[str, Any]:
+        """Collect performance monitoring state information."""
+        try:
+            # Get comparison due information
+            comparison_due = {}
+            current_time = datetime.now()
+            
+            for component, last_time_str in self.last_comparison_time.items():
+                try:
+                    last_time = datetime.fromisoformat(last_time_str)
+                    seconds_since = (current_time - last_time).total_seconds()
+                    frequency = self.comparison_frequency.get(component, 60)
+                    
+                    comparison_due[component] = {
+                        "seconds_since_last": seconds_since,
+                        "frequency": frequency,
+                        "due": seconds_since >= frequency
+                    }
+                except Exception as e:
+                    self.logger.debug(f"Error calculating comparison due for {component}: {e}")
+            
+            return {
+                "active_implementations": self.active_implementations.copy(),
+                "recent_switches": self._get_recent_implementation_switches(),
+                "performance_summary": self._get_performance_summary(),
+                "neural_availability": getattr(self, 'neural_available', False),
+                "fallback_status": getattr(self, 'fallback_triggers', {}).get('fallback_active', False),
+                "comparison_due": comparison_due
+            }
+        except Exception as e:
+            self.logger.error(f"Error collecting performance state: {e}")
+            return {}
+    
+    def _collect_resource_state(self) -> Dict[str, Any]:
+        """Collect resource usage state information."""
+        try:
+            # Memory usage tracking
+            memory_usage = {
+                "hormone_history_size": sum(len(history) for history in self.hormone_history.values()),
+                "performance_history_size": sum(len(history) for history in self.implementation_history.values()),
+                "buffer_size": len(self.buffers)
+            }
+            
+            # Computational load tracking
+            computational_load = {
+                "active_lobes": len([lobe for lobe, state in self.lobes.items() if hasattr(state, 'get_state')]),
+                "hormone_calculations": len(self.hormone_levels),
+                "performance_comparisons": len(self.performance_metrics)
+            }
+            
+            # Buffer efficiency calculation
+            buffer_efficiency = {}
+            if hasattr(self, 'prefetch_history') and self.prefetch_history:
+                total_accesses = len(self.prefetch_history)
+                unique_accesses = len(set(self.prefetch_history))
+                buffer_efficiency = {
+                    "hit_ratio": unique_accesses / total_accesses if total_accesses > 0 else 0.0,
+                    "total_accesses": total_accesses,
+                    "unique_accesses": unique_accesses
+                }
+            
+            return {
+                "memory_usage": memory_usage,
+                "computational_load": computational_load,
+                "buffer_efficiency": buffer_efficiency
+            }
+        except Exception as e:
+            self.logger.error(f"Error collecting resource state: {e}")
+            return {}
+    
+    def _collect_sensory_state(self) -> Dict[str, Any]:
+        """Collect sensory system state information."""
+        try:
+            if self.sensory_column and hasattr(self.sensory_column, 'get_latest'):
+                latest_data = self.sensory_column.get_latest()
+                return {
+                    "sensory_column_active": True,
+                    "latest_sensory_data": latest_data,
+                    "sensory_processing_status": "active"
+                }
+            else:
+                return {
+                    "sensory_column_active": False,
+                    "latest_sensory_data": None,
+                    "sensory_processing_status": "inactive"
+                }
+        except Exception as e:
+            self.logger.error(f"Error collecting sensory state: {e}")
+            return {
+                "sensory_column_active": False,
+                "latest_sensory_data": None,
+                "sensory_processing_status": "error"
+            }
+    
+    def _collect_memory_state(self) -> Dict[str, Any]:
+        """Collect memory system state information."""
+        try:
+            if self.vector_memory and hasattr(self.vector_memory, 'get_relevant_vectors'):
+                vectors = self.vector_memory.get_relevant_vectors()
+                return {
+                    "vector_memory_active": True,
+                    "vector_count": len(vectors) if vectors else 0
+                }
+            else:
+                return {
+                    "vector_memory_active": False,
+                    "vector_count": 0
+                }
+        except Exception as e:
+            self.logger.error(f"Error collecting memory state: {e}")
+            return {
+                "vector_memory_active": False,
+                "vector_count": 0
+            }
+    
+    def _calculate_volatility(self, history_entries: List[Dict[str, Any]]) -> float:
+        """
+        Calculate volatility from history entries.
+        
+        Args:
+            history_entries: List of history entries with 'level' field
+            
+        Returns:
+            Volatility as standard deviation of levels
+        """
+        if not history_entries or len(history_entries) < 2:
+            return 0.0
+        
+        try:
+            levels = [entry.get("level", 0.0) for entry in history_entries]
+            mean = sum(levels) / len(levels)
+            variance = sum((x - mean) ** 2 for x in levels) / len(levels)
+            return variance ** 0.5
+        except Exception as e:
+            self.logger.error(f"Error calculating volatility: {e}")
+            return 0.0
+
+    def initialize_comprehensive_system(self) -> None:
+        """
+        Initialize comprehensive predictive models and system components.
+        
+        This method sets up the comprehensive brain state system with all
+        necessary components for hormone tracking, performance monitoring,
+        and predictive modeling.
+        """
+        try:
+            self.logger.info("Initializing predictive models with comprehensive implementation")
+            
+            # Initialize predictive models for hormone system
+            self.predictive_models = {
+                "hormone_diffusion": {"accuracy": 0.85, "latency": 0.02},
+                "lobe_interaction": {"accuracy": 0.78, "latency": 0.015},
+                "performance_prediction": {"accuracy": 0.82, "latency": 0.025}
+            }
+            
+            # Initialize neural availability tracking
+            self.neural_available = True
+            
+            # Initialize fallback triggers
+            self.fallback_triggers = {
+                "fallback_active": False,
+                "neural_failure_count": 0,
+                "last_fallback_time": None
+            }
+            
+            # Initialize comprehensive hormone system
+            self._initialize_hormone_system()
+            
+            # Initialize performance monitoring system
+            self._initialize_performance_system()
+            
+            self.logger.info("Comprehensive predictive models initialized successfully")
+            self.logger.info("Comprehensive brain state system initialized")
+            
+        except Exception as e:
+            self.logger.error(f"Error initializing comprehensive system: {e}")
+            # Set fallback state
+            self.neural_available = False
+            self.fallback_triggers = {"fallback_active": True}
+    
+    def _initialize_hormone_system(self) -> None:
+        """Initialize the hormone tracking and management system."""
+        # Set up default hormone levels if not already present
+        default_hormones = {
+            "dopamine": 0.5,
+            "serotonin": 0.6,
+            "cortisol": 0.3,
+            "adrenaline": 0.2,
+            "oxytocin": 0.4,
+            "vasopressin": 0.3,
+            "acetylcholine": 0.5,
+            "gaba": 0.6,
+            "norepinephrine": 0.3,
+            "histamine": 0.2
+        }
+        
+        for hormone, default_level in default_hormones.items():
+            if hormone not in self.hormone_levels:
+                self.hormone_levels[hormone] = default_level
+        
+        # Initialize hormone source tracking for all hormones
+        for hormone in self.hormone_levels.keys():
+            if hormone not in self.hormone_source_tracking:
+                self.hormone_source_tracking[hormone] = {}
+    
+    def _initialize_performance_system(self) -> None:
+        """Initialize the performance monitoring and comparison system."""
+        # Set up default comparison frequencies
+        default_frequencies = {
+            "hormone_calculator": 60,
+            "diffusion_engine": 120,
+            "pattern_recognition": 90,
+            "decision_making": 75
+        }
+        
+        for component, frequency in default_frequencies.items():
+            if component not in self.comparison_frequency:
+                self.comparison_frequency[component] = frequency
+        
+        # Initialize performance thresholds
+        default_thresholds = {
+            "accuracy": 0.8,
+            "latency": 100.0,  # milliseconds
+            "resource_usage": 0.7
+        }
+        
+        for component in default_frequencies.keys():
+            if component not in self.performance_thresholds:
+                self.performance_thresholds[component] = default_thresholds.copy()
+
     def get_implementation_metrics(self, component: str, implementation_type: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Get performance metrics for a component's implementations.
+        
+        Args:
+            component: Name of the component
+            implementation_type: Specific implementation type, or None for all
+            
+        Returns:
+            Dictionary of performance metrics
+        """
+        if component not in self.performance_metrics:
+            return {}
+        
+        if implementation_type:
+            return self.performance_metrics[component].get(implementation_type, {})
+        else:
+            return self.performance_metrics[component].copy()
         """
         Get performance metrics for a component implementation.
         

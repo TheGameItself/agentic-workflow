@@ -6,7 +6,66 @@ The MCP Server provides a unified API for managing workflows, tasks, memory, and
 
 ## Core Components
 
-### 1. Workflow Manager API
+### 1. Implementation Switching Monitor API
+
+The ImplementationSwitchingMonitor manages automatic switching between algorithmic and neural implementations based on performance metrics, with fallback mechanisms and model persistence.
+
+#### Implementation Registration and Management
+
+```python
+# Register implementations for monitoring
+monitor.register_implementation("hormone_calculator", "algorithmic")
+monitor.register_implementation("hormone_calculator", "neural")
+
+# Record performance metrics
+monitor.record_performance(
+    "hormone_calculator", 
+    "neural", 
+    {"accuracy": 0.95, "latency": 45.2, "resource_usage": 0.3, "error_rate": 0.02},
+    success=True
+)
+
+# Get active implementation
+active_impl = monitor.get_active_implementation("hormone_calculator")
+```
+
+#### Automatic Execution with Fallback
+
+```python
+# Execute with automatic implementation selection and fallback
+result = monitor.execute_with_fallback(
+    "hormone_calculator",
+    neural_func=neural_hormone_calc,
+    algorithmic_func=algo_hormone_calc,
+    input_data=hormone_input
+)
+```
+
+#### Model Persistence
+
+```python
+# Save improved neural models
+model_path = monitor.save_improved_model("hormone_calculator", model_data)
+
+# Load saved models
+model_data, success = monitor.load_model("hormone_calculator")
+```
+
+#### Threshold Configuration
+
+```python
+# Set switching thresholds
+monitor.set_switching_thresholds("hormone_calculator", {
+    "accuracy_threshold": 0.05,
+    "latency_threshold": 0.1,
+    "resource_threshold": 0.1,
+    "error_threshold": 0.01,
+    "failure_threshold": 3,
+    "stability_period": 60
+})
+```
+
+### 2. Workflow Manager API
 
 The WorkflowManager handles project workflows with steps, dependencies, and progress tracking.
 

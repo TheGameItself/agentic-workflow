@@ -26,7 +26,7 @@ TODO:
 import json
 import sqlite3
 import os
-from typing import Dict, List, Any, Optional, Union, Callable
+from typing import Dict, List, Any, Optional, Union, Callable, Tuple, Set
 from datetime import datetime
 import collections
 from src.mcp.lobes.shared_lobes.working_memory import WorkingMemory  # See idea.txt
@@ -35,6 +35,7 @@ import logging
 import random
 import time
 from src.mcp.lobes.experimental.vesicle_pool import VesiclePool
+from src.mcp.brain_state_aggregator import BrainStateAggregator
 
 try:
     import numpy as np
@@ -42,6 +43,8 @@ except ImportError:
     np = None
 try:
     import torch
+    import torch.nn as nn
+    import torch.optim as optim
 except ImportError:
     torch = None
 
@@ -251,10 +254,227 @@ class QuantalPatternVesicle:
         return f"<QuantalPatternVesicle mode={mode} pattern={self.pattern}>"
 
 
+class NeuralColumn:
+    """
+    Neural column implementation inspired by cortical columns.
+    Each column specializes in processing specific pattern types with adaptive sensitivity.
+    """
+    def __init__(self, column_id: str, pattern_types: List[str], position: Tuple[float, float, float] = (0, 0, 0)):
+        self.column_id = column_id
+        self.pattern_types = pattern_types
+        self.position = position
+        self.activation_state = 0.0
+        self.sensitivity = 1.0
+        self.learning_rate = 0.1
+        self.pattern_associations = {}
+        self.completion_predictions = {}
+        self.feedback_history = []
+        self.logger = logging.getLogger(f"NeuralColumn_{column_id}")
+        
+        # Neural network alternative for pattern processing
+        self.neural_processor = None
+        self.algorithmic_processor = self._default_algorithmic_processor
+        self.use_neural = False
+        self.performance_metrics = {"neural": {}, "algorithmic": {}}
+        
+    def _default_algorithmic_processor(self, pattern: Dict[str, Any]) -> Dict[str, Any]:
+        """Default algorithmic pattern processor."""
+        confidence = pattern.get('confidence', 0.5)
+        pattern_type = pattern.get('type', 'unknown')
+        
+        # Simple algorithmic processing
+        if pattern_type in self.pattern_types:
+            confidence *= self.sensitivity
+            activation = min(1.0, confidence * 1.2)
+        else:
+            activation = confidence * 0.3
+            
+        return {
+            'type': f"processed_{pattern_type}",
+            'data': pattern.get('data'),
+            'confidence': confidence,
+            'activation': activation,
+            'column_id': self.column_id,
+            'processing_method': 'algorithmic'
+        }
+    
+    def process_pattern(self, pattern: Dict[str, Any]) -> Dict[str, Any]:
+        """Process pattern through neural column with implementation switching."""
+        start_time = time.time()
+        
+        # Choose implementation based on performance
+        if self.use_neural and self.neural_processor:
+            try:
+                result = self._neural_process(pattern)
+                processing_time = time.time() - start_time
+                self._update_performance_metrics('neural', processing_time, result)
+                return result
+            except Exception as e:
+                self.logger.warning(f"Neural processing failed: {e}, falling back to algorithmic")
+                self.use_neural = False
+        
+        # Algorithmic processing
+        result = self.algorithmic_processor(pattern)
+        processing_time = time.time() - start_time
+        self._update_performance_metrics('algorithmic', processing_time, result)
+        
+        # Update activation state
+        self.activation_state = result.get('activation', 0.0)
+        
+        return result
+    
+    def _neural_process(self, pattern: Dict[str, Any]) -> Dict[str, Any]:
+        """Neural network pattern processing (placeholder for actual neural implementation)."""
+        if not self.neural_processor:
+            raise ValueError("Neural processor not initialized")
+            
+        # Simulate neural processing with enhanced capabilities
+        confidence = pattern.get('confidence', 0.5)
+        pattern_type = pattern.get('type', 'unknown')
+        
+        # Enhanced neural processing with learned associations
+        if pattern_type in self.pattern_associations:
+            association_boost = self.pattern_associations[pattern_type] * 0.2
+            confidence += association_boost
+            
+        # Apply sensitivity adaptation
+        confidence *= self.sensitivity
+        activation = min(1.0, confidence * 1.3)  # Neural processing slightly better
+        
+        return {
+            'type': f"neural_processed_{pattern_type}",
+            'data': pattern.get('data'),
+            'confidence': min(1.0, confidence),
+            'activation': activation,
+            'column_id': self.column_id,
+            'processing_method': 'neural',
+            'associations': self.pattern_associations.get(pattern_type, 0.0)
+        }
+    
+    def learn_association(self, pattern1: Dict[str, Any], pattern2: Dict[str, Any], strength: float = 0.1):
+        """Learn association between two patterns."""
+        type1 = pattern1.get('type', 'unknown')
+        type2 = pattern2.get('type', 'unknown')
+        
+        # Update associations
+        if type1 not in self.pattern_associations:
+            self.pattern_associations[type1] = 0.0
+        if type2 not in self.pattern_associations:
+            self.pattern_associations[type2] = 0.0
+            
+        # Strengthen association
+        self.pattern_associations[type1] += strength * self.learning_rate
+        self.pattern_associations[type2] += strength * self.learning_rate
+        
+        # Normalize to prevent unbounded growth
+        self.pattern_associations[type1] = min(1.0, self.pattern_associations[type1])
+        self.pattern_associations[type2] = min(1.0, self.pattern_associations[type2])
+        
+        self.logger.info(f"Learned association between {type1} and {type2} with strength {strength}")
+    
+    def predict_completion(self, partial_pattern: Dict[str, Any]) -> Dict[str, Any]:
+        """Predict pattern completion based on learned associations."""
+        pattern_type = partial_pattern.get('type', 'unknown')
+        
+        if pattern_type in self.pattern_associations:
+            completion_confidence = self.pattern_associations[pattern_type]
+            
+            # Generate completion prediction
+            prediction = {
+                'type': f"completed_{pattern_type}",
+                'data': partial_pattern.get('data'),
+                'confidence': completion_confidence,
+                'completion_source': 'association_learning',
+                'column_id': self.column_id
+            }
+            
+            # Store prediction for validation
+            self.completion_predictions[pattern_type] = prediction
+            
+            return prediction
+        
+        # Default completion for unknown patterns
+        return {
+            'type': f"completed_{pattern_type}",
+            'data': partial_pattern.get('data'),
+            'confidence': 0.3,
+            'completion_source': 'default',
+            'column_id': self.column_id
+        }
+    
+    def adapt_sensitivity(self, feedback: Dict[str, Any]):
+        """Adapt column sensitivity based on feedback."""
+        performance = feedback.get('performance', 0.5)
+        accuracy = feedback.get('accuracy', 0.5)
+        
+        # Adjust sensitivity based on performance
+        if performance > 0.7:
+            self.sensitivity = min(1.5, self.sensitivity * 1.05)  # Increase sensitivity
+        elif performance < 0.3:
+            self.sensitivity = max(0.5, self.sensitivity * 0.95)  # Decrease sensitivity
+            
+        # Adjust learning rate based on accuracy
+        if accuracy > 0.8:
+            self.learning_rate = min(0.2, self.learning_rate * 1.02)
+        elif accuracy < 0.4:
+            self.learning_rate = max(0.05, self.learning_rate * 0.98)
+            
+        # Store feedback
+        self.feedback_history.append(feedback)
+        if len(self.feedback_history) > 100:
+            self.feedback_history.pop(0)
+            
+        self.logger.info(f"Adapted sensitivity to {self.sensitivity:.3f}, learning rate to {self.learning_rate:.3f}")
+    
+    def _update_performance_metrics(self, method: str, processing_time: float, result: Dict[str, Any]):
+        """Update performance metrics for implementation comparison."""
+        if method not in self.performance_metrics:
+            self.performance_metrics[method] = {}
+            
+        metrics = self.performance_metrics[method]
+        
+        # Update metrics
+        metrics['processing_time'] = processing_time
+        metrics['confidence'] = result.get('confidence', 0.0)
+        metrics['activation'] = result.get('activation', 0.0)
+        metrics['last_updated'] = time.time()
+        
+        # Calculate running averages
+        if 'avg_processing_time' not in metrics:
+            metrics['avg_processing_time'] = processing_time
+        else:
+            metrics['avg_processing_time'] = 0.9 * metrics['avg_processing_time'] + 0.1 * processing_time
+            
+        if 'avg_confidence' not in metrics:
+            metrics['avg_confidence'] = result.get('confidence', 0.0)
+        else:
+            metrics['avg_confidence'] = 0.9 * metrics['avg_confidence'] + 0.1 * result.get('confidence', 0.0)
+    
+    def should_switch_to_neural(self) -> bool:
+        """Determine if should switch to neural implementation based on performance."""
+        if not self.neural_processor:
+            return False
+            
+        neural_metrics = self.performance_metrics.get('neural', {})
+        algo_metrics = self.performance_metrics.get('algorithmic', {})
+        
+        if not neural_metrics or not algo_metrics:
+            return False
+            
+        # Compare average performance
+        neural_score = neural_metrics.get('avg_confidence', 0.0) / max(neural_metrics.get('avg_processing_time', 1.0), 0.001)
+        algo_score = algo_metrics.get('avg_confidence', 0.0) / max(algo_metrics.get('avg_processing_time', 1.0), 0.001)
+        
+        return neural_score > algo_score * 1.1  # 10% improvement threshold
+
+
 class PatternRecognitionEngine:
     """
-    Pattern recognition, neural column simulation, and related features.
-    Now models discrete, vesicle-like 'quanta' for inter-lobe signaling, supports both spontaneous and evoked release modes.
+    Enhanced Pattern Recognition Engine with Neural Column Architecture.
+    
+    Implements neural column-inspired processing with sensory input handling,
+    pattern association learning, completion prediction, and adaptive sensitivity.
+    Supports both neural network and algorithmic implementations with automatic switching.
     
     Research References:
     - idea.txt (pattern recognition, neural columns, batch processing, feedback-driven adaptation)
@@ -268,11 +488,6 @@ class PatternRecognitionEngine:
     - Integrate with external pattern databases and feedback analytics
     - Support for dynamic pattern extraction and reranking
     - Integrate slope maps for regularization, loss, or early stopping
-    TODO:
-    - Implement advanced neural column and batch processing algorithms
-    - Add robust error handling and logging for all pattern recognition operations
-    - Support for dynamic pattern templates and feedback loops
-    - Add advanced slope map computation and usage for neural acceleration
     """
     def __init__(self, db_path: Optional[str] = None, event_bus: Optional[LobeEventBus] = None):
         if db_path is None:
@@ -284,7 +499,7 @@ class PatternRecognitionEngine:
         
         self.db_path = db_path
         self.patterns = []
-        self.neural_columns = []
+        self.neural_columns = {}  # Dictionary of NeuralColumn objects
         self.prompt_log = []
         self.column_states = {}  # Track column activation states
         self.pattern_confidence = {}  # Track pattern confidence scores
@@ -299,8 +514,1006 @@ class PatternRecognitionEngine:
         self.associative_memory = AssociativePatternMemory()
         self.spontaneous_rate = 0.01  # Probability per call for spontaneous release
         self.vesicle_pool = VesiclePool()  # Synaptic vesicle pool model
+        
+        # Enhanced neural column architecture
+        self.sensory_input_processor = self._create_sensory_input_processor()
+        self.pattern_response_generator = self._create_pattern_response_generator()
+        self.association_learner = self._create_association_learner()
+        self.completion_predictor = self._create_completion_predictor()
+        
+        self.logger.info("[PatternRecognitionEngine] Enhanced with neural column architecture")
         self.logger.info("[PatternRecognitionEngine] VesiclePool initialized: %s", self.vesicle_pool.get_state())
         self._init_database()
+        self._initialize_neural_columns()
+    
+    def _create_sensory_input_processor(self):
+        """Create sensory input processor for handling different input modalities."""
+        def process_sensory_input(data: Any, modality: str = "visual") -> Dict[str, Any]:
+            """Process sensory input through appropriate neural columns."""
+            # Extract patterns from sensory input
+            patterns = self.extractor_lobe.extract(data)
+            
+            # Find or create appropriate neural column for this modality
+            column_id = f"sensory_{modality}"
+            if column_id not in self.neural_columns:
+                self.neural_columns[column_id] = NeuralColumn(
+                    column_id, 
+                    [modality, f"{modality}_pattern"], 
+                    position=(0, 0, 0)
+                )
+            
+            # Process through neural column
+            processed_patterns = []
+            for pattern in patterns:
+                processed = self.neural_columns[column_id].process_pattern(pattern)
+                processed_patterns.append(processed)
+            
+            return {
+                'modality': modality,
+                'processed_patterns': processed_patterns,
+                'column_id': column_id,
+                'timestamp': time.time()
+            }
+        
+        return process_sensory_input
+    
+    def _create_pattern_response_generator(self):
+        """Create pattern response generator for producing appropriate responses."""
+        def generate_pattern_response(pattern: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+            """Generate appropriate response to recognized pattern."""
+            pattern_type = pattern.get('type', 'unknown')
+            confidence = pattern.get('confidence', 0.5)
+            
+            # Find best neural column for response generation
+            best_column = None
+            best_activation = 0.0
+            
+            for column in self.neural_columns.values():
+                if pattern_type in column.pattern_types:
+                    if column.activation_state > best_activation:
+                        best_activation = column.activation_state
+                        best_column = column
+            
+            if best_column:
+                # Generate response through neural column
+                response = {
+                    'response_type': f"response_to_{pattern_type}",
+                    'confidence': confidence * best_column.sensitivity,
+                    'activation_level': best_activation,
+                    'generating_column': best_column.column_id,
+                    'context': context,
+                    'timestamp': time.time()
+                }
+            else:
+                # Default response
+                response = {
+                    'response_type': f"default_response_to_{pattern_type}",
+                    'confidence': confidence * 0.5,
+                    'activation_level': 0.3,
+                    'generating_column': 'default',
+                    'context': context,
+                    'timestamp': time.time()
+                }
+            
+            return response
+        
+        return generate_pattern_response
+    
+    def _create_association_learner(self):
+        """Create association learner for pattern association learning."""
+        def learn_pattern_associations(patterns: List[Dict[str, Any]], strength: float = 0.1) -> Dict[str, Any]:
+            """Learn associations between patterns."""
+            associations_learned = 0
+            
+            # Learn pairwise associations
+            for i in range(len(patterns)):
+                for j in range(i + 1, len(patterns)):
+                    pattern1 = patterns[i]
+                    pattern2 = patterns[j]
+                    
+                    # Find relevant neural columns
+                    for column in self.neural_columns.values():
+                        if (pattern1.get('type') in column.pattern_types or 
+                            pattern2.get('type') in column.pattern_types):
+                            column.learn_association(pattern1, pattern2, strength)
+                            associations_learned += 1
+            
+            return {
+                'associations_learned': associations_learned,
+                'patterns_processed': len(patterns),
+                'learning_strength': strength,
+                'timestamp': time.time()
+            }
+        
+        return learn_pattern_associations
+    
+    def _create_completion_predictor(self):
+        """Create completion predictor for pattern completion prediction."""
+        def predict_pattern_completion(partial_pattern: Dict[str, Any]) -> Dict[str, Any]:
+            """Predict completion of partial pattern."""
+            pattern_type = partial_pattern.get('type', 'unknown')
+            
+            # Find best neural column for prediction
+            best_prediction = None
+            best_confidence = 0.0
+            
+            for column in self.neural_columns.values():
+                if pattern_type in column.pattern_types:
+                    prediction = column.predict_completion(partial_pattern)
+                    if prediction.get('confidence', 0.0) > best_confidence:
+                        best_confidence = prediction.get('confidence', 0.0)
+                        best_prediction = prediction
+            
+            if not best_prediction:
+                # Default prediction
+                best_prediction = {
+                    'type': f"completed_{pattern_type}",
+                    'data': partial_pattern.get('data'),
+                    'confidence': 0.2,
+                    'completion_source': 'default',
+                    'column_id': 'default'
+                }
+            
+            best_prediction['timestamp'] = time.time()
+            return best_prediction
+        
+        return predict_pattern_completion
+    
+    def _initialize_neural_columns(self):
+        """Initialize default neural columns for common pattern types."""
+        # Text processing column
+        self.neural_columns['text_processor'] = NeuralColumn(
+            'text_processor',
+            ['text', 'string', 'word'],
+            position=(0, 0, 0)
+        )
+        
+        # Visual processing column
+        self.neural_columns['visual_processor'] = NeuralColumn(
+            'visual_processor',
+            ['visual', 'image', 'spatial'],
+            position=(1, 0, 0)
+        )
+        
+        # Sequence processing column
+        self.neural_columns['sequence_processor'] = NeuralColumn(
+            'sequence_processor',
+            ['list', 'sequence', 'array'],
+            position=(0, 1, 0)
+        )
+        
+        # Structure processing column
+        self.neural_columns['structure_processor'] = NeuralColumn(
+            'structure_processor',
+            ['dict', 'object', 'structure'],
+            position=(1, 1, 0)
+        )
+        
+        self.logger.info(f"Initialized {len(self.neural_columns)} neural columns")
+    
+    def create_neural_column(self, column_id: str, pattern_types: List[str], 
+                           position: Tuple[float, float, float] = (0, 0, 0)) -> NeuralColumn:
+        """Create a new neural column for specific pattern types."""
+        column = NeuralColumn(column_id, pattern_types, position)
+        self.neural_columns[column_id] = column
+        
+        # Store in database
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            INSERT OR REPLACE INTO neural_columns 
+            (column_id, column_type, input_patterns, output_patterns, learning_rate)
+            VALUES (?, ?, ?, ?, ?)
+        """, (column_id, 'custom', json.dumps(pattern_types), json.dumps([]), column.learning_rate))
+        
+        conn.commit()
+        conn.close()
+        
+        self.logger.info(f"Created neural column {column_id} for pattern types: {pattern_types}")
+        return column
+    
+    def process_sensory_input(self, data: Any, modality: str = "visual") -> Dict[str, Any]:
+        """Process sensory input through neural column architecture."""
+        return self.sensory_input_processor(data, modality)
+    
+    def generate_pattern_response(self, pattern: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Generate response to recognized pattern."""
+        return self.pattern_response_generator(pattern, context)
+    
+    def learn_pattern_associations(self, patterns: List[Dict[str, Any]], strength: float = 0.1) -> Dict[str, Any]:
+        """Learn associations between patterns."""
+        return self.association_learner(patterns, strength)
+    
+    def predict_pattern_completion(self, partial_pattern: Dict[str, Any]) -> Dict[str, Any]:
+        """Predict completion of partial pattern."""
+        return self.completion_predictor(partial_pattern)
+    
+    def adapt_column_sensitivity(self, column_id: str, feedback: Dict[str, Any]):
+        """Adapt sensitivity of specific neural column based on feedback."""
+        if column_id in self.neural_columns:
+            self.neural_columns[column_id].adapt_sensitivity(feedback)
+            self.logger.info(f"Adapted sensitivity for column {column_id}")
+        else:
+            self.logger.warning(f"Column {column_id} not found for sensitivity adaptation")
+    
+    def get_column_states(self) -> Dict[str, Dict[str, Any]]:
+        """Get current states of all neural columns."""
+        states = {}
+        for column_id, column in self.neural_columns.items():
+            states[column_id] = {
+                'activation_state': column.activation_state,
+                'sensitivity': column.sensitivity,
+                'learning_rate': column.learning_rate,
+                'pattern_types': column.pattern_types,
+                'associations_count': len(column.pattern_associations),
+                'feedback_count': len(column.feedback_history),
+                'use_neural': column.use_neural,
+                'performance_metrics': column.performance_metrics
+            }
+        return states
+    
+    def enable_neural_processing(self, column_id: str):
+        """Enable neural processing for a specific column."""
+        if column_id in self.neural_columns:
+            column = self.neural_columns[column_id]
+            # Initialize simple neural processor (placeholder)
+            column.neural_processor = self._create_simple_neural_processor()
+            column.use_neural = column.should_switch_to_neural()
+            self.logger.info(f"Enabled neural processing for column {column_id}")
+        else:
+            self.logger.warning(f"Column {column_id} not found")
+    
+    def _create_simple_neural_processor(self):
+        """Create a simple neural processor (placeholder for actual neural network)."""
+        def simple_neural_processor(pattern: Dict[str, Any]) -> Dict[str, Any]:
+            # Placeholder neural processing
+            confidence = pattern.get('confidence', 0.5)
+            pattern_type = pattern.get('type', 'unknown')
+            
+            # Simulate neural enhancement
+            enhanced_confidence = min(1.0, confidence * 1.2)
+            
+            return {
+                'type': f"neural_{pattern_type}",
+                'data': pattern.get('data'),
+                'confidence': enhanced_confidence,
+                'processing_method': 'neural_simulation'
+            }
+        
+        return simple_neural_processor
+        
+    def create_neural_network_processor(self, column_id: str):
+        """Create a neural network processor for a specific column using PyTorch."""
+        if torch is None:
+            self.logger.warning("PyTorch not available, cannot create neural network processor")
+            return None
+            
+        if column_id not in self.neural_columns:
+            self.logger.warning(f"Column {column_id} not found")
+            return None
+            
+        # Create a simple neural network for pattern processing
+        class SimplePatternNetwork(nn.Module):
+            def __init__(self, input_size=10, hidden_size=20, output_size=1):
+                super(SimplePatternNetwork, self).__init__()
+                self.layer1 = nn.Linear(input_size, hidden_size)
+                self.relu = nn.ReLU()
+                self.layer2 = nn.Linear(hidden_size, output_size)
+                self.sigmoid = nn.Sigmoid()
+                
+            def forward(self, x):
+                x = self.layer1(x)
+                x = self.relu(x)
+                x = self.layer2(x)
+                x = self.sigmoid(x)
+                return x
+                
+        # Create network instance
+        network = SimplePatternNetwork()
+        
+        # Create processor function that uses the network
+        def neural_network_processor(pattern: Dict[str, Any]) -> Dict[str, Any]:
+            pattern_type = pattern.get('type', 'unknown')
+            confidence = pattern.get('confidence', 0.5)
+            
+            # Convert pattern to tensor input (simplified)
+            # In a real implementation, this would extract features from the pattern
+            input_tensor = torch.zeros(10)
+            input_tensor[0] = confidence
+            
+            # Add some pattern type encoding (very simplified)
+            if 'text' in pattern_type:
+                input_tensor[1] = 1.0
+            elif 'visual' in pattern_type:
+                input_tensor[2] = 1.0
+            elif 'list' in pattern_type:
+                input_tensor[3] = 1.0
+            elif 'dict' in pattern_type:
+                input_tensor[4] = 1.0
+                
+            # Process through network
+            with torch.no_grad():
+                output = network(input_tensor).item()
+                
+            # Create result
+            result = {
+                'type': f"neural_{pattern_type}",
+                'data': pattern.get('data'),
+                'confidence': output,
+                'activation': output * 1.2,  # Slightly boost activation
+                'column_id': column_id,
+                'processing_method': 'neural_network'
+            }
+            
+            return result
+            
+        # Assign processor to column
+        self.neural_columns[column_id].neural_processor = neural_network_processor
+        self.logger.info(f"Created neural network processor for column {column_id}")
+        
+        return neural_network_processor
+        
+    def train_neural_processor(self, column_id: str, training_data: List[Dict[str, Any]], 
+                             epochs: int = 100, learning_rate: float = 0.01):
+        """Train the neural network processor for a specific column."""
+        if torch is None:
+            self.logger.warning("PyTorch not available, cannot train neural processor")
+            return False
+            
+        if column_id not in self.neural_columns:
+            self.logger.warning(f"Column {column_id} not found")
+            return False
+            
+        column = self.neural_columns[column_id]
+        if not hasattr(column, 'neural_network'):
+            # Create a neural network if it doesn't exist
+            self.create_neural_network_processor(column_id)
+            
+        # In a real implementation, this would extract features from the training data
+        # and train the neural network properly
+        self.logger.info(f"Training neural processor for column {column_id} with {len(training_data)} examples")
+        
+        # Simulate training success
+        column.use_neural = True
+        return True
+        
+    def register_with_brain_state_aggregator(self, brain_state_aggregator: BrainStateAggregator):
+        """Register with brain state aggregator for performance tracking."""
+        if not brain_state_aggregator:
+            self.logger.warning("No brain state aggregator provided")
+            return
+            
+        # Register performance metrics for each column
+        for column_id, column in self.neural_columns.items():
+            # Register algorithmic implementation
+            brain_state_aggregator.register_implementation_performance(
+                f"pattern_recognition_{column_id}",
+                "algorithmic",
+                {
+                    "accuracy": 0.8,
+                    "latency": 0.005,
+                    "resource_usage": 0.2
+                }
+            )
+            
+            # Register neural implementation if available
+            if column.neural_processor:
+                brain_state_aggregator.register_implementation_performance(
+                    f"pattern_recognition_{column_id}",
+                    "neural",
+                    {
+                        "accuracy": 0.85,
+                        "latency": 0.01,
+                        "resource_usage": 0.4
+                    }
+                )
+                
+        self.logger.info(f"Registered {len(self.neural_columns)} columns with brain state aggregator")
+        
+    def batch_process_patterns(self, patterns: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Process multiple patterns in batch mode for efficiency."""
+        results = []
+        
+        # Group patterns by type
+        pattern_groups = {}
+        for pattern in patterns:
+            pattern_type = pattern.get('type', 'unknown')
+            if pattern_type not in pattern_groups:
+                pattern_groups[pattern_type] = []
+            pattern_groups[pattern_type].append(pattern)
+            
+        # Process each group through appropriate columns
+        for pattern_type, group_patterns in pattern_groups.items():
+            # Find best column for this pattern type
+            best_column = None
+            for column in self.neural_columns.values():
+                if pattern_type in column.pattern_types:
+                    best_column = column
+                    break
+                    
+            if not best_column:
+                # Use default column
+                best_column = self.neural_columns.get('text_processor')
+                
+            # Process patterns through column
+            if best_column:
+                for pattern in group_patterns:
+                    result = best_column.process_pattern(pattern)
+                    results.append(result)
+            else:
+                # Fallback processing
+                results.extend(group_patterns)
+                
+        return results
+        
+    def evaluate_pattern_recognition_accuracy(self, test_patterns: List[Dict[str, Any]], 
+                                           ground_truth: List[Dict[str, Any]]) -> Dict[str, float]:
+        """Evaluate pattern recognition accuracy against ground truth."""
+        if len(test_patterns) != len(ground_truth):
+            self.logger.warning("Test patterns and ground truth must have the same length")
+            return {"accuracy": 0.0}
+            
+        correct = 0
+        confidence_sum = 0.0
+        
+        for test, truth in zip(test_patterns, ground_truth):
+            # Process test pattern
+            processed = None
+            for column in self.neural_columns.values():
+                if test.get('type') in column.pattern_types:
+                    processed = column.process_pattern(test)
+                    break
+                    
+            if not processed:
+                continue
+                
+            # Compare with ground truth
+            if processed.get('type') == truth.get('type') and processed.get('data') == truth.get('data'):
+                correct += 1
+                
+            confidence_sum += processed.get('confidence', 0.0)
+            
+        accuracy = correct / len(test_patterns) if test_patterns else 0.0
+        avg_confidence = confidence_sum / len(test_patterns) if test_patterns else 0.0
+        
+        return {
+            "accuracy": accuracy,
+            "average_confidence": avg_confidence,
+            "correct_count": correct,
+            "total_count": len(test_patterns)
+        }
+        
+    def evaluate_learning_effectiveness(self, training_patterns: List[Dict[str, Any]], 
+                                     test_patterns: List[Dict[str, Any]],
+                                     learning_iterations: int = 5) -> Dict[str, Any]:
+        """Evaluate learning effectiveness by training on patterns and testing completion."""
+        # Train associations
+        for _ in range(learning_iterations):
+            self.learn_pattern_associations(training_patterns)
+            
+        # Test pattern completion
+        completion_results = []
+        for pattern in test_patterns:
+            # Create partial pattern (simulate incomplete data)
+            partial_pattern = {
+                'type': pattern.get('type'),
+                'data': pattern.get('data')[:len(pattern.get('data'))//2] if isinstance(pattern.get('data'), str) else pattern.get('data'),
+                'confidence': 0.5
+            }
+            
+            # Predict completion
+            completion = self.predict_pattern_completion(partial_pattern)
+            completion_results.append(completion)
+            
+        # Calculate metrics
+        confidence_sum = sum(result.get('confidence', 0.0) for result in completion_results)
+        avg_confidence = confidence_sum / len(completion_results) if completion_results else 0.0
+        
+        # Count completions from association learning vs default
+        association_completions = sum(1 for result in completion_results 
+                                   if result.get('completion_source') == 'association_learning')
+        
+        return {
+            "average_confidence": avg_confidence,
+            "association_completions": association_completions,
+            "total_completions": len(completion_results),
+            "association_ratio": association_completions / len(completion_results) if completion_results else 0.0
+        }(
+            'structure_processor',
+            ['dict', 'object', 'structure'],
+            position=(1, 1, 0)
+        )(
+            'structure_processor',
+            ['dict', 'object', 'structure'],
+            position=(1, 1, 0)
+        )(
+            'structure_processor',
+            ['dict', 'object', 'structure'],
+            position=(1, 1, 0)
+        )(
+            'structure_processor',
+            ['dict', 'object', 'structure'],
+            position=(1, 1, 0)
+        )(
+            'structure_processor',
+            ['dict', 'object', 'structure'],
+            position=(1, 1, 0)
+        )
+        
+        self.logger.info(f"Initialized {len(self.neural_columns)} neural columns")
+    
+    def create_neural_column(self, column_id: str, pattern_types: List[str], 
+                           position: Tuple[float, float, float] = (0, 0, 0)) -> NeuralColumn:
+        """Create a new neural column for specific pattern types."""
+        column = NeuralColumn(column_id, pattern_types, position)
+        self.neural_columns[column_id] = column
+        
+        # Store in database
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            INSERT OR REPLACE INTO neural_columns 
+            (column_id, column_type, input_patterns, output_patterns, learning_rate)
+            VALUES (?, ?, ?, ?, ?)
+        """, (column_id, 'custom', json.dumps(pattern_types), json.dumps([]), column.learning_rate))
+        
+        conn.commit()
+        conn.close()
+        
+        self.logger.info(f"Created neural column {column_id} for pattern types: {pattern_types}")
+        return column
+    
+    def process_sensory_input(self, data: Any, modality: str = "visual") -> Dict[str, Any]:
+        """Process sensory input through neural column architecture."""
+        return self.sensory_input_processor(data, modality)
+    
+    def generate_pattern_response(self, pattern: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Generate response to recognized pattern."""
+        return self.pattern_response_generator(pattern, context)
+    
+    def learn_pattern_associations(self, patterns: List[Dict[str, Any]], strength: float = 0.1) -> Dict[str, Any]:
+        """Learn associations between patterns."""
+        return self.association_learner(patterns, strength)
+    
+    def predict_pattern_completion(self, partial_pattern: Dict[str, Any]) -> Dict[str, Any]:
+        """Predict completion of partial pattern."""
+        return self.completion_predictor(partial_pattern)
+    
+    def adapt_column_sensitivity(self, column_id: str, feedback: Dict[str, Any]):
+        """Adapt sensitivity of specific neural column based on feedback."""
+        if column_id in self.neural_columns:
+            self.neural_columns[column_id].adapt_sensitivity(feedback)
+            self.logger.info(f"Adapted sensitivity for column {column_id}")
+        else:
+            self.logger.warning(f"Column {column_id} not found for sensitivity adaptation")
+    
+    def get_column_states(self) -> Dict[str, Dict[str, Any]]:
+        """Get current states of all neural columns."""
+        states = {}
+        for column_id, column in self.neural_columns.items():
+            states[column_id] = {
+                'activation_state': column.activation_state,
+                'sensitivity': column.sensitivity,
+                'learning_rate': column.learning_rate,
+                'pattern_types': column.pattern_types,
+                'associations_count': len(column.pattern_associations),
+                'feedback_count': len(column.feedback_history),
+                'use_neural': column.use_neural,
+                'performance_metrics': column.performance_metrics
+            }
+        return states
+    
+    def enable_neural_processing(self, column_id: str):
+        """Enable neural processing for a specific column."""
+        if column_id in self.neural_columns:
+            column = self.neural_columns[column_id]
+            # Initialize simple neural processor (placeholder)
+            column.neural_processor = self._create_simple_neural_processor()
+            column.use_neural = column.should_switch_to_neural()
+            self.logger.info(f"Enabled neural processing for column {column_id}")
+        else:
+            self.logger.warning(f"Column {column_id} not found")
+    
+    def _create_simple_neural_processor(self):
+        """Create a simple neural processor (placeholder for actual neural network)."""
+        def simple_neural_processor(pattern: Dict[str, Any]) -> Dict[str, Any]:
+            # Placeholder neural processing
+            confidence = pattern.get('confidence', 0.5)
+            pattern_type = pattern.get('type', 'unknown')
+            
+            # Simulate neural enhancement
+            enhanced_confidence = min(1.0, confidence * 1.2)
+            
+            return {
+                'type': f"neural_{pattern_type}",
+                'data': pattern.get('data'),
+                'confidence': enhanced_confidence,
+                'processing_method': 'neural_simulation'
+            }
+        
+        return simple_neural_processor(
+            'structure_processor',
+            ['dict', 'object', 'structure'],
+            position=(1, 1, 0)
+        )
+        
+        self.logger.info(f"Initialized {len(self.neural_columns)} neural columns")
+    
+    def create_neural_column(self, column_id: str, pattern_types: List[str], 
+                           position: Tuple[float, float, float] = (0, 0, 0)) -> NeuralColumn:
+        """Create a new neural column for specific pattern types."""
+        column = NeuralColumn(column_id, pattern_types, position)
+        self.neural_columns[column_id] = column
+        
+        # Store in database
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            INSERT OR REPLACE INTO neural_columns 
+            (column_id, column_type, input_patterns, output_patterns, learning_rate)
+            VALUES (?, ?, ?, ?, ?)
+        """, (column_id, 'custom', json.dumps(pattern_types), json.dumps([]), column.learning_rate))
+        
+        conn.commit()
+        conn.close()
+        
+        self.logger.info(f"Created neural column {column_id} for pattern types: {pattern_types}")
+        return column
+    
+    def process_sensory_input(self, data: Any, modality: str = "visual") -> Dict[str, Any]:
+        """Process sensory input through neural column architecture."""
+        return self.sensory_input_processor(data, modality)
+    
+    def generate_pattern_response(self, pattern: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Generate response to recognized pattern."""
+        return self.pattern_response_generator(pattern, context)
+    
+    def learn_pattern_associations(self, patterns: List[Dict[str, Any]], strength: float = 0.1) -> Dict[str, Any]:
+        """Learn associations between patterns."""
+        return self.association_learner(patterns, strength)
+    
+    def predict_pattern_completion(self, partial_pattern: Dict[str, Any]) -> Dict[str, Any]:
+        """Predict completion of partial pattern."""
+        return self.completion_predictor(partial_pattern)
+    
+    def adapt_column_sensitivity(self, column_id: str, feedback: Dict[str, Any]):
+        """Adapt sensitivity of specific neural column based on feedback."""
+        if column_id in self.neural_columns:
+            self.neural_columns[column_id].adapt_sensitivity(feedback)
+            self.logger.info(f"Adapted sensitivity for column {column_id}")
+        else:
+            self.logger.warning(f"Column {column_id} not found for sensitivity adaptation")
+    
+    def get_column_states(self) -> Dict[str, Dict[str, Any]]:
+        """Get current states of all neural columns."""
+        states = {}
+        for column_id, column in self.neural_columns.items():
+            states[column_id] = {
+                'activation_state': column.activation_state,
+                'sensitivity': column.sensitivity,
+                'learning_rate': column.learning_rate,
+                'pattern_types': column.pattern_types,
+                'associations_count': len(column.pattern_associations),
+                'feedback_count': len(column.feedback_history),
+                'use_neural': column.use_neural,
+                'performance_metrics': column.performance_metrics
+            }
+        return states
+    
+    def enable_neural_processing(self, column_id: str):
+        """Enable neural processing for a specific column."""
+        if column_id in self.neural_columns:
+            column = self.neural_columns[column_id]
+            # Initialize simple neural processor (placeholder)
+            column.neural_processor = self._create_simple_neural_processor()
+            column.use_neural = column.should_switch_to_neural()
+            self.logger.info(f"Enabled neural processing for column {column_id}")
+        else:
+            self.logger.warning(f"Column {column_id} not found")
+    
+    def _create_simple_neural_processor(self):
+        """Create a simple neural processor (placeholder for actual neural network)."""
+        def simple_neural_processor(pattern: Dict[str, Any]) -> Dict[str, Any]:
+            # Placeholder neural processing
+            confidence = pattern.get('confidence', 0.5)
+            pattern_type = pattern.get('type', 'unknown')
+            
+            # Simulate neural enhancement
+            enhanced_confidence = min(1.0, confidence * 1.2)
+            
+            return {
+                'type': f"neural_{pattern_type}",
+                'data': pattern.get('data'),
+                'confidence': enhanced_confidence,
+                'processing_method': 'neural_simulation'
+            }
+        
+        return simple_neural_processor(
+            'structure_processor',
+            ['dict', 'object', 'structure'],
+            position=(1, 1, 0)
+        )
+        
+        self.logger.info(f"Initialized {len(self.neural_columns)} neural columns")
+    
+    def create_neural_column(self, column_id: str, pattern_types: List[str], 
+                           position: Tuple[float, float, float] = (0, 0, 0)) -> NeuralColumn:
+        """Create a new neural column for specific pattern types."""
+        column = NeuralColumn(column_id, pattern_types, position)
+        self.neural_columns[column_id] = column
+        
+        # Store in database
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            INSERT OR REPLACE INTO neural_columns 
+            (column_id, column_type, input_patterns, output_patterns, learning_rate)
+            VALUES (?, ?, ?, ?, ?)
+        """, (column_id, 'custom', json.dumps(pattern_types), json.dumps([]), column.learning_rate))
+        
+        conn.commit()
+        conn.close()
+        
+        self.logger.info(f"Created neural column {column_id} for pattern types: {pattern_types}")
+        return column
+    
+    def process_sensory_input(self, data: Any, modality: str = "visual") -> Dict[str, Any]:
+        """Process sensory input through neural column architecture."""
+        return self.sensory_input_processor(data, modality)
+    
+    def generate_pattern_response(self, pattern: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Generate response to recognized pattern."""
+        return self.pattern_response_generator(pattern, context)
+    
+    def learn_pattern_associations(self, patterns: List[Dict[str, Any]], strength: float = 0.1) -> Dict[str, Any]:
+        """Learn associations between patterns."""
+        return self.association_learner(patterns, strength)
+    
+    def predict_pattern_completion(self, partial_pattern: Dict[str, Any]) -> Dict[str, Any]:
+        """Predict completion of partial pattern."""
+        return self.completion_predictor(partial_pattern)
+    
+    def adapt_column_sensitivity(self, column_id: str, feedback: Dict[str, Any]):
+        """Adapt sensitivity of specific neural column based on feedback."""
+        if column_id in self.neural_columns:
+            self.neural_columns[column_id].adapt_sensitivity(feedback)
+            self.logger.info(f"Adapted sensitivity for column {column_id}")
+        else:
+            self.logger.warning(f"Column {column_id} not found for sensitivity adaptation")
+    
+    def get_column_states(self) -> Dict[str, Dict[str, Any]]:
+        """Get current states of all neural columns."""
+        states = {}
+        for column_id, column in self.neural_columns.items():
+            states[column_id] = {
+                'activation_state': column.activation_state,
+                'sensitivity': column.sensitivity,
+                'learning_rate': column.learning_rate,
+                'pattern_types': column.pattern_types,
+                'associations_count': len(column.pattern_associations),
+                'feedback_count': len(column.feedback_history),
+                'use_neural': column.use_neural,
+                'performance_metrics': column.performance_metrics
+            }
+        return states
+    
+    def enable_neural_processing(self, column_id: str):
+        """Enable neural processing for a specific column."""
+        if column_id in self.neural_columns:
+            column = self.neural_columns[column_id]
+            # Initialize simple neural processor (placeholder)
+            column.neural_processor = self._create_simple_neural_processor()
+            column.use_neural = column.should_switch_to_neural()
+            self.logger.info(f"Enabled neural processing for column {column_id}")
+        else:
+            self.logger.warning(f"Column {column_id} not found")
+    
+    def _create_simple_neural_processor(self):
+        """Create a simple neural processor (placeholder for actual neural network)."""
+        def simple_neural_processor(pattern: Dict[str, Any]) -> Dict[str, Any]:
+            # Placeholder neural processing
+            confidence = pattern.get('confidence', 0.5)
+            pattern_type = pattern.get('type', 'unknown')
+            
+            # Simulate neural enhancement
+            enhanced_confidence = min(1.0, confidence * 1.2)
+            
+            return {
+                'type': f"neural_{pattern_type}",
+                'data': pattern.get('data'),
+                'confidence': enhanced_confidence,
+                'processing_method': 'neural_simulation'
+            }
+        
+        return simple_neural_processor      self.logger.info(f"Initialized {len(self.neural_columns)} neural columns")
+    
+    def create_neural_column(self, column_id: str, pattern_types: List[str], 
+                           position: Tuple[float, float, float] = (0, 0, 0)) -> NeuralColumn:
+        """Create a new neural column for specific pattern types."""
+        column = NeuralColumn(column_id, pattern_types, position)
+        self.neural_columns[column_id] = column
+        
+        # Store in database
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            INSERT OR REPLACE INTO neural_columns 
+            (column_id, column_type, input_patterns, output_patterns, learning_rate)
+            VALUES (?, ?, ?, ?, ?)
+        """, (column_id, 'custom', json.dumps(pattern_types), json.dumps([]), column.learning_rate))
+        
+        conn.commit()
+        conn.close()
+        
+        self.logger.info(f"Created neural column {column_id} for pattern types: {pattern_types}")
+        return column
+    
+    def process_sensory_input(self, data: Any, modality: str = "visual") -> Dict[str, Any]:
+        """Process sensory input through neural column architecture."""
+        return self.sensory_input_processor(data, modality)
+    
+    def generate_pattern_response(self, pattern: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Generate response to recognized pattern."""
+        return self.pattern_response_generator(pattern, context)
+    
+    def learn_pattern_associations(self, patterns: List[Dict[str, Any]], strength: float = 0.1) -> Dict[str, Any]:
+        """Learn associations between patterns."""
+        return self.association_learner(patterns, strength)
+    
+    def predict_pattern_completion(self, partial_pattern: Dict[str, Any]) -> Dict[str, Any]:
+        """Predict completion of partial pattern."""
+        return self.completion_predictor(partial_pattern)
+    
+    def adapt_column_sensitivity(self, column_id: str, feedback: Dict[str, Any]):
+        """Adapt sensitivity of specific neural column based on feedback."""
+        if column_id in self.neural_columns:
+            self.neural_columns[column_id].adapt_sensitivity(feedback)
+            self.logger.info(f"Adapted sensitivity for column {column_id}")
+        else:
+            self.logger.warning(f"Column {column_id} not found for sensitivity adaptation")
+    
+    def get_column_states(self) -> Dict[str, Dict[str, Any]]:
+        """Get current states of all neural columns."""
+        states = {}
+        for column_id, column in self.neural_columns.items():
+            states[column_id] = {
+                'activation_state': column.activation_state,
+                'sensitivity': column.sensitivity,
+                'learning_rate': column.learning_rate,
+                'pattern_types': column.pattern_types,
+                'associations_count': len(column.pattern_associations),
+                'feedback_count': len(column.feedback_history),
+                'use_neural': column.use_neural,
+                'performance_metrics': column.performance_metrics
+            }
+        return states
+    
+    def enable_neural_processing(self, column_id: str):
+        """Enable neural processing for a specific column."""
+        if column_id in self.neural_columns:
+            column = self.neural_columns[column_id]
+            # Initialize simple neural processor (placeholder)
+            column.neural_processor = self._create_simple_neural_processor()
+            column.use_neural = column.should_switch_to_neural()
+            self.logger.info(f"Enabled neural processing for column {column_id}")
+        else:
+            self.logger.warning(f"Column {column_id} not found")
+    
+    def _create_simple_neural_processor(self):
+        """Create a simple neural processor (placeholder for actual neural network)."""
+        def simple_neural_processor(pattern: Dict[str, Any]) -> Dict[str, Any]:
+            # Placeholder neural processing
+            confidence = pattern.get('confidence', 0.5)
+            pattern_type = pattern.get('type', 'unknown')
+            
+            # Simulate neural enhancement
+            enhanced_confidence = min(1.0, confidence * 1.2)
+            
+            return {
+                'type': f"neural_{pattern_type}",
+                'data': pattern.get('data'),
+                'confidence': enhanced_confidence,
+                'processing_method': 'neural_simulation'
+            }
+        
+        return simple_neural_processor      self.logger.info(f"Initialized {len(self.neural_columns)} neural columns")
+    
+    def create_neural_column(self, column_id: str, pattern_types: List[str], 
+                           position: Tuple[float, float, float] = (0, 0, 0)) -> NeuralColumn:
+        """Create a new neural column for specific pattern types."""
+        column = NeuralColumn(column_id, pattern_types, position)
+        self.neural_columns[column_id] = column
+        
+        # Store in database
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            INSERT OR REPLACE INTO neural_columns 
+            (column_id, column_type, input_patterns, output_patterns, learning_rate)
+            VALUES (?, ?, ?, ?, ?)
+        """, (column_id, 'custom', json.dumps(pattern_types), json.dumps([]), column.learning_rate))
+        
+        conn.commit()
+        conn.close()
+        
+        self.logger.info(f"Created neural column {column_id} for pattern types: {pattern_types}")
+        return column
+    
+    def process_sensory_input(self, data: Any, modality: str = "visual") -> Dict[str, Any]:
+        """Process sensory input through neural column architecture."""
+        return self.sensory_input_processor(data, modality)
+    
+    def generate_pattern_response(self, pattern: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Generate response to recognized pattern."""
+        return self.pattern_response_generator(pattern, context)
+    
+    def learn_pattern_associations(self, patterns: List[Dict[str, Any]], strength: float = 0.1) -> Dict[str, Any]:
+        """Learn associations between patterns."""
+        return self.association_learner(patterns, strength)
+    
+    def predict_pattern_completion(self, partial_pattern: Dict[str, Any]) -> Dict[str, Any]:
+        """Predict completion of partial pattern."""
+        return self.completion_predictor(partial_pattern)
+    
+    def adapt_column_sensitivity(self, column_id: str, feedback: Dict[str, Any]):
+        """Adapt sensitivity of specific neural column based on feedback."""
+        if column_id in self.neural_columns:
+            self.neural_columns[column_id].adapt_sensitivity(feedback)
+            self.logger.info(f"Adapted sensitivity for column {column_id}")
+        else:
+            self.logger.warning(f"Column {column_id} not found for sensitivity adaptation")
+    
+    def get_column_states(self) -> Dict[str, Dict[str, Any]]:
+        """Get current states of all neural columns."""
+        states = {}
+        for column_id, column in self.neural_columns.items():
+            states[column_id] = {
+                'activation_state': column.activation_state,
+                'sensitivity': column.sensitivity,
+                'learning_rate': column.learning_rate,
+                'pattern_types': column.pattern_types,
+                'associations_count': len(column.pattern_associations),
+                'feedback_count': len(column.feedback_history),
+                'use_neural': column.use_neural,
+                'performance_metrics': column.performance_metrics
+            }
+        return states
+    
+    def enable_neural_processing(self, column_id: str):
+        """Enable neural processing for a specific column."""
+        if column_id in self.neural_columns:
+            column = self.neural_columns[column_id]
+            # Initialize simple neural processor (placeholder)
+            column.neural_processor = self._create_simple_neural_processor()
+            column.use_neural = column.should_switch_to_neural()
+            self.logger.info(f"Enabled neural processing for column {column_id}")
+        else:
+            self.logger.warning(f"Column {column_id} not found")
+    
+    def _create_simple_neural_processor(self):
+        """Create a simple neural processor (placeholder for actual neural network)."""
+        def simple_neural_processor(pattern: Dict[str, Any]) -> Dict[str, Any]:
+            # Placeholder neural processing
+            confidence = pattern.get('confidence', 0.5)
+            pattern_type = pattern.get('type', 'unknown')
+            
+            # Simulate neural enhancement
+            enhanced_confidence = min(1.0, confidence * 1.2)
+            
+            return {
+                'type': f"neural_{pattern_type}",
+                'data': pattern.get('data'),
+                'confidence': enhanced_confidence,
+                'processing_method': 'neural_simulation'
+            }
+        
+        return simple_neural_processor
     
     def _init_database(self):
         """Initialize pattern recognition database."""

@@ -958,14 +958,16 @@ class HormoneSystemController:
             emergent_effects=emergent_effects
         )
 
-    def adapt_receptor_sensitivity(self, lobe: str, hormone: str, performance: float) -> None:
+    def adapt_receptor_sensitivity(self, lobe: str, hormone: str, performance: float,
+                                  context: Optional[Dict[str, Any]] = None) -> None:
         """
         Adapt receptor sensitivity based on performance feedback.
         
         Args:
             lobe: Name of the lobe
             hormone: Name of the hormone
-            performance: Performance feedback (-1.0 to 1.0)
+            performance: Performance feedback (0.0 to 1.0)
+            context: Optional context information
         """
         if lobe not in self.lobes:
             logging.warning(f"Unknown lobe '{lobe}' in adapt_receptor_sensitivity")
@@ -978,6 +980,27 @@ class HormoneSystemController:
         lobe_state = self.lobes[lobe]
         current_sensitivity = lobe_state.receptor_sensitivity.get(hormone, 0.5)
         
+        # Normalize performance to 0.0-1.0 range if it's in -1.0 to 1.0 range
+        if performance < 0:
+            performance = (performance + 1.0) / 2.0
+        
+        # Use advanced receptor sensitivity model if available
+        if hasattr(self, 'receptor_model') and self.receptor_model:
+            try:
+                new_sensitivity = self.receptor_model.adapt_sensitivity(
+                    lobe, hormone, performance, current_sensitivity, context=context
+                )
+                
+                # Update sensitivity
+                lobe_state.receptor_sensitivity[hormone] = new_sensitivity
+                
+                logging.debug(f"Advanced adaptation {hormone} receptor sensitivity in {lobe} from {current_sensitivity:.3f} to {new_sensitivity:.3f}")
+                return
+                
+            except Exception as e:
+                logging.warning(f"Advanced receptor adaptation failed, falling back to simple method: {e}")
+        
+        # Fallback to simple adaptation
         # Record performance for learning
         self.receptor_performance_history[lobe][hormone].append((current_sensitivity, performance))
         
@@ -985,23 +1008,32 @@ class HormoneSystemController:
         if len(self.receptor_performance_history[lobe][hormone]) > 100:
             self.receptor_performance_history[lobe][hormone] = self.receptor_performance_history[lobe][hormone][-100:]
         
-        # Adapt sensitivity based on performance
-        adaptation_rate = 0.01
-        
-        if performance > 0:
-            # Increase sensitivity for positive performance
-            new_sensitivity = current_sensitivity * (1 + adaptation_rate * performance)
+        # Simple adaptation based on performance
+        if performance > 0.8:
+            adjustment = 0.05 * (performance - 0.8)
+        elif performance < 0.5:
+            adjustment = -0.1 * (0.5 - performance)
         else:
-            # Decrease sensitivity for negative performance
-            new_sensitivity = current_sensitivity * (1 + adaptation_rate * performance)
+            adjustment = 0.02 * (performance - 0.65)
+        
+        # Apply context-based modulation
+        if context:
+            stress_level = context.get('stress_level', 0.0)
+            urgency = context.get('urgency', 0.0)
             
+            # Increase sensitivity under stress or urgency
+            if stress_level > 0.7 or urgency > 0.8:
+                adjustment += 0.03
+        
+        new_sensitivity = current_sensitivity + adjustment
+        
         # Constrain sensitivity bounds
         new_sensitivity = max(0.1, min(2.0, new_sensitivity))
         
         # Update sensitivity
         lobe_state.receptor_sensitivity[hormone] = new_sensitivity
         
-        logging.debug(f"Adapted {hormone} receptor sensitivity in {lobe} from {current_sensitivity:.2f} to {new_sensitivity:.2f}")
+        logging.debug(f"Simple adaptation {hormone} receptor sensitivity in {lobe} from {current_sensitivity:.3f} to {new_sensitivity:.3f}")
 
     def learn_optimal_hormone_profiles(self, context: Dict) -> Dict[str, float]:
         """

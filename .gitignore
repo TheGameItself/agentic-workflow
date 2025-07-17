@@ -2551,3 +2551,13 @@ test_venv/lib/python3.11/site-packages/setuptools-65.5.0.dist-info/RECORD
 test_venv/lib/python3.11/site-packages/setuptools-65.5.0.dist-info/REQUESTED
 test_venv/lib/python3.11/site-packages/setuptools-65.5.0.dist-info/top_level.txt
 test_venv/lib/python3.11/site-packages/setuptools-65.5.0.dist-info/WHEEL
+.kiro/steering/p2p.md
+.kiro/hooks/code-doc-sync.kiro.hook
+.kiro/hooks/cross-integration-alert.kiro.hook
+.kiro/hooks/stub-implementation-hook.kiro.hook
+.kiro/hooks/code-doc-sync.kiro.hook
+.kiro/hooks/cross-integration-alert.kiro.hook
+.kiro/hooks/stub-implementation-hook.kiro.hook
+.kiro/specs/documentation-update/design.md
+.kiro/specs/documentation-update/requirements.md
+.kiro/specs/documentation-update/tasks.md
