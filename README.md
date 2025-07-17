@@ -127,7 +127,6 @@ See the `docs/` vault for ready-to-use configuration snippets for Cursor, JetBra
 - `README.md` — This file
 - `requirements.txt`, `pyproject.toml`, `setup.py` — Packaging
 - `start_mcp.sh`, `start_mcp.bat`, `start_mcp.ps1` — Launch scripts
-- `idea.txt` — **Never remove or modify**
 - `.gitignore`, `LICENSE`
 
 > For the full, up-to-date file tree, see [`docs/FILETREE.txt`](docs/FILETREE.txt).
