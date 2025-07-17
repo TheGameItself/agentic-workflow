@@ -1,187 +1,177 @@
-#!/usr/bin/env python3
 """
-Test script for Core Infrastructure and Stub Elimination components.
+Test script for the Core System Infrastructure.
+
+This script tests the functionality of the CoreSystemInfrastructure class,
+including lobe registration, hormone communication, and event handling.
 """
+
+import logging
+import time
+import unittest
+from typing import Dict, Any, List
 
 import sys
-import asyncio
-from pathlib import Path
+import os
 
-# Add src to path
-sys.path.insert(0, str(Path(__file__).parent / "src"))
+# Add the project root to the Python path
+sys.path.insert(0, os.path.abspath('.'))
 
-from mcp.stub_elimination_engine import StubEliminationEngine, scan_project_for_stubs
-from mcp.implementation_validator import ImplementationValidator, validate_mcp_system
-from mcp.fallback_manager import FallbackManager, handle_error_with_fallback
+from src.mcp.core_system_infrastructure import CoreSystemInfrastructure
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("TestCoreInfrastructure")
 
 
-def test_stub_elimination_engine():
-    """Test the StubEliminationEngine."""
-    print("=" * 50)
-    print("Testing StubEliminationEngine")
-    print("=" * 50)
+class MockLobe:
+    """Mock lobe for testing."""
     
-    try:
-        # Test basic initialization
-        engine = StubEliminationEngine()
-        print("✓ StubEliminationEngine initialized successfully")
+    def __init__(self, name: str):
+        self.name = name
+        self.update_count = 0
+        self.received_events = []
+        self.context_packages = []
         
-        # Test stub scanning (limited scope to avoid long execution)
-        stubs = engine.scan_for_stubs([str(Path("src/mcp").resolve())])
-        print(f"✓ Scanned for stubs, found {len(stubs)} potential issues")
+    def update(self, context_package: Dict[str, Any]):
+        """Update method called by the core system."""
+        self.update_count += 1
+        self.context_packages.append(context_package)
         
-        # Test report generation
-        report = engine.get_stub_report()
-        print(f"✓ Generated stub report: {report.get('total_stubs', 0)} total stubs")
+    def register_event_handlers(self, event_bus):
+        """Register event handlers with the event bus."""
+        event_bus.subscribe(f"{self.name}_event", self.handle_event)
         
-        # Test convenience function
-        project_stubs = scan_project_for_stubs(str(Path(".").resolve()))
-        print(f"✓ Convenience function works: found {len(project_stubs)} stubs")
-        
-        return True
-        
-    except Exception as e:
-        print(f"✗ StubEliminationEngine test failed: {e}")
-        return False
+    def handle_event(self, event_data):
+        """Handle an event."""
+        self.received_events.append(event_data)
 
 
-def test_implementation_validator():
-    """Test the ImplementationValidator."""
-    print("\n" + "=" * 50)
-    print("Testing ImplementationValidator")
-    print("=" * 50)
+class TestCoreSystemInfrastructure(unittest.TestCase):
+    """Test cases for CoreSystemInfrastructure."""
     
-    try:
-        # Test basic initialization
-        validator = ImplementationValidator()
-        print("✓ ImplementationValidator initialized successfully")
+    def setUp(self):
+        """Set up the test environment."""
+        self.core_system = CoreSystemInfrastructure()
         
-        # Test module discovery
-        modules = validator._discover_modules()
-        print(f"✓ Discovered {len(modules)} modules")
-        
-        # Test validation config loading
-        config = validator.validation_config
-        print(f"✓ Loaded validation config with {len(config.get('validation_checks', []))} checks")
-        
-        # Test stub detection in production
-        no_stubs = validator.ensure_no_stubs_in_production()
-        print(f"✓ Production stub check: {'No critical stubs' if no_stubs else 'Found critical stubs'}")
-        
-        # Test convenience function
-        system_validation = validate_mcp_system(str(Path(".").resolve()))
-        print(f"✓ System validation completed: {system_validation.overall_completion:.1f}% complete")
-        
-        return True
-        
-    except Exception as e:
-        print(f"✗ ImplementationValidator test failed: {e}")
-        return False
-
-
-async def test_fallback_manager():
-    """Test the FallbackManager."""
-    print("\n" + "=" * 50)
-    print("Testing FallbackManager")
-    print("=" * 50)
-    
-    try:
-        # Test basic initialization
-        manager = FallbackManager()
-        print("✓ FallbackManager initialized successfully")
-        
-        # Test error statistics
-        stats = manager.get_error_statistics()
-        print(f"✓ Error statistics retrieved: {stats.get('total_errors', 0)} total errors")
-        
-        # Test fallback registry
-        rules_count = len(manager.fallback_registry.rules)
-        print(f"✓ Fallback registry has {rules_count} rules")
-        
-        # Test error handling with a simple error
-        test_error = ValueError("Test error for fallback")
-        test_context = {
-            'function_name': 'test_function',
-            'module_name': 'test_module',
-            'args': (),
-            'kwargs': {}
+        # Create mock lobes
+        self.mock_lobes = {
+            "task_management": MockLobe("task_management"),
+            "memory": MockLobe("memory"),
+            "pattern_recognition": MockLobe("pattern_recognition"),
+            "decision_making": MockLobe("decision_making")
         }
         
-        result = await manager.handle_error(test_error, test_context)
-        print(f"✓ Error handling test completed: {type(result)}")
-        
-        # Test convenience function
-        result2 = await handle_error_with_fallback(test_error, test_context)
-        print(f"✓ Convenience function works: {type(result2)}")
-        
-        # Test health assessment
-        health = manager._assess_system_health()
-        print(f"✓ System health: {health['status']} (score: {health['score']})")
-        
-        return True
-        
-    except Exception as e:
-        print(f"✗ FallbackManager test failed: {e}")
-        return False
-
-
-def test_integration():
-    """Test integration between components."""
-    print("\n" + "=" * 50)
-    print("Testing Component Integration")
-    print("=" * 50)
+        # Register mock lobes
+        for name, lobe in self.mock_lobes.items():
+            self.core_system.register_lobe(
+                name=name,
+                instance=lobe,
+                position=(0, 0, 0),
+                connected_lobes=list(self.mock_lobes.keys()),
+                is_left_hemisphere=(name in ["task_management", "decision_making"]),
+                is_experimental=False,
+                capabilities={"test"},
+                hormone_receptors={"dopamine": 0.8, "serotonin": 0.7}
+            )
     
-    try:
-        # Test that validator can use stub engine
-        validator = ImplementationValidator()
-        stub_engine = validator.stub_engine
-        print("✓ Validator integrates with StubEliminationEngine")
+    def tearDown(self):
+        """Clean up after the test."""
+        if self.core_system.running:
+            self.core_system.stop()
+    
+    def test_lobe_registration(self):
+        """Test lobe registration."""
+        # Check that lobes were registered
+        self.assertEqual(len(self.core_system.lobes), 4)
         
-        # Test that components can work together
-        stubs = stub_engine.scan_for_stubs([str(Path("src/mcp").resolve())])
-        if stubs:
-            print(f"✓ Found {len(stubs)} stubs that could be handled by fallback system")
-        else:
-            print("✓ No stubs found - system appears well-implemented")
+        # Check that lobes were registered with the hormone controller
+        for name in self.mock_lobes:
+            self.assertIn(name, self.core_system.hormone_controller.lobes)
+    
+    def test_start_stop(self):
+        """Test starting and stopping the core system."""
+        # Start the system
+        self.core_system.start()
+        self.assertTrue(self.core_system.running)
         
-        return True
+        # Wait for a bit to let the system run
+        time.sleep(1)
         
-    except Exception as e:
-        print(f"✗ Integration test failed: {e}")
-        return False
-
-
-async def main():
-    """Run all tests."""
-    print("Core Infrastructure and Stub Elimination Test Suite")
-    print("=" * 60)
+        # Stop the system
+        self.core_system.stop()
+        self.assertFalse(self.core_system.running)
     
-    results = []
+    def test_hormone_release(self):
+        """Test hormone release."""
+        # Start the system
+        self.core_system.start()
+        
+        # Release a hormone
+        self.core_system.release_hormone("task_management", "dopamine", 0.8)
+        
+        # Wait for a bit to let the hormone circulate
+        time.sleep(1)
+        
+        # Check hormone levels
+        hormone_levels = self.core_system.get_hormone_levels()
+        self.assertGreater(hormone_levels["dopamine"], 0)
     
-    # Run tests
-    results.append(test_stub_elimination_engine())
-    results.append(test_implementation_validator())
-    results.append(await test_fallback_manager())
-    results.append(test_integration())
+    def test_event_emission(self):
+        """Test event emission."""
+        # Start the system
+        self.core_system.start()
+        
+        # Emit an event
+        self.core_system.emit_event(
+            "task_management_event",
+            {"test": "data"},
+            signal_type="excitatory",
+            context={"source": "test"}
+        )
+        
+        # Wait for a bit to let the event be processed
+        time.sleep(1)
+        
+        # Check that the event was received
+        self.assertEqual(len(self.mock_lobes["task_management"].received_events), 1)
+        self.assertEqual(self.mock_lobes["task_management"].received_events[0]["data"]["test"], "data")
     
-    # Summary
-    print("\n" + "=" * 60)
-    print("TEST SUMMARY")
-    print("=" * 60)
+    def test_lobe_update(self):
+        """Test lobe updates."""
+        # Start the system
+        self.core_system.start()
+        
+        # Wait for a bit to let the lobes be updated
+        time.sleep(1)
+        
+        # Check that lobes were updated
+        for name, lobe in self.mock_lobes.items():
+            self.assertGreater(lobe.update_count, 0)
+            self.assertGreater(len(lobe.context_packages), 0)
     
-    passed = sum(results)
-    total = len(results)
+    def test_hemisphere_classification(self):
+        """Test hemisphere classification."""
+        # Get lobes by hemisphere
+        left_lobes = self.core_system.get_lobes_by_hemisphere(left_hemisphere=True)
+        right_lobes = self.core_system.get_lobes_by_hemisphere(left_hemisphere=False)
+        
+        # Check that lobes were classified correctly
+        self.assertEqual(len(left_lobes), 2)
+        self.assertEqual(len(right_lobes), 2)
+        self.assertIn("task_management", left_lobes)
+        self.assertIn("decision_making", left_lobes)
+        self.assertIn("memory", right_lobes)
+        self.assertIn("pattern_recognition", right_lobes)
     
-    print(f"Tests passed: {passed}/{total}")
-    
-    if passed == total:
-        print("🎉 All tests passed! Core infrastructure is working correctly.")
-        return True
-    else:
-        print("❌ Some tests failed. Please check the output above.")
-        return False
+    def test_capabilities(self):
+        """Test capability tracking."""
+        # Get capabilities
+        capabilities = self.core_system.get_lobe_capabilities()
+        
+        # Check that capabilities were tracked correctly
+        self.assertIn("test", capabilities)
+        self.assertEqual(len(capabilities["test"]), 4)
 
 
 if __name__ == "__main__":
-    success = asyncio.run(main())
-    sys.exit(0 if success else 1)
+    unittest.main()

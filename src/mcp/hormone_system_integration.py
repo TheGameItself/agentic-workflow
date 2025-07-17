@@ -3,7 +3,8 @@ Integration script for HormoneSystemController with BrainStateAggregator.
 
 This script demonstrates how to integrate the HormoneSystemController
 with the existing BrainStateAggregator for comprehensive brain-inspired
-hormone communication between lobes.
+hormone communication between lobes. It now leverages the CoreSystemInfrastructure
+for a more robust and complete implementation.
 """
 
 import logging
@@ -11,10 +12,14 @@ from typing import Dict, Any, Optional
 from mcp.hormone_system_controller import HormoneSystemController
 from mcp.brain_state_aggregator import BrainStateAggregator
 from mcp.lobes.experimental.lobe_event_bus import LobeEventBus
+from mcp.core_system_infrastructure import CoreSystemInfrastructure
 
 class HormoneSystemIntegration:
     """
     Integration class for connecting HormoneSystemController with BrainStateAggregator.
+    
+    This class now leverages the CoreSystemInfrastructure for a more robust
+    and complete implementation of the hormone system integration.
     """
     
     def __init__(self):
@@ -23,17 +28,13 @@ class HormoneSystemIntegration:
         logging.basicConfig(level=logging.INFO)
         self.logger = logging.getLogger("HormoneSystemIntegration")
         
-        # Create event bus for communication
-        self.event_bus = LobeEventBus()
+        # Create core system infrastructure
+        self.core_system = CoreSystemInfrastructure()
         
-        # Create hormone system controller
-        self.hormone_controller = HormoneSystemController(event_bus=self.event_bus)
-        
-        # Create brain state aggregator with hormone controller
-        self.brain_state_aggregator = BrainStateAggregator(
-            hormone_engine=self.hormone_controller,
-            event_bus=self.event_bus
-        )
+        # Get references to core components
+        self.event_bus = self.core_system.event_bus
+        self.hormone_controller = self.core_system.hormone_controller
+        self.brain_state_aggregator = self.core_system.brain_state_aggregator
         
         # Register lobes with the hormone system
         self._register_lobes()
@@ -201,13 +202,18 @@ class HormoneSystemIntegration:
             )
             self.logger.info(f"Released oxytocin for high trust signal (level: {trust_level})")
         
+    def start(self):
+        """Start the integration system."""
+        self.core_system.start()
+        self.logger.info("HormoneSystemIntegration started")
+        
     def update(self):
         """Update the integration system."""
-        # Process hormone cascades
-        cascade_result = self.hormone_controller.process_hormone_cascades()
+        # The core system handles updates automatically in its own thread
+        # This method is kept for backward compatibility
         
-        # Update brain state aggregator
-        self.brain_state_aggregator.update_buffers()
+        # Get cascade results for logging
+        cascade_result = self.hormone_controller.process_hormone_cascades()
         
         # Log cascade results
         if cascade_result.triggered_cascades:
@@ -217,23 +223,28 @@ class HormoneSystemIntegration:
             
     def get_hormone_levels(self) -> Dict[str, float]:
         """Get current hormone levels."""
-        return self.hormone_controller.get_levels()
+        return self.core_system.get_hormone_levels()
     
     def get_brain_state(self) -> Dict[str, Any]:
         """Get current brain state."""
-        return self.brain_state_aggregator.get_context_package("global")
+        return self.core_system.get_brain_state()
     
     def adapt_receptor_sensitivity(self, lobe: str, hormone: str, performance: float):
         """Adapt receptor sensitivity based on performance feedback."""
-        self.hormone_controller.adapt_receptor_sensitivity(lobe, hormone, performance)
+        self.core_system.adapt_receptor_sensitivity(lobe, hormone, performance)
         
     def learn_optimal_hormone_profiles(self, context: Dict) -> Dict[str, float]:
         """Learn optimal hormone profiles for specific contexts."""
-        return self.hormone_controller.learn_optimal_hormone_profiles(context)
+        return self.core_system.learn_optimal_hormone_profiles(context)
+    
+    def emit_event(self, event_type: str, data: Any, signal_type: str = "excitatory", 
+                  context: Dict = None, priority: int = 0):
+        """Emit an event on the event bus."""
+        self.core_system.emit_event(event_type, data, signal_type, context, priority)
     
     def shutdown(self):
         """Shut down the integration system."""
-        self.hormone_controller.stop()
+        self.core_system.stop()
         self.logger.info("HormoneSystemIntegration shut down")
 
 
@@ -243,12 +254,16 @@ if __name__ == "__main__":
     integration = HormoneSystemIntegration()
     
     try:
+        # Start the system
+        integration.start()
+        
         # Simulate some events
         integration.event_bus.emit("task_completed", {"importance": 0.8, "name": "Important Task"})
         integration.event_bus.emit("learning_event", {"importance": 0.7, "topic": "New Concept"})
         
-        # Update system
-        integration.update()
+        # Wait for a bit to let the system process
+        import time
+        time.sleep(2)
         
         # Get hormone levels
         hormone_levels = integration.get_hormone_levels()
@@ -269,6 +284,14 @@ if __name__ == "__main__":
         for hormone, level in optimal_profile.items():
             if level > 0.5:  # Only show significant levels
                 print(f"  {hormone}: {level:.2f}")
+        
+        # Emit a custom event
+        integration.emit_event(
+            "custom_event", 
+            {"data": "test data"}, 
+            signal_type="excitatory", 
+            context={"source": "example"}
+        )
                 
     finally:
         # Shut down
