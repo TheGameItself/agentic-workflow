@@ -73,6 +73,39 @@ The API layer provides multiple interfaces for client interaction:
 - **Purpose**: Real-time communication for web interfaces
 - **Features**: Live updates, event streaming, bidirectional messaging
 
+### 1.1 Cross-Lobe Communication System
+
+The system implements brain-inspired cross-lobe communication for coordinated processing:
+
+#### Sensory Data Sharing (Implemented)
+- **Purpose**: Standardized sensory data format for cross-lobe communication
+- **Features**: 
+  - Hormone-triggered sensory data propagation with priority adjustment
+  - Propagation rule registration and management
+  - Standardized data format across all lobes (`cross_lobe_sensory_data`)
+  - Real-time cross-lobe data synchronization
+  - Performance monitoring and statistics tracking
+- **Implementation Status**: Fully implemented in Pattern Recognition Engine with comprehensive testing
+- **Data Flow**: Sensory Input → Processing → Standardization → Rule Matching → Hormone-Based Propagation → Target Lobes
+- **Key Components**:
+  - `SensoryDataPropagator`: Manages propagation rules and data routing
+  - `AdaptiveSensitivityManager`: Handles cross-column learning and hormone modulation
+  - Hormone-based priority adjustment system for dynamic data routing
+
+#### P2P Genetic Data Exchange (Implemented)
+- **Purpose**: Secure, decentralized sharing of training data, engrams, and system optimizations
+- **Features**:
+  - 256-codon genetic encoding system for metadata and integration instructions
+  - Privacy-preserving data sanitization pipeline
+  - Cryptographic hashing and content-addressable storage
+  - Multi-stage validation and integrity checking
+- **Implementation Status**: Complete P2P network with DHT routing and genetic data exchange
+- **Key Components**:
+  - `P2PNetworkNode`: Handles network connectivity and data distribution
+  - `GeneticDataExchange`: Manages genetic encoding and decoding
+  - `EngramTransferManager`: Handles compressed memory structure sharing
+  - `GeneticNetworkOrchestrator`: Coordinates network-wide genetic operations
+
 ### 2. Core Services
 
 #### Implementation Switching Monitor

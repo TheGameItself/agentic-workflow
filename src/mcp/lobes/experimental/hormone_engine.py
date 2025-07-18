@@ -83,8 +83,222 @@ class HormoneEngine:
         return dict(self.levels)
 
     def receive_data(self, data: dict):
-        """Stub: Receive data from aggregator or adjacent lobes."""
-        logging.info(f"[HormoneEngine] Received data: {data}")
-        # TODO: Integrate received data into hormone state
+        """
+        Receive data from aggregator or adjacent lobes with hormone-based processing.
+        
+        Implements cross-lobe communication by translating received data into
+        appropriate hormone releases and level adjustments based on biological
+        hormone system patterns.
+        """
+        logging.info(f"[HormoneEngine] Received data from {data.get('source', 'unknown')}")
+        
+        try:
+            # Extract data components
+            source_lobe = data.get('source', 'unknown')
+            data_type = data.get('type', 'general')
+            content = data.get('content', {})
+            importance = data.get('importance', 0.5)
+            timestamp = data.get('timestamp', time.time())
+            
+            # Process different types of data and trigger appropriate hormone responses
+            if data_type == 'success_signal':
+                self._process_success_signal(content, source_lobe, importance)
+            elif data_type == 'error_signal':
+                self._process_error_signal(content, source_lobe, importance)
+            elif data_type == 'performance_data':
+                self._process_performance_data(content, source_lobe, importance)
+            elif data_type == 'user_feedback':
+                self._process_user_feedback(content, source_lobe, importance)
+            elif data_type == 'task_completion':
+                self._process_task_completion(content, source_lobe, importance)
+            elif data_type == 'learning_progress':
+                self._process_learning_progress(content, source_lobe, importance)
+            elif data_type == 'resource_status':
+                self._process_resource_status(content, source_lobe, importance)
+            else:
+                self._process_general_signal(content, source_lobe, importance)
+            
+            # Update cross-lobe communication tracking
+            if not hasattr(self, 'lobe_interactions'):
+                self.lobe_interactions = {}
+            
+            if source_lobe not in self.lobe_interactions:
+                self.lobe_interactions[source_lobe] = {
+                    'message_count': 0,
+                    'last_interaction': 0,
+                    'hormone_triggers': {},
+                    'average_importance': 0.5
+                }
+            
+            interaction = self.lobe_interactions[source_lobe]
+            interaction['message_count'] += 1
+            interaction['last_interaction'] = timestamp
+            interaction['average_importance'] = (
+                0.9 * interaction['average_importance'] + 0.1 * importance
+            )
+            
+            # Track which hormones this lobe tends to trigger
+            if data_type not in interaction['hormone_triggers']:
+                interaction['hormone_triggers'][data_type] = 0
+            interaction['hormone_triggers'][data_type] += 1
+            
+            logging.info(f"[HormoneEngine] Successfully processed {data_type} from {source_lobe}")
+            
+        except Exception as e:
+            logging.error(f"[HormoneEngine] Error processing received data: {e}")
+            # Release cortisol on processing errors
+            self._adjust('cortisol', 0.1)
+    
+    def _process_success_signal(self, content: dict, source: str, importance: float):
+        """Process success signals and release appropriate reward hormones."""
+        success_level = content.get('success_level', 0.5)
+        task_type = content.get('task_type', 'general')
+        
+        # Release dopamine for success
+        dopamine_amount = min(0.3, success_level * importance * 0.2)
+        self._adjust('dopamine', dopamine_amount)
+        
+        # Release serotonin for sustained well-being
+        if success_level > 0.8:
+            serotonin_amount = min(0.2, success_level * importance * 0.15)
+            self._adjust('serotonin', serotonin_amount)
+        
+        logging.info(f"[HormoneEngine] Success signal from {source}: dopamine +{dopamine_amount:.3f}")
+    
+    def _process_error_signal(self, content: dict, source: str, importance: float):
+        """Process error signals and release stress hormones."""
+        error_severity = content.get('severity', 0.5)
+        error_type = content.get('error_type', 'general')
+        recoverable = content.get('recoverable', True)
+        
+        # Release cortisol for stress response
+        cortisol_amount = min(0.4, error_severity * importance * 0.3)
+        self._adjust('cortisol', cortisol_amount)
+        
+        # If error is severe and non-recoverable, release more stress hormones
+        if error_severity > 0.8 and not recoverable:
+            additional_cortisol = min(0.2, error_severity * 0.2)
+            self._adjust('cortisol', additional_cortisol)
+        
+        logging.info(f"[HormoneEngine] Error signal from {source}: cortisol +{cortisol_amount:.3f}")
+    
+    def _process_performance_data(self, content: dict, source: str, importance: float):
+        """Process performance data and adjust hormone levels accordingly."""
+        performance_score = content.get('performance_score', 0.5)
+        response_time = content.get('response_time', 1.0)
+        accuracy = content.get('accuracy', 0.5)
+        
+        # Good performance triggers reward hormones
+        if performance_score > 0.7:
+            dopamine_amount = min(0.15, (performance_score - 0.5) * importance * 0.2)
+            self._adjust('dopamine', dopamine_amount)
+        
+        # Poor performance triggers stress response
+        elif performance_score < 0.3:
+            cortisol_amount = min(0.2, (0.5 - performance_score) * importance * 0.3)
+            self._adjust('cortisol', cortisol_amount)
+        
+        # Fast response times trigger small dopamine release
+        if response_time < 0.5:
+            speed_bonus = min(0.05, (0.5 - response_time) * importance * 0.1)
+            self._adjust('dopamine', speed_bonus)
+        
+        logging.info(f"[HormoneEngine] Performance data from {source}: score={performance_score:.3f}")
+    
+    def _process_user_feedback(self, content: dict, source: str, importance: float):
+        """Process user feedback and release appropriate hormones."""
+        satisfaction = content.get('satisfaction', 0.5)
+        feedback_type = content.get('feedback_type', 'general')
+        positive_feedback = content.get('positive_feedback', True)
+        
+        if positive_feedback and satisfaction > 0.6:
+            # Positive feedback releases dopamine and serotonin
+            dopamine_amount = min(0.25, satisfaction * importance * 0.3)
+            serotonin_amount = min(0.15, satisfaction * importance * 0.2)
+            
+            self._adjust('dopamine', dopamine_amount)
+            self._adjust('serotonin', serotonin_amount)
+            
+        elif not positive_feedback or satisfaction < 0.4:
+            # Negative feedback releases cortisol
+            cortisol_amount = min(0.3, (0.6 - satisfaction) * importance * 0.4)
+            self._adjust('cortisol', cortisol_amount)
+        
+        logging.info(f"[HormoneEngine] User feedback from {source}: satisfaction={satisfaction:.3f}")
+    
+    def _process_task_completion(self, content: dict, source: str, importance: float):
+        """Process task completion signals."""
+        completion_rate = content.get('completion_rate', 0.5)
+        task_difficulty = content.get('difficulty', 0.5)
+        time_taken = content.get('time_taken', 1.0)
+        
+        # Task completion releases dopamine, more for difficult tasks
+        base_dopamine = completion_rate * 0.1
+        difficulty_bonus = task_difficulty * 0.1
+        dopamine_amount = min(0.3, (base_dopamine + difficulty_bonus) * importance)
+        
+        self._adjust('dopamine', dopamine_amount)
+        
+        # Quick completion of difficult tasks gets extra reward
+        if completion_rate > 0.8 and task_difficulty > 0.7 and time_taken < 1.0:
+            bonus_dopamine = min(0.1, task_difficulty * importance * 0.1)
+            self._adjust('dopamine', bonus_dopamine)
+        
+        logging.info(f"[HormoneEngine] Task completion from {source}: rate={completion_rate:.3f}")
+    
+    def _process_learning_progress(self, content: dict, source: str, importance: float):
+        """Process learning progress signals."""
+        learning_rate = content.get('learning_rate', 0.5)
+        accuracy_improvement = content.get('accuracy_improvement', 0.0)
+        knowledge_gained = content.get('knowledge_gained', 0.5)
+        
+        # Learning progress releases growth hormone and dopamine
+        if learning_rate > 0.5:
+            # Note: growth_hormone not in default levels, using serotonin as substitute
+            serotonin_amount = min(0.2, learning_rate * importance * 0.25)
+            self._adjust('serotonin', serotonin_amount)
+        
+        # Significant improvement releases dopamine
+        if accuracy_improvement > 0.1:
+            dopamine_amount = min(0.15, accuracy_improvement * importance * 1.5)
+            self._adjust('dopamine', dopamine_amount)
+        
+        logging.info(f"[HormoneEngine] Learning progress from {source}: rate={learning_rate:.3f}")
+    
+    def _process_resource_status(self, content: dict, source: str, importance: float):
+        """Process resource status updates."""
+        memory_usage = content.get('memory_usage', 0.5)
+        cpu_usage = content.get('cpu_usage', 0.5)
+        storage_usage = content.get('storage_usage', 0.5)
+        
+        # High resource usage triggers stress response
+        max_usage = max(memory_usage, cpu_usage, storage_usage)
+        if max_usage > 0.8:
+            cortisol_amount = min(0.25, (max_usage - 0.5) * importance * 0.5)
+            self._adjust('cortisol', cortisol_amount)
+        
+        # Low resource usage allows for serotonin release (substitute for growth hormone)
+        elif max_usage < 0.3:
+            serotonin_amount = min(0.1, (0.5 - max_usage) * importance * 0.2)
+            self._adjust('serotonin', serotonin_amount)
+        
+        logging.info(f"[HormoneEngine] Resource status from {source}: max_usage={max_usage:.3f}")
+    
+    def _process_general_signal(self, content: dict, source: str, importance: float):
+        """Process general signals with default hormone response."""
+        signal_strength = content.get('signal_strength', 0.5)
+        signal_type = content.get('signal_type', 'neutral')
+        
+        # General positive signals release small amounts of serotonin
+        if signal_type == 'positive' or signal_strength > 0.7:
+            serotonin_amount = min(0.05, signal_strength * importance * 0.1)
+            self._adjust('serotonin', serotonin_amount)
+        
+        # General negative signals release small amounts of cortisol
+        elif signal_type == 'negative' or signal_strength < 0.3:
+            cortisol_amount = min(0.05, (0.5 - signal_strength) * importance * 0.1)
+            self._adjust('cortisol', cortisol_amount)
+        
+        logging.info(f"[HormoneEngine] General signal from {source}: type={signal_type}, strength={signal_strength:.3f}")
 
 # Usage: Instantiate HormoneEngine with the event bus in the MCP system. 

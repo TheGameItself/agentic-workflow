@@ -75,8 +75,35 @@ class PrometheusExporter:
                         self.end_headers()
                 
                 def log_message(self, format, *args):
-                    # Suppress access logs
-                    pass
+                    """
+                    Log HTTP access messages with brain-inspired filtering.
+                    
+                    Implements selective logging based on request importance and
+                    hormone-based attention mechanisms.
+                    """
+                    # Check if we should log this message based on importance
+                    message = format % args if args else format
+                    
+                    # Filter out routine health checks and metrics requests
+                    if any(pattern in message.lower() for pattern in ['/metrics', '/health', 'get /metrics']):
+                        # Suppress routine monitoring requests
+                        return
+                    
+                    # Log important requests (errors, unusual patterns)
+                    if any(pattern in message for pattern in ['404', '500', 'ERROR', 'POST', 'PUT', 'DELETE']):
+                        import logging
+                        logger = logging.getLogger('MetricsHandler')
+                        logger.info(f"HTTP: {message}")
+                        
+                        # If we have access to hormone system, release stress hormones for errors
+                        if hasattr(self.server, 'hormone_system') and ('404' in message or '500' in message):
+                            self.server.hormone_system.release_hormone('cortisol', 0.02)
+                    
+                    # For debugging, optionally log all messages
+                    if hasattr(self.server, 'debug_mode') and self.server.debug_mode:
+                        import logging
+                        logger = logging.getLogger('MetricsHandler')
+                        logger.debug(f"HTTP Debug: {message}")
             
             server = HTTPServer(('localhost', self.port), MetricsHandler)
             server.exporter = self

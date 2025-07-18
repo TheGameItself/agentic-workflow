@@ -161,11 +161,58 @@ python -m src.mcp.cli analyze-alignment --task-id <task-id> --preferences '{"qua
 ```
 
 #### Pattern Recognition Engine
-Identifies patterns in your work to improve efficiency.
+Identifies patterns in your work to improve efficiency with neural column architecture.
 
 ```bash
 # Recognize patterns in recent tasks
 python -m src.mcp.cli recognize-patterns --pattern-type "success_failure" --limit 20
+
+# Process sensory input through pattern recognition
+python -m src.mcp.cli process-sensory-input "user feedback data" --modality "textual"
+
+# Get cross-lobe sensory data (In Progress)
+python -m src.mcp.cli get-cross-lobe-data --modality "visual" --limit 10
+```
+
+#### Cross-Lobe Communication (Implemented)
+The system supports comprehensive brain-inspired communication between different cognitive lobes:
+
+```bash
+# View cross-lobe sharing statistics
+python -m src.mcp.cli cross-lobe-stats
+
+# Monitor hormone-triggered data propagation
+python -m src.mcp.cli monitor-hormone-propagation --duration 60
+
+# Test cross-lobe sensory data sharing
+python -m src.mcp.cli test-cross-lobe-sharing --modality visual --priority 0.8
+
+# Configure propagation rules
+python -m src.mcp.cli configure-propagation-rule \
+  --source pattern_recognition \
+  --targets alignment_engine,hormone_engine \
+  --data-types success,error \
+  --priority 0.7
+```
+
+#### P2P Genetic Data Exchange (Implemented)
+Secure, decentralized sharing of optimizations using genetic-inspired encoding:
+
+```bash
+# Start P2P network node
+python -m src.mcp.cli start-p2p-node --node-id organism_1 --port 10000
+
+# Share genetic optimization data
+python -m src.mcp.cli share-genetic-data \
+  --data-type neural_network \
+  --data-file model_weights.pkl \
+  --target-peers peer1,peer2
+
+# Monitor genetic data exchange
+python -m src.mcp.cli monitor-genetic-exchange --duration 300
+
+# View genetic network statistics
+python -m src.mcp.cli genetic-network-stats
 ```
 
 #### Mind Map Engine

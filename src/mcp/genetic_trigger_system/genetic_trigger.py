@@ -4,13 +4,33 @@ Genetic Trigger System for MCP System Upgrade.
 This module implements the Genetic Trigger System, which handles environmental
 adaptation through genetic encoding and selection, activating optimized pathways
 when similar conditions recur.
+
+Enhanced with dual implementation strategy, hormone integration, and epigenetic memory.
 """
 
+import asyncio
 import logging
 import random
 import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
+
+# Import enhanced genetic components (will be created)
+try:
+    from .neural_genetic_processor import NeuralGeneticProcessor
+    from .code_genetic_processor import CodeGeneticProcessor
+    from .hormone_system_interface import HormoneSystemInterface
+    from .adaptive_mutation_controller import AdaptiveMutationController
+    from .epigenetic_memory import EpigeneticMemory
+    from ..neural_network_models.performance_tracker import PerformanceTracker
+except ImportError:
+    # Fallback for missing components
+    NeuralGeneticProcessor = None
+    CodeGeneticProcessor = None
+    HormoneSystemInterface = None
+    AdaptiveMutationController = None
+    EpigeneticMemory = None
+    PerformanceTracker = None
 
 class GeneticTrigger:
     """

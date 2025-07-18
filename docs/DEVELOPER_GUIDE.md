@@ -183,6 +183,167 @@ class AlignmentEngine:
         }
 ```
 
+### 4.1 Cross-Lobe Sensory Data Sharing (Implemented)
+
+The cross-lobe sensory data sharing system enables standardized communication between cognitive lobes with comprehensive hormone-triggered propagation and adaptive sensitivity management:
+
+```python
+# Example: Implementing cross-lobe sensory data sharing
+class AdaptivePatternRecognitionEngine:
+    def __init__(self):
+        self.sensory_data_propagator = SensoryDataPropagator(event_bus)
+        self.adaptive_sensitivity_manager = AdaptiveSensitivityManager()
+        self.neural_columns = self._initialize_adaptive_columns()
+        
+    def implement_cross_lobe_sensory_data_sharing(self, sensory_data, hormone_levels=None):
+        """Share sensory data across lobes with hormone-triggered propagation."""
+        
+        # Create standardized sensory data format
+        standardized_data = self._create_standardized_format(
+            sensory_data, 
+            source_lobe='pattern_recognition',
+            target_lobe=None,  # Will be determined by propagation rules
+            priority=sensory_data.get('priority', 0.5)
+        )
+        
+        # Apply hormone-based priority adjustment
+        if hormone_levels:
+            adjusted_priority = self.sensory_data_propagator._adjust_priority_by_hormones(
+                standardized_data['priority'], hormone_levels, standardized_data['data_type']
+            )
+            standardized_data['priority'] = adjusted_priority
+        
+        # Propagate to target lobes using registered rules
+        propagation_result = self.sensory_data_propagator.propagate_sensory_data(
+            standardized_data, hormone_levels
+        )
+        
+        # Store sharing activity for statistics
+        self._store_sensory_data_sharing_activity(standardized_data, propagation_result)
+        
+        return {
+            'source_lobe': 'pattern_recognition',
+            'propagation_success': propagation_result['propagation_success'],
+            'target_lobes': propagation_result['target_lobes'],
+            'rules_applied': propagation_result['rules_applied'],
+            'adjusted_priority': standardized_data['priority']
+        }
+    
+    def process_adaptive_feedback_integration(self, feedback_data):
+        """Process comprehensive feedback with cross-modal learning."""
+        target_columns = feedback_data.get('target_columns', [])
+        hormone_levels = feedback_data.get('hormone_levels', {})
+        
+        processed_columns = []
+        for column_id in target_columns:
+            if column_id in self.neural_columns:
+                column = self.neural_columns[column_id]
+                integration_result = column.process_feedback_integration(feedback_data)
+                processed_columns.append({
+                    'column_id': column_id,
+                    'integration_result': integration_result
+                })
+        
+        # Apply hormone modulation across all columns
+        if hormone_levels:
+            self.adaptive_sensitivity_manager.apply_hormone_modulation(hormone_levels)
+        
+        # Apply cross-modal learning if enabled
+        cross_modal_learning_applied = False
+        if feedback_data.get('enable_cross_modal_learning', False):
+            self._apply_cross_modal_learning(feedback_data)
+            cross_modal_learning_applied = True
+        
+        return {
+            'processed_columns': processed_columns,
+            'cross_modal_learning_applied': cross_modal_learning_applied,
+            'hormone_modulation_applied': bool(hormone_levels),
+            'sensitivity_adjustments': self._get_sensitivity_adjustments()
+        }
+```
+
+#### Key Implementation Features:
+- **Standardized Data Format**: `cross_lobe_sensory_data` type with consistent structure
+- **Hormone-Triggered Propagation**: Dynamic priority adjustment based on dopamine, cortisol, norepinephrine, and serotonin levels
+- **Propagation Rule System**: Configurable rules for data routing between specific lobes
+- **Adaptive Sensitivity Management**: Cross-column learning and hormone-based sensitivity modulation
+- **Comprehensive Statistics**: Detailed tracking of sharing activity, rule usage, and performance metrics
+- **Real-Time Integration**: Immediate cross-lobe data availability with feedback processing
+
+### 4.2 P2P Genetic Data Exchange (Implemented)
+
+The P2P genetic data exchange system enables secure, decentralized sharing of optimizations using genetic-inspired encoding:
+
+```python
+# Example: P2P genetic data exchange implementation
+class P2PGeneticSystem:
+    def __init__(self, organism_id: str, port: int):
+        self.p2p_node = P2PNetworkNode(organism_id, port)
+        self.genetic_exchange = GeneticDataExchange(organism_id)
+        self.engram_manager = EngramTransferManager(organism_id, self.p2p_node)
+        self.orchestrator = GeneticNetworkOrchestrator()
+        
+    async def share_neural_optimization(self, neural_data, target_peers=None):
+        """Share neural network optimizations with genetic encoding."""
+        
+        # Create genetic packet with integration instructions
+        genetic_packet = self.genetic_exchange.create_genetic_packet(
+            data_type='neural_network',
+            data=neural_data,
+            metadata={
+                'integration_when': 'performance_threshold_0.8',
+                'integration_where': 'pattern_recognition_lobe',
+                'integration_how': 'weighted_merge',
+                'integration_why': 'improve_pattern_accuracy',
+                'integration_what': 'neural_weights',
+                'integration_order': 'after_validation'
+            }
+        )
+        
+        # Share via P2P network
+        if target_peers:
+            for peer in target_peers:
+                success = await self.p2p_node.share_genetic_data_to_peer(genetic_packet, peer)
+        else:
+            success = await self.p2p_node.broadcast_genetic_data(genetic_packet)
+        
+        return success
+    
+    async def receive_and_integrate_optimization(self, genetic_packet):
+        """Receive and integrate genetic optimization data."""
+        
+        # Decode genetic packet
+        decoded_data = self.genetic_exchange.decode_genetic_packet(genetic_packet)
+        
+        # Validate integration criteria
+        if self._validate_integration_criteria(decoded_data):
+            # Apply genetic instructions for integration
+            integration_result = await self._apply_genetic_integration(decoded_data)
+            return integration_result
+        
+        return {'success': False, 'reason': 'validation_failed'}
+    
+    def _validate_integration_criteria(self, decoded_data):
+        """Validate that integration criteria are met."""
+        metadata = decoded_data.get('metadata', {})
+        
+        # Check performance threshold
+        when_condition = metadata.get('integration_when', '')
+        if 'performance_threshold' in when_condition:
+            threshold = float(when_condition.split('_')[-1])
+            current_performance = self._get_current_performance()
+            return current_performance >= threshold
+        
+        return True
+```
+
+#### Key P2P Features:
+- **256-Codon Genetic Encoding**: Extended genetic alphabet for rich metadata encoding
+- **Integration Instructions**: When, where, how, why, what, and order specifications
+- **Privacy-Preserving**: Multi-stage data sanitization and cryptographic security
+- **DHT Routing**: Distributed hash table for efficient peer discovery and data routing
+- **Validation Pipeline**: Multi-stage validation for data integrity and source authenticity
+
 ## Development Workflow
 
 ### 1. Feature Development

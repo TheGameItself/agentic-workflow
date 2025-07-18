@@ -15,6 +15,7 @@ All project documentation—including architecture, API, user and developer guid
 - `API_DOCUMENTATION.md` — Core API reference
 - `USER_GUIDE.md` — User guide and onboarding
 - `DEVELOPER_GUIDE.md` — Developer documentation
+- `IMPLEMENTATION_STATUS.md` — Current implementation progress and status
 - `PLUGIN_DEVELOPMENT.md` — Plugin system and integration
 - `RESEARCH_SOURCES.md` — Research and references
 - `FILETREE.txt` — Canonical, up-to-date file tree

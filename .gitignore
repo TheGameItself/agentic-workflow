@@ -2675,3 +2675,6 @@ test_venv/lib/python3.11/site-packages/wheel-0.45.1.dist-info/METADATA
 test_venv/lib/python3.11/site-packages/wheel-0.45.1.dist-info/RECORD
 test_venv/lib/python3.11/site-packages/wheel-0.45.1.dist-info/REQUESTED
 test_venv/lib/python3.11/site-packages/wheel-0.45.1.dist-info/WHEEL
+.kiro/hooks/code-quality-analyzer.json
+.kiro/hooks/code-quality-analyzer.kiro.hook
+.kiro/hooks/p2p-genetic-analysis.kiro.hook

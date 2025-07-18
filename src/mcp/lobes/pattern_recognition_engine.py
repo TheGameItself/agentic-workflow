@@ -256,8 +256,17 @@ class QuantalPatternVesicle:
 
 class NeuralColumn:
     """
-    Neural column implementation inspired by cortical columns.
-    Each column specializes in processing specific pattern types with adaptive sensitivity.
+    Enhanced Neural column implementation inspired by cortical columns.
+    Each column specializes in processing specific pattern types with adaptive sensitivity,
+    sensory input processing, pattern response generation, and completion prediction.
+    
+    Features:
+    - Neural network alternatives with automatic switching
+    - Pattern association learning with strength tracking
+    - Completion prediction based on learned associations
+    - Adaptive sensitivity based on feedback
+    - Sensory input processing for different modalities
+    - Pattern response generation with context awareness
     """
     def __init__(self, column_id: str, pattern_types: List[str], position: Tuple[float, float, float] = (0, 0, 0)):
         self.column_id = column_id
@@ -271,11 +280,24 @@ class NeuralColumn:
         self.feedback_history = []
         self.logger = logging.getLogger(f"NeuralColumn_{column_id}")
         
-        # Neural network alternative for pattern processing
+        # Enhanced neural network alternative for pattern processing
         self.neural_processor = None
         self.algorithmic_processor = self._default_algorithmic_processor
         self.use_neural = False
         self.performance_metrics = {"neural": {}, "algorithmic": {}}
+        
+        # Enhanced sensory processing capabilities
+        self.sensory_receptors = {}  # Different receptor types for different modalities
+        self.response_patterns = {}  # Learned response patterns
+        self.association_strengths = {}  # Track association strengths over time
+        self.completion_accuracy = {}  # Track completion prediction accuracy
+        
+        # Adaptive learning parameters
+        self.adaptation_rate = 0.05
+        self.sensitivity_bounds = (0.1, 2.0)
+        self.learning_rate_bounds = (0.01, 0.3)
+        
+        self.logger.info(f"Enhanced NeuralColumn {column_id} initialized with pattern types: {pattern_types}")
         
     def _default_algorithmic_processor(self, pattern: Dict[str, Any]) -> Dict[str, Any]:
         """Default algorithmic pattern processor."""
@@ -466,6 +488,304 @@ class NeuralColumn:
         algo_score = algo_metrics.get('avg_confidence', 0.0) / max(algo_metrics.get('avg_processing_time', 1.0), 0.001)
         
         return neural_score > algo_score * 1.1  # 10% improvement threshold
+    
+    def process_sensory_input(self, sensory_data: Any, modality: str = "visual") -> Dict[str, Any]:
+        """Process sensory input through specialized receptors for this column."""
+        # Initialize receptor for this modality if not exists
+        if modality not in self.sensory_receptors:
+            self.sensory_receptors[modality] = {
+                'sensitivity': 1.0,
+                'adaptation_rate': 0.05,
+                'response_history': [],
+                'pattern_count': 0
+            }
+        
+        receptor = self.sensory_receptors[modality]
+        
+        # Extract patterns from sensory data
+        if isinstance(sensory_data, str):
+            patterns = [{"type": f"{modality}_text", "data": sensory_data, "confidence": 0.6}]
+        elif isinstance(sensory_data, dict):
+            patterns = [{"type": f"{modality}_structure", "data": sensory_data, "confidence": 0.7}]
+        elif isinstance(sensory_data, list):
+            patterns = [{"type": f"{modality}_sequence", "data": sensory_data, "confidence": 0.65}]
+        else:
+            patterns = [{"type": f"{modality}_raw", "data": str(sensory_data), "confidence": 0.5}]
+        
+        # Process patterns through column
+        processed_patterns = []
+        for pattern in patterns:
+            # Apply receptor sensitivity
+            pattern['confidence'] *= receptor['sensitivity']
+            
+            # Process through column
+            result = self.process_pattern(pattern)
+            processed_patterns.append(result)
+            
+            # Update receptor statistics
+            receptor['pattern_count'] += 1
+            receptor['response_history'].append({
+                'confidence': result.get('confidence', 0.0),
+                'activation': result.get('activation', 0.0),
+                'timestamp': time.time()
+            })
+            
+            # Keep history manageable
+            if len(receptor['response_history']) > 50:
+                receptor['response_history'].pop(0)
+        
+        return {
+            'modality': modality,
+            'column_id': self.column_id,
+            'processed_patterns': processed_patterns,
+            'receptor_sensitivity': receptor['sensitivity'],
+            'pattern_count': receptor['pattern_count'],
+            'timestamp': time.time()
+        }
+    
+    def generate_pattern_response(self, pattern: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Generate appropriate response to recognized pattern based on learned response patterns."""
+        pattern_type = pattern.get('type', 'unknown')
+        confidence = pattern.get('confidence', 0.5)
+        
+        # Check if we have learned response patterns for this type
+        if pattern_type in self.response_patterns:
+            response_template = self.response_patterns[pattern_type]
+            response_confidence = confidence * response_template.get('effectiveness', 1.0)
+            
+            response = {
+                'response_type': response_template.get('response_type', f"learned_response_to_{pattern_type}"),
+                'response_data': response_template.get('response_data'),
+                'confidence': min(1.0, response_confidence),
+                'activation_level': self.activation_state,
+                'generating_column': self.column_id,
+                'context': context,
+                'learned_response': True,
+                'timestamp': time.time()
+            }
+        else:
+            # Generate default response
+            response = {
+                'response_type': f"default_response_to_{pattern_type}",
+                'response_data': f"Processed {pattern_type} with confidence {confidence:.2f}",
+                'confidence': confidence * self.sensitivity,
+                'activation_level': self.activation_state,
+                'generating_column': self.column_id,
+                'context': context,
+                'learned_response': False,
+                'timestamp': time.time()
+            }
+        
+        # Store response pattern for learning
+        if pattern_type not in self.response_patterns:
+            self.response_patterns[pattern_type] = {
+                'response_type': response['response_type'],
+                'response_data': response['response_data'],
+                'effectiveness': 1.0,
+                'usage_count': 1
+            }
+        else:
+            self.response_patterns[pattern_type]['usage_count'] += 1
+        
+        return response
+    
+    def learn_pattern_association_with_strength(self, pattern1: Dict[str, Any], pattern2: Dict[str, Any], 
+                                              strength: float = 0.1, context: str = None):
+        """Enhanced pattern association learning with strength tracking and context."""
+        type1 = pattern1.get('type', 'unknown')
+        type2 = pattern2.get('type', 'unknown')
+        
+        # Create association key
+        association_key = f"{type1}_{type2}"
+        reverse_key = f"{type2}_{type1}"
+        
+        # Initialize association strengths if not exists
+        if association_key not in self.association_strengths:
+            self.association_strengths[association_key] = {
+                'strength': 0.0,
+                'reinforcements': 0,
+                'contexts': [],
+                'last_updated': time.time()
+            }
+        
+        # Update association strength
+        association = self.association_strengths[association_key]
+        association['strength'] += strength * self.learning_rate
+        association['reinforcements'] += 1
+        association['last_updated'] = time.time()
+        
+        # Add context if provided
+        if context and context not in association['contexts']:
+            association['contexts'].append(context)
+            if len(association['contexts']) > 10:  # Keep context list manageable
+                association['contexts'].pop(0)
+        
+        # Normalize strength to prevent unbounded growth
+        association['strength'] = min(1.0, association['strength'])
+        
+        # Also update individual pattern associations
+        if type1 not in self.pattern_associations:
+            self.pattern_associations[type1] = 0.0
+        if type2 not in self.pattern_associations:
+            self.pattern_associations[type2] = 0.0
+            
+        self.pattern_associations[type1] += strength * self.learning_rate * 0.5
+        self.pattern_associations[type2] += strength * self.learning_rate * 0.5
+        
+        # Normalize individual associations
+        self.pattern_associations[type1] = min(1.0, self.pattern_associations[type1])
+        self.pattern_associations[type2] = min(1.0, self.pattern_associations[type2])
+        
+        self.logger.info(f"Enhanced association learning: {type1} <-> {type2}, strength: {association['strength']:.3f}")
+    
+    def predict_pattern_completion_with_accuracy(self, partial_pattern: Dict[str, Any]) -> Dict[str, Any]:
+        """Enhanced pattern completion prediction with accuracy tracking."""
+        pattern_type = partial_pattern.get('type', 'unknown')
+        
+        # Check if we have completion accuracy data for this pattern type
+        if pattern_type in self.completion_accuracy:
+            accuracy_data = self.completion_accuracy[pattern_type]
+            base_confidence = accuracy_data.get('average_accuracy', 0.5)
+        else:
+            base_confidence = 0.3
+            self.completion_accuracy[pattern_type] = {
+                'predictions': 0,
+                'correct_predictions': 0,
+                'average_accuracy': 0.3,
+                'last_updated': time.time()
+            }
+        
+        # Use association strength to improve prediction
+        if pattern_type in self.pattern_associations:
+            association_boost = self.pattern_associations[pattern_type] * 0.3
+            completion_confidence = min(1.0, base_confidence + association_boost)
+        else:
+            completion_confidence = base_confidence
+        
+        # Generate completion prediction
+        prediction = {
+            'type': f"completed_{pattern_type}",
+            'data': partial_pattern.get('data'),
+            'confidence': completion_confidence,
+            'completion_source': 'enhanced_association_learning',
+            'column_id': self.column_id,
+            'base_accuracy': base_confidence,
+            'association_boost': self.pattern_associations.get(pattern_type, 0.0),
+            'prediction_id': f"{pattern_type}_{int(time.time())}",
+            'timestamp': time.time()
+        }
+        
+        # Store prediction for validation
+        self.completion_predictions[pattern_type] = prediction
+        
+        # Update prediction count
+        self.completion_accuracy[pattern_type]['predictions'] += 1
+        
+        return prediction
+    
+    def validate_completion_prediction(self, prediction_id: str, actual_result: Dict[str, Any], 
+                                     was_correct: bool):
+        """Validate a completion prediction and update accuracy metrics."""
+        # Find the pattern type from prediction_id
+        pattern_type = prediction_id.split('_')[0] if '_' in prediction_id else 'unknown'
+        
+        if pattern_type in self.completion_accuracy:
+            accuracy_data = self.completion_accuracy[pattern_type]
+            
+            if was_correct:
+                accuracy_data['correct_predictions'] += 1
+            
+            # Update average accuracy
+            if accuracy_data['predictions'] > 0:
+                accuracy_data['average_accuracy'] = (
+                    accuracy_data['correct_predictions'] / accuracy_data['predictions']
+                )
+            
+            accuracy_data['last_updated'] = time.time()
+            
+            self.logger.info(f"Completion prediction validated for {pattern_type}: "
+                           f"correct={was_correct}, accuracy={accuracy_data['average_accuracy']:.3f}")
+    
+    def adapt_sensitivity_enhanced(self, feedback: Dict[str, Any]):
+        """Enhanced sensitivity adaptation with multiple feedback dimensions."""
+        performance = feedback.get('performance', 0.5)
+        accuracy = feedback.get('accuracy', 0.5)
+        response_time = feedback.get('response_time', 1.0)
+        user_satisfaction = feedback.get('user_satisfaction', 0.5)
+        
+        # Calculate composite feedback score
+        composite_score = (
+            performance * 0.3 + 
+            accuracy * 0.3 + 
+            (1.0 / max(response_time, 0.1)) * 0.2 +  # Inverse of response time
+            user_satisfaction * 0.2
+        )
+        
+        # Adapt sensitivity based on composite score
+        if composite_score > 0.7:
+            # Good performance, increase sensitivity gradually
+            self.sensitivity = min(self.sensitivity_bounds[1], 
+                                 self.sensitivity * (1.0 + self.adaptation_rate))
+        elif composite_score < 0.3:
+            # Poor performance, decrease sensitivity
+            self.sensitivity = max(self.sensitivity_bounds[0], 
+                                 self.sensitivity * (1.0 - self.adaptation_rate))
+        
+        # Adapt learning rate based on accuracy
+        if accuracy > 0.8:
+            self.learning_rate = min(self.learning_rate_bounds[1], 
+                                   self.learning_rate * 1.02)
+        elif accuracy < 0.4:
+            self.learning_rate = max(self.learning_rate_bounds[0], 
+                                   self.learning_rate * 0.98)
+        
+        # Store enhanced feedback
+        enhanced_feedback = feedback.copy()
+        enhanced_feedback.update({
+            'composite_score': composite_score,
+            'sensitivity_after': self.sensitivity,
+            'learning_rate_after': self.learning_rate,
+            'timestamp': time.time()
+        })
+        
+        self.feedback_history.append(enhanced_feedback)
+        if len(self.feedback_history) > 100:
+            self.feedback_history.pop(0)
+            
+        self.logger.info(f"Enhanced sensitivity adaptation: composite_score={composite_score:.3f}, "
+                        f"sensitivity={self.sensitivity:.3f}, learning_rate={self.learning_rate:.3f}")
+    
+    def get_column_performance_summary(self) -> Dict[str, Any]:
+        """Get comprehensive performance summary for this column."""
+        return {
+            'column_id': self.column_id,
+            'pattern_types': self.pattern_types,
+            'position': self.position,
+            'activation_state': self.activation_state,
+            'sensitivity': self.sensitivity,
+            'learning_rate': self.learning_rate,
+            'use_neural': self.use_neural,
+            'performance_metrics': self.performance_metrics,
+            'sensory_receptors': {
+                modality: {
+                    'sensitivity': receptor['sensitivity'],
+                    'pattern_count': receptor['pattern_count'],
+                    'avg_confidence': sum(h['confidence'] for h in receptor['response_history'][-10:]) / min(len(receptor['response_history']), 10) if receptor['response_history'] else 0.0
+                }
+                for modality, receptor in self.sensory_receptors.items()
+            },
+            'association_count': len(self.pattern_associations),
+            'response_patterns_count': len(self.response_patterns),
+            'completion_accuracy': {
+                pattern_type: data['average_accuracy']
+                for pattern_type, data in self.completion_accuracy.items()
+            },
+            'feedback_count': len(self.feedback_history),
+            'recent_feedback_score': (
+                sum(f.get('composite_score', 0.5) for f in self.feedback_history[-5:]) / 
+                min(len(self.feedback_history), 5)
+            ) if self.feedback_history else 0.5
+        }
 
 
 class PatternRecognitionEngine:
@@ -660,36 +980,57 @@ class PatternRecognitionEngine:
         return predict_pattern_completion
     
     def _initialize_neural_columns(self):
-        """Initialize default neural columns for common pattern types."""
-        # Text processing column
+        """Initialize enhanced neural columns for common pattern types with specialized capabilities."""
+        # Text processing column with enhanced sensory capabilities
         self.neural_columns['text_processor'] = NeuralColumn(
             'text_processor',
-            ['text', 'string', 'word'],
+            ['text', 'string', 'word', 'textual', 'linguistic'],
             position=(0, 0, 0)
         )
         
-        # Visual processing column
+        # Visual processing column with spatial awareness
         self.neural_columns['visual_processor'] = NeuralColumn(
             'visual_processor',
-            ['visual', 'image', 'spatial'],
+            ['visual', 'image', 'spatial', 'geometric', 'visual_pattern'],
             position=(1, 0, 0)
         )
         
-        # Sequence processing column
+        # Sequence processing column with temporal patterns
         self.neural_columns['sequence_processor'] = NeuralColumn(
             'sequence_processor',
-            ['list', 'sequence', 'array'],
+            ['list', 'sequence', 'array', 'temporal', 'ordered'],
             position=(0, 1, 0)
         )
         
-        # Structure processing column
+        # Structure processing column with hierarchical patterns
         self.neural_columns['structure_processor'] = NeuralColumn(
             'structure_processor',
-            ['dict', 'object', 'structure'],
+            ['dict', 'object', 'structure', 'hierarchical', 'nested'],
             position=(1, 1, 0)
         )
         
-        self.logger.info(f"Initialized {len(self.neural_columns)} neural columns")
+        # Auditory processing column for sound patterns
+        self.neural_columns['auditory_processor'] = NeuralColumn(
+            'auditory_processor',
+            ['audio', 'sound', 'frequency', 'acoustic', 'auditory'],
+            position=(0, 0, 1)
+        )
+        
+        # Tactile processing column for touch patterns
+        self.neural_columns['tactile_processor'] = NeuralColumn(
+            'tactile_processor',
+            ['tactile', 'touch', 'pressure', 'texture', 'haptic'],
+            position=(1, 0, 1)
+        )
+        
+        # Multi-modal processing column for complex patterns
+        self.neural_columns['multimodal_processor'] = NeuralColumn(
+            'multimodal_processor',
+            ['multimodal', 'complex', 'combined', 'integrated', 'fusion'],
+            position=(0.5, 0.5, 0.5)
+        )
+        
+        self.logger.info(f"Initialized {len(self.neural_columns)} enhanced neural columns with specialized capabilities")
     
     def create_neural_column(self, column_id: str, pattern_types: List[str], 
                            position: Tuple[float, float, float] = (0, 0, 0)) -> NeuralColumn:
@@ -2098,12 +2439,76 @@ class PatternRecognitionEngine:
     def cross_lobe_integration(self, lobe_name: str = "", data: Any = None) -> Any:
         """
         Integrate with other lobes for cross-engine research and feedback.
+        
+        This method implements hormone-based cross-lobe communication following
+        the brain-inspired architecture. It processes incoming data from other
+        lobes and shares relevant pattern information.
+        
+        Args:
+            lobe_name: Name of the requesting lobe (e.g., 'VectorLobe', 'PhysicsLobe')
+            data: Optional data payload from the requesting lobe
+            
+        Returns:
+            Dict containing relevant patterns and state information for the requesting lobe
+            
         Example: call VectorLobe or PhysicsLobe for additional context.
         See idea.txt, README.md, ARCHITECTURE.md.
         """
-        self.logger.info(f"[PatternRecognitionEngine] Cross-lobe integration called with {lobe_name}.")
-        # Placeholder: simulate integration
-        return self.get_patterns()
+        self.logger.info(f"[PatternRecognitionEngine] Cross-lobe integration with {lobe_name}")
+        
+        try:
+            # Process incoming data if provided
+            if data is not None:
+                self.receive_data(data)
+            
+            # Prepare response based on requesting lobe type
+            response = {
+                'lobe_name': 'PatternRecognitionEngine',
+                'timestamp': time.time(),
+                'patterns': self.get_patterns(),
+                'column_states': self.column_states,
+                'confidence_scores': self.pattern_confidence
+            }
+            
+            # Lobe-specific data sharing
+            if lobe_name.lower() in ['vectorlobe', 'vector_lobe']:
+                # Share pattern vectors and embeddings
+                response['pattern_vectors'] = self._extract_pattern_vectors()
+                response['similarity_scores'] = self._calculate_pattern_similarities()
+                
+            elif lobe_name.lower() in ['physicslobe', 'physics_lobe']:
+                # Share spatial and temporal pattern relationships
+                response['spatial_patterns'] = self._extract_spatial_patterns()
+                response['temporal_sequences'] = self._extract_temporal_patterns()
+                
+            elif lobe_name.lower() in ['memorylobe', 'memory_lobe']:
+                # Share pattern associations and memory links
+                response['pattern_associations'] = self._extract_pattern_associations()
+                response['memory_strength'] = self._calculate_memory_strength()
+                
+            elif lobe_name.lower() in ['scientificlobe', 'scientific_lobe']:
+                # Share pattern hypotheses and experimental data
+                response['pattern_hypotheses'] = self._generate_pattern_hypotheses()
+                response['experimental_results'] = self._extract_experimental_patterns()
+                
+            else:
+                # Generic cross-lobe sharing
+                response['recent_patterns'] = self.get_recent_patterns(limit=10)
+                response['high_confidence_patterns'] = self._get_high_confidence_patterns()
+            
+            # Trigger hormone release for successful cross-lobe communication
+            if hasattr(self, 'hormone_system'):
+                self.hormone_system.release_hormone('dopamine', 0.1)  # Small reward for cooperation
+                
+            self.logger.info(f"[PatternRecognitionEngine] Successfully integrated with {lobe_name}")
+            return response
+            
+        except Exception as e:
+            self.logger.error(f"[PatternRecognitionEngine] Cross-lobe integration error: {e}")
+            # Trigger stress hormone on failure
+            if hasattr(self, 'hormone_system'):
+                self.hormone_system.release_hormone('cortisol', 0.05)
+            return {'error': str(e), 'lobe_name': 'PatternRecognitionEngine'}
 
     def usage_example(self):
         """
@@ -2130,6 +2535,809 @@ class PatternRecognitionEngine:
         }
 
     def receive_data(self, data: dict):
-        """Stub: Receive data from aggregator or adjacent lobes."""
-        self.logger.info(f"[PatternRecognitionEngine] Received data: {data}")
-        # TODO: Integrate received data into engine state 
+        """
+        Receive and integrate data from aggregator or adjacent lobes.
+        
+        This method processes incoming data from other lobes in the brain-inspired
+        architecture, updating internal state and triggering appropriate responses
+        based on the hormone system and genetic triggers.
+        
+        Args:
+            data: Dictionary containing data from other lobes, including:
+                - lobe_name: Source lobe identifier
+                - patterns: Pattern data to integrate
+                - hormone_levels: Current hormone state
+                - context: Contextual information
+                - timestamp: When data was sent
+        """
+        self.logger.info(f"[PatternRecognitionEngine] Received data from: {data.get('lobe_name', 'unknown')}")
+        
+        try:
+            # Extract key information from received data
+            source_lobe = data.get('lobe_name', 'unknown')
+            patterns = data.get('patterns', [])
+            hormone_levels = data.get('hormone_levels', {})
+            context = data.get('context', {})
+            timestamp = data.get('timestamp', time.time())
+            
+            # Process received patterns
+            if patterns:
+                self._integrate_external_patterns(patterns, source_lobe, context)
+            
+            # Update hormone-sensitive parameters
+            if hormone_levels:
+                self._adapt_to_hormone_levels(hormone_levels)
+            
+            # Store cross-lobe interaction in associative memory
+            if hasattr(self, 'associative_memory'):
+                self.associative_memory.add(
+                    pattern={'type': 'cross_lobe_data', 'source': source_lobe, 'data': data},
+                    context=f"cross_lobe_integration_{source_lobe}",
+                    feedback={'integration_success': True, 'timestamp': timestamp}
+                )
+            
+            # Update working memory with relevant information
+            if hasattr(self.working_memory, 'add'):
+                self.working_memory.add({
+                    'type': 'cross_lobe_integration',
+                    'source': source_lobe,
+                    'pattern_count': len(patterns) if patterns else 0,
+                    'timestamp': timestamp
+                })
+            
+            # Trigger hormone release for successful data integration
+            if hasattr(self, 'hormone_system'):
+                # Small dopamine release for successful cooperation
+                self.hormone_system.release_hormone('dopamine', 0.05)
+                
+                # Growth hormone if learning new patterns
+                if patterns and len(patterns) > 0:
+                    self.hormone_system.release_hormone('growth_hormone', 0.02)
+            
+            # Update column states based on received data
+            self._update_columns_from_external_data(data)
+            
+            self.logger.info(f"[PatternRecognitionEngine] Successfully integrated data from {source_lobe}")
+            
+        except Exception as e:
+            self.logger.error(f"[PatternRecognitionEngine] Error receiving data: {e}")
+            
+            # Trigger stress hormone on integration failure
+            if hasattr(self, 'hormone_system'):
+                self.hormone_system.release_hormone('cortisol', 0.03)
+            
+            # Store failed integration attempt
+            if hasattr(self, 'associative_memory'):
+                self.associative_memory.add(
+                    pattern={'type': 'integration_failure', 'error': str(e), 'data': data},
+                    context='cross_lobe_integration_error',
+                    feedback={'integration_success': False, 'error': str(e)}
+                )
+    
+    def _integrate_external_patterns(self, patterns: List[Dict[str, Any]], source_lobe: str, context: Dict[str, Any]):
+        """
+        Integrate patterns received from external lobes into the pattern recognition system.
+        
+        Args:
+            patterns: List of pattern dictionaries from external lobe
+            source_lobe: Name of the source lobe
+            context: Contextual information about the patterns
+        """
+        try:
+            for pattern in patterns:
+                # Add source information to pattern
+                enhanced_pattern = pattern.copy()
+                enhanced_pattern['source_lobe'] = source_lobe
+                enhanced_pattern['integration_timestamp'] = time.time()
+                enhanced_pattern['context'] = context
+                
+                # Process pattern through our recognition system
+                recognized = self.recognize_patterns([enhanced_pattern])
+                
+                # Update pattern confidence based on cross-lobe validation
+                if recognized:
+                    original_confidence = pattern.get('confidence', 0.5)
+                    cross_validation_boost = 0.1  # Small boost for cross-lobe validation
+                    enhanced_confidence = min(1.0, original_confidence + cross_validation_boost)
+                    
+                    # Store enhanced pattern
+                    self._store_pattern(enhanced_pattern, enhanced_confidence)
+                    
+            self.logger.info(f"[PatternRecognitionEngine] Integrated {len(patterns)} patterns from {source_lobe}")
+            
+        except Exception as e:
+            self.logger.error(f"[PatternRecognitionEngine] Error integrating external patterns: {e}")
+    
+    def _adapt_to_hormone_levels(self, hormone_levels: Dict[str, float]):
+        """
+        Adapt pattern recognition parameters based on current hormone levels.
+        
+        Args:
+            hormone_levels: Dictionary of hormone names and their current levels
+        """
+        try:
+            # Dopamine affects learning rate and sensitivity
+            dopamine = hormone_levels.get('dopamine', 0.5)
+            if dopamine > 0.7:
+                # High dopamine increases learning rate and sensitivity
+                for column in self.neural_columns.values():
+                    column.learning_rate = min(column.learning_rate_bounds[1], 
+                                             column.learning_rate * 1.02)
+                    column.sensitivity = min(column.sensitivity_bounds[1], 
+                                           column.sensitivity * 1.01)
+            elif dopamine < 0.3:
+                # Low dopamine decreases learning rate and sensitivity
+                for column in self.neural_columns.values():
+                    column.learning_rate = max(column.learning_rate_bounds[0], 
+                                             column.learning_rate * 0.98)
+                    column.sensitivity = max(column.sensitivity_bounds[0], 
+                                           column.sensitivity * 0.99)
+            
+            # Cortisol affects pattern confidence thresholds
+            cortisol = hormone_levels.get('cortisol', 0.2)
+            if cortisol > 0.5:
+                # High stress reduces confidence in pattern recognition
+                self.confidence_threshold = max(0.3, self.confidence_threshold * 0.95)
+            else:
+                # Low stress allows higher confidence
+                self.confidence_threshold = min(0.8, self.confidence_threshold * 1.01)
+            
+            # Growth hormone affects pattern association strength
+            growth_hormone = hormone_levels.get('growth_hormone', 0.3)
+            if growth_hormone > 0.5:
+                # High growth hormone strengthens pattern associations
+                self.association_strength_multiplier = min(2.0, 
+                    getattr(self, 'association_strength_multiplier', 1.0) * 1.05)
+            
+            # Serotonin affects overall system stability
+            serotonin = hormone_levels.get('serotonin', 0.6)
+            if serotonin < 0.4:
+                # Low serotonin increases system volatility
+                self.pattern_decay_rate = min(0.99, 
+                    getattr(self, 'pattern_decay_rate', 0.95) * 1.02)
+            
+            self.logger.info(f"[PatternRecognitionEngine] Adapted to hormone levels: {hormone_levels}")
+            
+        except Exception as e:
+            self.logger.error(f"[PatternRecognitionEngine] Error adapting to hormone levels: {e}")
+    
+    def _update_columns_from_external_data(self, data: Dict[str, Any]):
+        """
+        Update neural column states based on external data from other lobes.
+        
+        Args:
+            data: External data containing patterns and context
+        """
+        try:
+            patterns = data.get('patterns', [])
+            source_lobe = data.get('lobe_name', 'unknown')
+            
+            # Update columns based on pattern types in external data
+            for pattern in patterns:
+                pattern_type = pattern.get('type', 'unknown')
+                
+                # Find columns that can process this pattern type
+                relevant_columns = []
+                for column_id, column in self.neural_columns.items():
+                    if any(pt in pattern_type.lower() for pt in column.pattern_types):
+                        relevant_columns.append(column)
+                
+                # Update relevant columns with external pattern information
+                for column in relevant_columns:
+                    # Slight activation boost from cross-lobe validation
+                    column.activation_state = min(1.0, column.activation_state + 0.05)
+                    
+                    # Learn association with source lobe
+                    if hasattr(column, 'learn_pattern_association_with_strength'):
+                        external_pattern = {
+                            'type': f"{source_lobe}_pattern",
+                            'data': pattern.get('data'),
+                            'confidence': pattern.get('confidence', 0.5)
+                        }
+                        column.learn_pattern_association_with_strength(
+                            pattern, external_pattern, 
+                            strength=0.05, 
+                            context=f"cross_lobe_{source_lobe}"
+                        )
+            
+            self.logger.info(f"[PatternRecognitionEngine] Updated columns from {source_lobe} data")
+            
+        except Exception as e:
+            self.logger.error(f"[PatternRecognitionEngine] Error updating columns from external data: {e}")
+    
+    def _extract_pattern_vectors(self) -> List[Dict[str, Any]]:
+        """Extract pattern vectors for sharing with vector-based lobes."""
+        try:
+            vectors = []
+            for pattern_id, pattern_data in self.patterns.items():
+                if isinstance(pattern_data, dict):
+                    vector_info = {
+                        'pattern_id': pattern_id,
+                        'pattern_type': pattern_data.get('type', 'unknown'),
+                        'confidence': pattern_data.get('confidence', 0.5),
+                        'vector_representation': self._create_pattern_vector(pattern_data),
+                        'timestamp': pattern_data.get('timestamp', time.time())
+                    }
+                    vectors.append(vector_info)
+            
+            return vectors[:50]  # Limit to most recent 50 patterns
+            
+        except Exception as e:
+            self.logger.error(f"[PatternRecognitionEngine] Error extracting pattern vectors: {e}")
+            return []
+    
+    def _create_pattern_vector(self, pattern: Dict[str, Any]) -> List[float]:
+        """Create a simple vector representation of a pattern."""
+        try:
+            # Simple hash-based vector creation (placeholder for more sophisticated methods)
+            pattern_str = str(pattern.get('data', ''))
+            pattern_type = pattern.get('type', 'unknown')
+            confidence = pattern.get('confidence', 0.5)
+            
+            # Create a simple 10-dimensional vector
+            vector = [0.0] * 10
+            
+            # Use hash values to populate vector dimensions
+            for i, char in enumerate(pattern_str[:10]):
+                vector[i] = (ord(char) % 100) / 100.0
+            
+            # Add pattern type influence
+            type_hash = hash(pattern_type) % 1000
+            for i in range(len(vector)):
+                vector[i] += (type_hash % (i + 1)) / 1000.0
+            
+            # Scale by confidence
+            vector = [v * confidence for v in vector]
+            
+            return vector
+            
+        except Exception as e:
+            self.logger.error(f"[PatternRecognitionEngine] Error creating pattern vector: {e}")
+            return [0.0] * 10
+    
+    def _calculate_pattern_similarities(self) -> Dict[str, float]:
+        """Calculate similarity scores between patterns."""
+        try:
+            similarities = {}
+            pattern_items = list(self.patterns.items())
+            
+            for i, (id1, pattern1) in enumerate(pattern_items):
+                for j, (id2, pattern2) in enumerate(pattern_items[i+1:], i+1):
+                    similarity = self._calculate_similarity(pattern1, pattern2)
+                    similarities[f"{id1}_{id2}"] = similarity
+            
+            return similarities
+            
+        except Exception as e:
+            self.logger.error(f"[PatternRecognitionEngine] Error calculating pattern similarities: {e}")
+            return {}
+    
+    def _calculate_similarity(self, pattern1: Dict[str, Any], pattern2: Dict[str, Any]) -> float:
+        """Calculate similarity between two patterns."""
+        try:
+            # Simple similarity based on type and confidence
+            type_similarity = 1.0 if pattern1.get('type') == pattern2.get('type') else 0.3
+            
+            conf1 = pattern1.get('confidence', 0.5)
+            conf2 = pattern2.get('confidence', 0.5)
+            confidence_similarity = 1.0 - abs(conf1 - conf2)
+            
+            # Data similarity (simple string comparison)
+            data1 = str(pattern1.get('data', ''))
+            data2 = str(pattern2.get('data', ''))
+            
+            if data1 and data2:
+                common_chars = len(set(data1.lower()) & set(data2.lower()))
+                total_chars = len(set(data1.lower()) | set(data2.lower()))
+                data_similarity = common_chars / max(total_chars, 1)
+            else:
+                data_similarity = 0.0
+            
+            # Weighted average
+            overall_similarity = (
+                type_similarity * 0.4 + 
+                confidence_similarity * 0.3 + 
+                data_similarity * 0.3
+            )
+            
+            return overall_similarity
+            
+        except Exception as e:
+            self.logger.error(f"[PatternRecognitionEngine] Error calculating similarity: {e}")
+            return 0.0
+    
+    def _extract_spatial_patterns(self) -> List[Dict[str, Any]]:
+        """Extract spatial pattern relationships for physics-based lobes."""
+        try:
+            spatial_patterns = []
+            
+            for column_id, column in self.neural_columns.items():
+                if hasattr(column, 'position'):
+                    spatial_info = {
+                        'column_id': column_id,
+                        'position': column.position,
+                        'activation_state': column.activation_state,
+                        'pattern_types': column.pattern_types,
+                        'spatial_relationships': self._calculate_spatial_relationships(column)
+                    }
+                    spatial_patterns.append(spatial_info)
+            
+            return spatial_patterns
+            
+        except Exception as e:
+            self.logger.error(f"[PatternRecognitionEngine] Error extracting spatial patterns: {e}")
+            return []
+    
+    def _calculate_spatial_relationships(self, column) -> Dict[str, Any]:
+        """Calculate spatial relationships for a neural column."""
+        try:
+            relationships = {
+                'neighbors': [],
+                'distance_map': {},
+                'activation_gradient': 0.0
+            }
+            
+            # Find neighboring columns
+            for other_id, other_column in self.neural_columns.items():
+                if other_id != column.column_id and hasattr(other_column, 'position'):
+                    distance = self._calculate_distance(column.position, other_column.position)
+                    relationships['distance_map'][other_id] = distance
+                    
+                    if distance < 2.0:  # Arbitrary threshold for "neighbors"
+                        relationships['neighbors'].append({
+                            'column_id': other_id,
+                            'distance': distance,
+                            'activation_difference': abs(column.activation_state - other_column.activation_state)
+                        })
+            
+            # Calculate activation gradient
+            if relationships['neighbors']:
+                total_diff = sum(n['activation_difference'] for n in relationships['neighbors'])
+                relationships['activation_gradient'] = total_diff / len(relationships['neighbors'])
+            
+            return relationships
+            
+        except Exception as e:
+            self.logger.error(f"[PatternRecognitionEngine] Error calculating spatial relationships: {e}")
+            return {}
+    
+    def _calculate_distance(self, pos1: Tuple[float, float, float], pos2: Tuple[float, float, float]) -> float:
+        """Calculate Euclidean distance between two 3D positions."""
+        try:
+            return ((pos1[0] - pos2[0])**2 + (pos1[1] - pos2[1])**2 + (pos1[2] - pos2[2])**2)**0.5
+        except Exception as e:
+            self.logger.error(f"[PatternRecognitionEngine] Error calculating distance: {e}")
+            return float('inf')
+    
+    def _extract_temporal_patterns(self) -> List[Dict[str, Any]]:
+        """Extract temporal pattern sequences for time-based analysis."""
+        try:
+            temporal_patterns = []
+            
+            # Get patterns with timestamps
+            timestamped_patterns = []
+            for pattern_id, pattern_data in self.patterns.items():
+                if isinstance(pattern_data, dict) and 'timestamp' in pattern_data:
+                    timestamped_patterns.append((pattern_data['timestamp'], pattern_id, pattern_data))
+            
+            # Sort by timestamp
+            timestamped_patterns.sort(key=lambda x: x[0])
+            
+            # Create temporal sequences
+            sequence_length = 5
+            for i in range(len(timestamped_patterns) - sequence_length + 1):
+                sequence = timestamped_patterns[i:i + sequence_length]
+                
+                temporal_info = {
+                    'sequence_start': sequence[0][0],
+                    'sequence_end': sequence[-1][0],
+                    'duration': sequence[-1][0] - sequence[0][0],
+                    'pattern_sequence': [
+                        {
+                            'pattern_id': item[1],
+                            'pattern_type': item[2].get('type', 'unknown'),
+                            'confidence': item[2].get('confidence', 0.5),
+                            'timestamp': item[0]
+                        }
+                        for item in sequence
+                    ],
+                    'sequence_confidence': sum(item[2].get('confidence', 0.5) for item in sequence) / len(sequence)
+                }
+                temporal_patterns.append(temporal_info)
+            
+            return temporal_patterns[-20:]  # Return most recent 20 sequences
+            
+        except Exception as e:
+            self.logger.error(f"[PatternRecognitionEngine] Error extracting temporal patterns: {e}")
+            return []
+    
+    def _extract_pattern_associations(self) -> Dict[str, Any]:
+        """Extract pattern associations for sharing with memory-based lobes."""
+        try:
+            associations = {
+                'column_associations': {},
+                'global_associations': {},
+                'association_strengths': {},
+                'total_associations': 0
+            }
+            
+            # Extract associations from neural columns
+            for column_id, column in self.neural_columns.items():
+                if hasattr(column, 'pattern_associations') and column.pattern_associations:
+                    associations['column_associations'][column_id] = column.pattern_associations.copy()
+                
+                if hasattr(column, 'association_strengths') and column.association_strengths:
+                    associations['association_strengths'][column_id] = column.association_strengths.copy()
+            
+            # Calculate global association patterns
+            all_pattern_types = set()
+            for column_associations in associations['column_associations'].values():
+                all_pattern_types.update(column_associations.keys())
+            
+            for pattern_type in all_pattern_types:
+                total_strength = 0.0
+                column_count = 0
+                
+                for column_associations in associations['column_associations'].values():
+                    if pattern_type in column_associations:
+                        total_strength += column_associations[pattern_type]
+                        column_count += 1
+                
+                if column_count > 0:
+                    associations['global_associations'][pattern_type] = {
+                        'average_strength': total_strength / column_count,
+                        'total_strength': total_strength,
+                        'column_count': column_count,
+                        'prevalence': column_count / len(self.neural_columns)
+                    }
+            
+            associations['total_associations'] = len(associations['global_associations'])
+            
+            return associations
+            
+        except Exception as e:
+            self.logger.error(f"[PatternRecognitionEngine] Error extracting pattern associations: {e}")
+            return {'column_associations': {}, 'global_associations': {}, 'total_associations': 0}
+    
+    def _calculate_memory_strength(self) -> Dict[str, float]:
+        """Calculate overall memory strength metrics."""
+        try:
+            memory_metrics = {
+                'average_pattern_confidence': 0.0,
+                'total_patterns': 0,
+                'high_confidence_ratio': 0.0,
+                'association_density': 0.0,
+                'memory_coherence': 0.0
+            }
+            
+            # Calculate pattern confidence metrics
+            if self.patterns:
+                confidences = []
+                high_confidence_count = 0
+                
+                for pattern_data in self.patterns.values():
+                    if isinstance(pattern_data, dict):
+                        confidence = pattern_data.get('confidence', 0.5)
+                        confidences.append(confidence)
+                        if confidence > 0.7:
+                            high_confidence_count += 1
+                
+                if confidences:
+                    memory_metrics['average_pattern_confidence'] = sum(confidences) / len(confidences)
+                    memory_metrics['total_patterns'] = len(confidences)
+                    memory_metrics['high_confidence_ratio'] = high_confidence_count / len(confidences)
+            
+            # Calculate association density
+            total_associations = 0
+            for column in self.neural_columns.values():
+                if hasattr(column, 'pattern_associations'):
+                    total_associations += len(column.pattern_associations)
+            
+            if memory_metrics['total_patterns'] > 0:
+                memory_metrics['association_density'] = total_associations / memory_metrics['total_patterns']
+            
+            # Calculate memory coherence (how well patterns are interconnected)
+            if total_associations > 0:
+                coherence_score = 0.0
+                coherence_count = 0
+                
+                for column in self.neural_columns.values():
+                    if hasattr(column, 'association_strengths'):
+                        for assoc_data in column.association_strengths.values():
+                            coherence_score += assoc_data.get('strength', 0.0)
+                            coherence_count += 1
+                
+                if coherence_count > 0:
+                    memory_metrics['memory_coherence'] = coherence_score / coherence_count
+            
+            return memory_metrics
+            
+        except Exception as e:
+            self.logger.error(f"[PatternRecognitionEngine] Error calculating memory strength: {e}")
+            return {'average_pattern_confidence': 0.0, 'total_patterns': 0, 'memory_coherence': 0.0}
+    
+    def _generate_pattern_hypotheses(self) -> List[Dict[str, Any]]:
+        """Generate pattern hypotheses for scientific analysis."""
+        try:
+            hypotheses = []
+            
+            # Analyze pattern trends and generate hypotheses
+            pattern_types = {}
+            confidence_trends = {}
+            
+            # Collect pattern statistics
+            for pattern_id, pattern_data in self.patterns.items():
+                if isinstance(pattern_data, dict):
+                    pattern_type = pattern_data.get('type', 'unknown')
+                    confidence = pattern_data.get('confidence', 0.5)
+                    timestamp = pattern_data.get('timestamp', time.time())
+                    
+                    if pattern_type not in pattern_types:
+                        pattern_types[pattern_type] = []
+                    pattern_types[pattern_type].append({
+                        'confidence': confidence,
+                        'timestamp': timestamp,
+                        'pattern_id': pattern_id
+                    })
+            
+            # Generate hypotheses based on pattern analysis
+            for pattern_type, pattern_list in pattern_types.items():
+                if len(pattern_list) >= 3:  # Need minimum data for hypothesis
+                    confidences = [p['confidence'] for p in pattern_list]
+                    avg_confidence = sum(confidences) / len(confidences)
+                    confidence_variance = sum((c - avg_confidence)**2 for c in confidences) / len(confidences)
+                    
+                    # Hypothesis 1: Pattern confidence trend
+                    if len(pattern_list) >= 5:
+                        recent_confidence = sum(p['confidence'] for p in pattern_list[-3:]) / 3
+                        early_confidence = sum(p['confidence'] for p in pattern_list[:3]) / 3
+                        
+                        if recent_confidence > early_confidence + 0.1:
+                            hypotheses.append({
+                                'hypothesis_type': 'confidence_improvement',
+                                'pattern_type': pattern_type,
+                                'description': f"Pattern recognition confidence for {pattern_type} is improving over time",
+                                'evidence': {
+                                    'early_confidence': early_confidence,
+                                    'recent_confidence': recent_confidence,
+                                    'improvement': recent_confidence - early_confidence
+                                },
+                                'confidence': 0.7,
+                                'testable': True
+                            })
+                    
+                    # Hypothesis 2: Pattern stability
+                    if confidence_variance < 0.05:
+                        hypotheses.append({
+                            'hypothesis_type': 'pattern_stability',
+                            'pattern_type': pattern_type,
+                            'description': f"Pattern {pattern_type} shows consistent recognition confidence",
+                            'evidence': {
+                                'average_confidence': avg_confidence,
+                                'variance': confidence_variance,
+                                'sample_size': len(pattern_list)
+                            },
+                            'confidence': 0.8,
+                            'testable': True
+                        })
+                    
+                    # Hypothesis 3: Pattern frequency correlation
+                    if len(pattern_list) > 10:
+                        hypotheses.append({
+                            'hypothesis_type': 'frequency_correlation',
+                            'pattern_type': pattern_type,
+                            'description': f"High frequency pattern {pattern_type} may indicate system specialization",
+                            'evidence': {
+                                'frequency': len(pattern_list),
+                                'average_confidence': avg_confidence,
+                                'specialization_score': len(pattern_list) * avg_confidence
+                            },
+                            'confidence': 0.6,
+                            'testable': True
+                        })
+            
+            # Cross-pattern hypotheses
+            if len(pattern_types) >= 2:
+                type_confidences = {
+                    ptype: sum(p['confidence'] for p in plist) / len(plist)
+                    for ptype, plist in pattern_types.items()
+                    if len(plist) >= 2
+                }
+                
+                if len(type_confidences) >= 2:
+                    best_type = max(type_confidences.keys(), key=lambda k: type_confidences[k])
+                    worst_type = min(type_confidences.keys(), key=lambda k: type_confidences[k])
+                    
+                    if type_confidences[best_type] - type_confidences[worst_type] > 0.2:
+                        hypotheses.append({
+                            'hypothesis_type': 'specialization_difference',
+                            'pattern_type': 'cross_pattern',
+                            'description': f"System shows specialization: better at {best_type} than {worst_type}",
+                            'evidence': {
+                                'best_type': best_type,
+                                'best_confidence': type_confidences[best_type],
+                                'worst_type': worst_type,
+                                'worst_confidence': type_confidences[worst_type],
+                                'difference': type_confidences[best_type] - type_confidences[worst_type]
+                            },
+                            'confidence': 0.75,
+                            'testable': True
+                        })
+            
+            return hypotheses[:10]  # Return top 10 hypotheses
+            
+        except Exception as e:
+            self.logger.error(f"[PatternRecognitionEngine] Error generating pattern hypotheses: {e}")
+            return []
+    
+    def _extract_experimental_patterns(self) -> List[Dict[str, Any]]:
+        """Extract patterns that could serve as experimental data."""
+        try:
+            experimental_patterns = []
+            
+            # Find patterns with varying confidence levels for experimentation
+            confidence_buckets = {'low': [], 'medium': [], 'high': []}
+            
+            for pattern_id, pattern_data in self.patterns.items():
+                if isinstance(pattern_data, dict):
+                    confidence = pattern_data.get('confidence', 0.5)
+                    
+                    if confidence < 0.4:
+                        confidence_buckets['low'].append((pattern_id, pattern_data))
+                    elif confidence < 0.7:
+                        confidence_buckets['medium'].append((pattern_id, pattern_data))
+                    else:
+                        confidence_buckets['high'].append((pattern_id, pattern_data))
+            
+            # Create experimental datasets
+            for bucket_name, patterns in confidence_buckets.items():
+                if patterns:
+                    experimental_patterns.append({
+                        'experiment_type': f"{bucket_name}_confidence_analysis",
+                        'description': f"Analysis of {bucket_name} confidence patterns",
+                        'sample_size': len(patterns),
+                        'patterns': [
+                            {
+                                'pattern_id': pid,
+                                'pattern_type': pdata.get('type', 'unknown'),
+                                'confidence': pdata.get('confidence', 0.5),
+                                'data_summary': str(pdata.get('data', ''))[:100]  # Truncated for privacy
+                            }
+                            for pid, pdata in patterns[:5]  # Sample of 5 patterns
+                        ],
+                        'statistical_summary': {
+                            'mean_confidence': sum(p[1].get('confidence', 0.5) for p in patterns) / len(patterns),
+                            'pattern_types': list(set(p[1].get('type', 'unknown') for p in patterns)),
+                            'sample_variance': self._calculate_variance([p[1].get('confidence', 0.5) for p in patterns])
+                        }
+                    })
+            
+            # Add column performance experiments
+            for column_id, column in self.neural_columns.items():
+                if hasattr(column, 'performance_metrics') and column.performance_metrics:
+                    experimental_patterns.append({
+                        'experiment_type': 'column_performance_analysis',
+                        'description': f"Performance analysis for neural column {column_id}",
+                        'column_id': column_id,
+                        'pattern_types': column.pattern_types,
+                        'performance_data': {
+                            'algorithmic_metrics': column.performance_metrics.get('algorithmic', {}),
+                            'neural_metrics': column.performance_metrics.get('neural', {}),
+                            'use_neural': column.use_neural,
+                            'activation_state': column.activation_state
+                        }
+                    })
+            
+            return experimental_patterns
+            
+        except Exception as e:
+            self.logger.error(f"[PatternRecognitionEngine] Error extracting experimental patterns: {e}")
+            return []
+    
+    def _calculate_variance(self, values: List[float]) -> float:
+        """Calculate variance of a list of values."""
+        if not values:
+            return 0.0
+        
+        mean = sum(values) / len(values)
+        variance = sum((x - mean)**2 for x in values) / len(values)
+        return variance
+    
+    def _get_high_confidence_patterns(self, threshold: float = 0.7) -> List[Dict[str, Any]]:
+        """Get patterns with confidence above threshold."""
+        try:
+            high_confidence = []
+            
+            for pattern_id, pattern_data in self.patterns.items():
+                if isinstance(pattern_data, dict):
+                    confidence = pattern_data.get('confidence', 0.5)
+                    if confidence >= threshold:
+                        high_confidence.append({
+                            'pattern_id': pattern_id,
+                            'pattern_type': pattern_data.get('type', 'unknown'),
+                            'confidence': confidence,
+                            'data': pattern_data.get('data'),
+                            'timestamp': pattern_data.get('timestamp', time.time())
+                        })
+            
+            # Sort by confidence (highest first)
+            high_confidence.sort(key=lambda x: x['confidence'], reverse=True)
+            
+            return high_confidence[:20]  # Return top 20
+            
+        except Exception as e:
+            self.logger.error(f"[PatternRecognitionEngine] Error getting high confidence patterns: {e}")
+            return []
+    
+    def get_recent_patterns(self, limit: int = 10) -> List[Dict[str, Any]]:
+        """Get most recently processed patterns."""
+        try:
+            recent_patterns = []
+            
+            # Get patterns with timestamps
+            timestamped_patterns = []
+            for pattern_id, pattern_data in self.patterns.items():
+                if isinstance(pattern_data, dict):
+                    timestamp = pattern_data.get('timestamp', 0)
+                    timestamped_patterns.append((timestamp, pattern_id, pattern_data))
+            
+            # Sort by timestamp (most recent first)
+            timestamped_patterns.sort(key=lambda x: x[0], reverse=True)
+            
+            # Format for return
+            for timestamp, pattern_id, pattern_data in timestamped_patterns[:limit]:
+                recent_patterns.append({
+                    'pattern_id': pattern_id,
+                    'pattern_type': pattern_data.get('type', 'unknown'),
+                    'confidence': pattern_data.get('confidence', 0.5),
+                    'data': pattern_data.get('data'),
+                    'timestamp': timestamp
+                })
+            
+            return recent_patterns
+            
+        except Exception as e:
+            self.logger.error(f"[PatternRecognitionEngine] Error getting recent patterns: {e}")
+            return []
+    
+    def _store_pattern(self, pattern: Dict[str, Any], confidence: float):
+        """Store a pattern with enhanced confidence in the pattern database."""
+        try:
+            pattern_id = f"pattern_{int(time.time())}_{hash(str(pattern))}"
+            
+            enhanced_pattern = pattern.copy()
+            enhanced_pattern['confidence'] = confidence
+            enhanced_pattern['timestamp'] = time.time()
+            enhanced_pattern['stored_by'] = 'cross_lobe_integration'
+            
+            # Store in patterns dictionary
+            self.patterns[pattern_id] = enhanced_pattern
+            
+            # Store in database if available
+            if hasattr(self, 'db_path') and self.db_path:
+                try:
+                    conn = sqlite3.connect(self.db_path)
+                    cursor = conn.cursor()
+                    
+                    cursor.execute("""
+                        INSERT INTO recognized_patterns 
+                        (pattern_type, pattern_data, confidence, context, created_at)
+                        VALUES (?, ?, ?, ?, ?)
+                    """, (
+                        enhanced_pattern.get('type', 'unknown'),
+                        json.dumps(enhanced_pattern.get('data')),
+                        confidence,
+                        enhanced_pattern.get('context', 'cross_lobe_integration'),
+                        datetime.now().isoformat()
+                    ))
+                    
+                    conn.commit()
+                    conn.close()
+                    
+                except Exception as db_error:
+                    self.logger.warning(f"[PatternRecognitionEngine] Database storage failed: {db_error}")
+            
+            self.logger.info(f"[PatternRecognitionEngine] Stored enhanced pattern {pattern_id} with confidence {confidence:.3f}")
+            
+        except Exception as e:
+            self.logger.error(f"[PatternRecognitionEngine] Error storing pattern: {e}")
