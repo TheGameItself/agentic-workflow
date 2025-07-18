@@ -268,8 +268,8 @@ class EngramCompressor:
         }
         
         return compressed_bytes, params    
-  
-  def _sparse_coding_decompress(self, compressed_data: bytes, 
+    
+    def _sparse_coding_decompress(self, compressed_data: bytes, 
                                  params: Dict[str, Any]) -> Dict[str, Any]:
         """Sparse coding decompression"""
         decompressed = pickle.loads(zlib.decompress(compressed_data))

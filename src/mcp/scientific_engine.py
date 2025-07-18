@@ -640,6 +640,220 @@ class ScientificProcessEngine:
             ),
         }
 
+    def formulate_hypothesis(self, observation: Dict[str, Any]) -> str:
+        """
+        Formulate a hypothesis from an observation.
+
+        Args:
+            observation: Observation data containing patterns, context, and variables
+
+        Returns:
+            The ID of the formulated hypothesis
+        """
+        # Extract key elements from observation
+        pattern = observation.get("pattern", "")
+        context = observation.get("context", {})
+        variables = observation.get("variables", [])
+        confidence = observation.get("confidence", 0.5)
+
+        # Generate hypothesis statement based on observation
+        if pattern and variables:
+            statement = f"Based on observed pattern '{pattern}', we hypothesize that {variables[0]} influences the outcome"
+            if len(variables) > 1:
+                statement += f" in conjunction with {', '.join(variables[1:])}"
+        else:
+            statement = f"Hypothesis derived from observation: {observation.get('description', 'Unknown pattern')}"
+
+        # Determine category based on observation type
+        category = self._determine_hypothesis_category(observation)
+
+        # Create hypothesis
+        hypothesis_id = self.propose_hypothesis(
+            statement=statement,
+            category=category,
+            variables=variables,
+            assumptions=context.get("assumptions", []),
+            confidence=confidence
+        )
+
+        return hypothesis_id
+
+    def design_experiment(
+        self,
+        hypothesis_id: str,
+        methodology: str = "randomized_control",
+        sample_size: Optional[int] = None,
+        duration_days: Optional[int] = None,
+        variables: Optional[Dict[str, Any]] = None,
+    ) -> str:
+        """
+        Design an experiment to test a hypothesis.
+
+        Args:
+            hypothesis_id: ID of the hypothesis to test
+            methodology: Experimental methodology
+            sample_size: Sample size for the experiment
+            duration_days: Duration of the experiment
+            variables: Variables to control and measure
+
+        Returns:
+            The ID of the designed experiment
+        """
+        if methodology not in self.methodologies:
+            methodology = "randomized_control"
+
+        # Get hypothesis
+        hypothesis = self._get_hypothesis(hypothesis_id)
+        if not hypothesis:
+            raise ValueError(f"Hypothesis {hypothesis_id} not found")
+
+        # Determine optimal parameters if not provided
+        if sample_size is None:
+            sample_size = self._calculate_optimal_sample_size(hypothesis, methodology)
+
+        if duration_days is None:
+            duration_days = self._calculate_optimal_duration(hypothesis, methodology)
+
+        if variables is None:
+            variables = self._extract_variables_from_hypothesis(hypothesis)
+
+        # Design control and experimental groups
+        control_group = self._design_control_group(variables)
+        experimental_group = self._design_experimental_group(variables)
+
+        experiment_id = self._generate_experiment_id(hypothesis_id, methodology)
+
+        experiment = Experiment(
+            id=experiment_id,
+            hypothesis_id=hypothesis_id,
+            methodology=methodology,
+            sample_size=sample_size,
+            duration_days=duration_days,
+            variables=variables,
+            control_group=control_group,
+            experimental_group=experimental_group,
+            created_at=datetime.now(),
+            status="designed",
+            results=None,
+            statistical_significance=None,
+        )
+
+        # Store experiment
+        self._store_experiment(experiment)
+
+        return experiment_id
+
+    def execute_experiment(self, experiment_design: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Execute an experiment based on the design.
+
+        Args:
+            experiment_design: Complete experiment design specification
+
+        Returns:
+            Experiment results with analysis
+        """
+        experiment_id = experiment_design.get("id")
+        if not experiment_id:
+            raise ValueError("Experiment design must include an ID")
+
+        # Run the experiment
+        results = self.run_experiment(experiment_id)
+        
+        # Add execution metadata
+        results["execution_timestamp"] = datetime.now().isoformat()
+        results["design_parameters"] = experiment_design
+        
+        return results
+
+    def analyze_results(self, experiment_result: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Analyze experiment results with comprehensive statistical analysis.
+
+        Args:
+            experiment_result: Results from experiment execution
+
+        Returns:
+            Comprehensive analysis including statistical significance, effect sizes, and conclusions
+        """
+        experiment_id = experiment_result.get("experiment_id")
+        if not experiment_id:
+            raise ValueError("Experiment result must include experiment_id")
+
+        # Get detailed analysis
+        analysis = self.analyze_hypothesis(experiment_result.get("hypothesis_id", ""))
+        
+        # Add advanced statistical analysis
+        results_data = experiment_result.get("results", {})
+        if results_data:
+            advanced_analysis = self._perform_advanced_statistical_analysis(results_data)
+            analysis["advanced_statistics"] = advanced_analysis
+            analysis["interpretation"] = self._interpret_statistical_results(advanced_analysis)
+            analysis["recommendations"] = self._generate_analysis_recommendations(advanced_analysis)
+
+        return analysis
+
+    def validate_against_research(self, finding: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Validate findings against peer-reviewed research.
+
+        Args:
+            finding: Research finding to validate
+
+        Returns:
+            Validation results with research comparison
+        """
+        # Extract key elements from finding
+        hypothesis_statement = finding.get("hypothesis", "")
+        effect_size = finding.get("effect_size", 0.0)
+        confidence_level = finding.get("confidence", 0.5)
+        domain = finding.get("domain", "general")
+
+        # Simulate research validation (in real implementation, would query research databases)
+        validation_result = {
+            "finding_id": finding.get("id", "unknown"),
+            "validation_status": self._determine_validation_status(effect_size, confidence_level),
+            "research_support": self._find_supporting_research(hypothesis_statement, domain),
+            "contradictory_evidence": self._find_contradictory_research(hypothesis_statement, domain),
+            "novelty_score": self._assess_finding_novelty(hypothesis_statement, domain),
+            "replication_recommendations": self._generate_replication_recommendations(finding),
+            "validation_timestamp": datetime.now().isoformat()
+        }
+
+        # Store validation result
+        self._store_validation_result(validation_result)
+
+        return validation_result
+
+    def update_knowledge_base(self, validated_finding: Dict[str, Any]) -> None:
+        """
+        Update the knowledge base with validated findings.
+
+        Args:
+            validated_finding: Validated research finding to add to knowledge base
+        """
+        # Extract validation information
+        validation_status = validated_finding.get("validation_status", "unvalidated")
+        
+        if validation_status in ["validated", "strongly_supported"]:
+            # Add to knowledge base
+            knowledge_entry = {
+                "finding": validated_finding,
+                "added_timestamp": datetime.now().isoformat(),
+                "confidence_score": validated_finding.get("confidence", 0.5),
+                "research_support_level": validated_finding.get("research_support", {}).get("support_level", "low")
+            }
+            
+            self._add_to_knowledge_base(knowledge_entry)
+            
+            # Update related hypotheses
+            self._update_related_hypotheses(validated_finding)
+            
+            # Generate new research questions
+            new_questions = self._generate_follow_up_questions(validated_finding)
+            for question in new_questions:
+                self._store_research_question(question)
+
     def _calculate_optimal_sample_size(
         self, hypothesis: Hypothesis, methodology: str
     ) -> int:

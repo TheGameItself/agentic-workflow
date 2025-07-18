@@ -445,8 +445,8 @@ class GeneticDataExchange:
         
         conn.commit()
         conn.close()    
-  
-  def encode_neural_network(self, model_data: Dict[str, Any]) -> GeneticChromosome:
+    
+    def encode_neural_network(self, model_data: Dict[str, Any]) -> GeneticChromosome:
         """Encode neural network into genetic chromosome"""
         elements = []
         
