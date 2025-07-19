@@ -1,866 +1,452 @@
-# MCP Developer Guide
+# 🔧 MCP Developer Guide
 
 ## Overview
 
-This guide covers development patterns and requirements for the MCP Agentic Workflow Accelerator. The system is currently in active development with most core components completed.
+Welcome to MCP development! This guide provides essential information for developers working with the MCP Agentic Workflow Accelerator.
 
 **Current Status**: ✅ 100% Complete - Production Ready 🎉
 
-## Documentation Structure
+## Quick Start for Developers
 
-The documentation is organized as an Obsidian vault with focused, cross-linked documents:
+### 1. Get Started
+- **[[development/Development-Setup]]** - Set up your development environment
+- **[[development/Core-Architecture]]** - Understand the system architecture
+- **[[development/Development-Workflow]]** - Learn the development process
 
-### Core System Documentation
-- [[ARCHITECTURE]] - System architecture overview
-- [[API_DOCUMENTATION]] - Comprehensive API reference
-- [[IMPLEMENTATION_STATUS]] - Current implementation progress
+### 2. Core Concepts
+- **[[ARCHITECTURE]]** - High-level system architecture
+- **[[API_DOCUMENTATION]]** - Complete API reference
+- **[[IMPLEMENTATION_STATUS]]** - Current implementation status
 
-### Focused Component Documentation
-- [[Memory-System]] - Three-tier memory architecture
-- [[Genetic-System]] - Genetic triggers and evolution
-- [[Hormone-System]] - Cross-lobe communication
-- [[P2P-Network]] - Peer-to-peer networking
-- [[Pattern-Recognition]] - Neural columns and sensory sharing
-- [[Simulation-Layer]] - Advanced computation and world modeling
+### 3. Component Documentation
+- **[[Memory-System]]** - Three-tier memory architecture
+- **[[Genetic-System]]** - Environmental adaptation and evolution
+- **[[Hormone-System]]** - Cross-lobe communication system
+- **[[P2P-Network]]** - Decentralized collaboration network
+- **[[Pattern-Recognition]]** - Neural columns and sensory processing
+- **[[Simulation-Layer]]** - Advanced computation and world modeling
 
-### Development Documentation
-- [[DEVELOPER_GUIDE]] - This document
-- [[USER_GUIDE]] - User-facing functionality
-- [[Performance-Optimization]] - System optimization
+## Development Documentation Structure
+
+### Getting Started
+- **[[development/Development-Setup]]** - Environment setup and prerequisites
+- **[[development/Development-Workflow]]** - Feature development and contribution process
+- **[[development/Code-Standards]]** - Coding standards and quality requirements
+
+### Architecture & Design
+- **[[development/Core-Architecture]]** - System architecture and design patterns
+- **[[development/Brain-Inspired-Patterns]]** - Brain-inspired development patterns
+- **[[development/Integration-Patterns]]** - Cross-component integration patterns
+
+### Implementation Guides
+- **[[PLUGIN_DEVELOPMENT]]** - Creating and integrating plugins
+- **[[development/Database-Design]]** - Database schema and optimization
+- **[[Performance-Optimization]]** - Performance tuning and optimization
+
+### Testing & Quality
+- **[[development/Testing-Guide]]** - Testing strategies and frameworks
+- **[[development/Debugging-Guide]]** - Debugging and troubleshooting
+- **[[development/Code-Review]]** - Code review process and standards
 
 ## Current Implementation Status
 
-### ✅ Completed Systems
-- **Memory System**: Three-tier architecture (Working, Short-term, Long-term)
+### ✅ Production Ready Systems
+
+All major components are **100% complete** and production-ready:
+
+- **Memory System**: Three-tier architecture with automatic consolidation
 - **Genetic System**: Environmental adaptation with P2P exchange
-- **Hormone System**: Cross-lobe communication and modulation
-- **Pattern Recognition**: Neural columns with cross-lobe sharing
-- **P2P Network**: Decentralized collaboration and benchmarking
-- **Integration Layer**: Async processing and system coordination
-- **Simulation Layer**: WebSocialEngine and cross-engine coordination fully implemented
+- **Hormone System**: Cross-lobe communication and biological signaling
+- **Pattern Recognition**: Neural columns with cross-lobe sensory sharing
+- **P2P Network**: Decentralized collaboration and global benchmarking
+- **Simulation Layer**: WebSocialEngine and cross-engine coordination
 - **Performance Optimization**: Real-time monitoring and adaptive optimization
 - **Quality Assurance**: Comprehensive testing and validation framework
 
-### 🔄 Maintenance Phase
+### 🔄 Current Phase: Production Deployment & Maintenance
+
 - Performance monitoring and optimization
 - User feedback integration and bug fixes
 - Documentation maintenance and updates
-- Advanced research integration (LL0 model - future enhancement)
+- System stability and reliability improvements
 
 ## Key Integration Patterns
 
 ### Memory System Integration
+
 All lobes/engines use the three-tier memory system:
 
 ```python
-from src.mcp.three_tier_memory_manager import ThreeTierMemoryManager
+from mcp.three_tier_memory_manager import ThreeTierMemoryManager, MemoryTier
 
-# Initialize memory manager
-memory_manager = ThreeTierMemoryManager()
-
-# Add memory to appropriate tier
-memory_id = memory_manager.add_memory(
-    text="Important information",
-    memory_type="knowledge",
-    priority=5
-)
-
-# Cross-tier search
-results = memory_manager.cross_tier_search("search query", limit=10)
-```
-
-### Genetic System Integration
-Environmental adaptation with dual implementations:
-
-```python
-from src.mcp.genetic_trigger_system.genetic_trigger import GeneticTriggerSystem
-
-# Initialize genetic system
-genetic_system = GeneticTriggerSystem()
-
-# Check activation with dual code/neural implementation
-should_activate = await genetic_system.should_activate(
-    environment=env_data,
-    threshold=0.7
-)
-
-# Register for A/B testing
-genetic_system.register_ab_test_group("experimental_group")
+class ExampleLobe:
+    def __init__(self):
+        self.memory = ThreeTierMemoryManager(
+            working_capacity_mb=100.0,
+            short_term_capacity_gb=1.0,
+            long_term_capacity_gb=10.0
+        )
+    
+    async def process(self, data):
+        # Store in appropriate tier
+        await self.memory.store(
+            key="processing_result",
+            data=result,
+            context="lobe_processing",
+            priority=0.8
+        )
+        
+        # Cross-tier search
+        related = await self.memory.cross_tier_search(
+            query="similar_processing",
+            limit=10
+        )
 ```
 
 ### Hormone System Integration
-Cross-lobe communication via hormone signaling:
+
+Cross-lobe communication using biological signaling:
 
 ```python
-from src.mcp.hormone_system_controller import HormoneSystemController
+from mcp.hormone_system import HormoneEngine
 
-# Initialize hormone system
-hormone_controller = HormoneSystemController()
-
-# Release hormones based on events
-hormone_controller.release_hormone('dopamine', intensity=0.8, duration=300)
-
-# Get current hormone levels
-levels = hormone_controller.get_hormone_levels()
-```
-
-### P2P Network Integration
-Decentralized collaboration and data exchange:
-
-```python
-from src.mcp.p2p_network import P2PNetworkNode
-
-# Initialize P2P node
-node = P2PNetworkNode("node_id", port=10000)
-await node.start()
-
-# Share genetic data
-success = await node.share_genetic_data(genetic_packet)
-
-# Get network status
-status = await node.visualize_status()
-```
-
-## Introduction
-
-Welcome to the MCP Server development team! This guide will help you understand the codebase, set up your development environment, and contribute effectively to the project.
-
-## Development Environment Setup
-
-### Prerequisites
-
-- **Python 3.8+**: The project requires Python 3.8 or higher
-- **IDE**: VS Code, PyCharm, or your preferred IDE
-- **Docker**: Optional, for containerized development
-
-### Initial Setup
-
-1. **Download or copy the project files** to your working directory.
-
-2. **Create virtual environment**:
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # Linux/macOS
-   # or
-   .venv\Scripts\activate     # Windows
-   ```
-
-3. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   pip install -r requirements-dev.txt  # Development dependencies
-   ```
-
-4. **Install pre-commit hooks** (optional, for code quality):
-   ```bash
-   pre-commit install
-   ```
-
-5. **Run initial tests**:
-   ```bash
-   python -m pytest tests/ -v
-   ```
-
-### Development Tools
-
-#### Code Quality Tools
-- **Black**: Code formatting
-- **Flake8**: Linting
-- **MyPy**: Type checking
-- **Pre-commit**: Code quality hooks
-
-#### Testing Tools
-- **Pytest**: Test framework
-- **Coverage**: Test coverage reporting
-- **Pytest-cov**: Coverage integration
-
-#### Documentation Tools
-- **Sphinx**: Documentation generation
-- **MkDocs**: Alternative documentation
-
-## Project Structure
-
-```
-agentic-workflow/
-├── src/mcp/                    # Main source code
-│   ├── __init__.py
-│   ├── server.py               # Main server implementation
-│   ├── cli.py                  # Command-line interface
-│   ├── memory.py               # Memory management
-│   ├── task_manager.py         # Task management
-│   ├── workflow.py             # Workflow management
-│   ├── context_manager.py      # Context management
-│   ├── experimental_lobes.py   # Experimental cognitive engines
-│   ├── lobes/                  # Individual lobe implementations
-│   │   ├── alignment_engine.py
-│   │   └── pattern_recognition_engine.py
-│   ├── performance_monitor.py  # Performance monitoring
-│   ├── plugin_system.py        # Plugin system
-│   └── api_enhancements.py     # API enhancements
-├── tests/                      # Test suite
-├── docs/                       # Documentation
-├── scripts/                    # Utility scripts
-├── config/                     # Configuration files
-├── plugins/                    # Plugin examples
-├── requirements.txt            # Production dependencies
-├── requirements-dev.txt        # Development dependencies
-├── pyproject.toml             # Project configuration
-└── README.md                  # Project overview
-```
-
-## Core Architecture
-
-### 1. Server Architecture
-
-The MCP server follows a modular architecture with clear separation of concerns:
-
-```python
-# Main server class
-class MCPServer:
-    def __init__(self):
-        self.memory_manager = MemoryManager()
-        self.task_manager = TaskManager()
-        self.workflow_manager = WorkflowManager()
-        self.context_manager = ContextManager()
-        # ... other components
-```
-
-### 2. Component Interaction
-
-Components interact through well-defined interfaces:
-
-```python
-# Example: Task creation with memory integration
-def create_task_with_context(self, title, description, context_query):
-    # Get relevant context
-    context = self.context_manager.get_relevant_context(context_query)
+class CognitiveLobe:
+    def __init__(self, hormone_system):
+        self.hormone_system = hormone_system
     
-    # Create task
-    task_id = self.task_manager.create_task(title, description)
-    
-    # Store context as memory
-    self.memory_manager.add_memory(
-        f"Task context for {title}: {context}",
-        memory_type="task_context"
-    )
-    
-    return task_id
-```
-
-### 3. Implementation Switching System
-
-The implementation switching system provides automatic selection between algorithmic and neural implementations based on performance metrics:
-
-```python
-# Example: Using the implementation switching monitor
-from src.mcp.implementation_switching_monitor import ImplementationSwitchingMonitor
-
-class HormoneCalculator:
-    def __init__(self):
-        self.monitor = ImplementationSwitchingMonitor()
+    async def complete_task(self, task):
+        result = await self.process_task(task)
         
-        # Register both implementations
-        self.monitor.register_implementation("hormone_calc", "algorithmic")
-        self.monitor.register_implementation("hormone_calc", "neural")
-    
-    def calculate_hormone_level(self, input_data):
-        # Execute with automatic fallback
-        return self.monitor.execute_with_fallback(
-            "hormone_calc",
-            neural_func=self._neural_calculate,
-            algorithmic_func=self._algorithmic_calculate,
-            input_data
-        )
-    
-    def _neural_calculate(self, input_data):
-        # Neural network implementation
-        result = self.neural_model.predict(input_data)
-        return result
-    
-    def _algorithmic_calculate(self, input_data):
-        # Traditional algorithmic implementation
-        result = self.traditional_algorithm(input_data)
-        return result
-```
-
-### 4. Experimental Lobes
-
-The experimental lobes implement advanced cognitive functions:
-
-```python
-# Example: Using the alignment engine
-class AlignmentEngine:
-    def analyze_alignment(self, task_id, user_preferences, context):
-        # Analyze task alignment with user preferences
-        alignment_score = self._calculate_alignment(task_id, user_preferences)
-        
-        # Generate suggestions
-        suggestions = self._generate_suggestions(alignment_score, context)
-        
-        return {
-            "alignment_score": alignment_score,
-            "suggestions": suggestions,
-            "confidence": self._calculate_confidence()
-        }
-```
-
-### 4.1 Cross-Lobe Sensory Data Sharing (Implemented)
-
-The cross-lobe sensory data sharing system enables standardized communication between cognitive lobes with comprehensive hormone-triggered propagation and adaptive sensitivity management:
-
-```python
-# Example: Implementing cross-lobe sensory data sharing
-class AdaptivePatternRecognitionEngine:
-    def __init__(self):
-        self.sensory_data_propagator = SensoryDataPropagator(event_bus)
-        self.adaptive_sensitivity_manager = AdaptiveSensitivityManager()
-        self.neural_columns = self._initialize_adaptive_columns()
-        
-    def implement_cross_lobe_sensory_data_sharing(self, sensory_data, hormone_levels=None):
-        """Share sensory data across lobes with hormone-triggered propagation."""
-        
-        # Create standardized sensory data format
-        standardized_data = self._create_standardized_format(
-            sensory_data, 
-            source_lobe='pattern_recognition',
-            target_lobe=None,  # Will be determined by propagation rules
-            priority=sensory_data.get('priority', 0.5)
-        )
-        
-        # Apply hormone-based priority adjustment
-        if hormone_levels:
-            adjusted_priority = self.sensory_data_propagator._adjust_priority_by_hormones(
-                standardized_data['priority'], hormone_levels, standardized_data['data_type']
+        # Release dopamine on success
+        if result.success:
+            await self.hormone_system.release_hormone(
+                hormone_type="dopamine",
+                intensity=0.8,
+                source_lobe="cognitive_lobe"
             )
-            standardized_data['priority'] = adjusted_priority
-        
-        # Propagate to target lobes using registered rules
-        propagation_result = self.sensory_data_propagator.propagate_sensory_data(
-            standardized_data, hormone_levels
-        )
-        
-        # Store sharing activity for statistics
-        self._store_sensory_data_sharing_activity(standardized_data, propagation_result)
-        
-        return {
-            'source_lobe': 'pattern_recognition',
-            'propagation_success': propagation_result['propagation_success'],
-            'target_lobes': propagation_result['target_lobes'],
-            'rules_applied': propagation_result['rules_applied'],
-            'adjusted_priority': standardized_data['priority']
-        }
-    
-    def process_adaptive_feedback_integration(self, feedback_data):
-        """Process comprehensive feedback with cross-modal learning."""
-        target_columns = feedback_data.get('target_columns', [])
-        hormone_levels = feedback_data.get('hormone_levels', {})
-        
-        processed_columns = []
-        for column_id in target_columns:
-            if column_id in self.neural_columns:
-                column = self.neural_columns[column_id]
-                integration_result = column.process_feedback_integration(feedback_data)
-                processed_columns.append({
-                    'column_id': column_id,
-                    'integration_result': integration_result
-                })
-        
-        # Apply hormone modulation across all columns
-        if hormone_levels:
-            self.adaptive_sensitivity_manager.apply_hormone_modulation(hormone_levels)
-        
-        # Apply cross-modal learning if enabled
-        cross_modal_learning_applied = False
-        if feedback_data.get('enable_cross_modal_learning', False):
-            self._apply_cross_modal_learning(feedback_data)
-            cross_modal_learning_applied = True
-        
-        return {
-            'processed_columns': processed_columns,
-            'cross_modal_learning_applied': cross_modal_learning_applied,
-            'hormone_modulation_applied': bool(hormone_levels),
-            'sensitivity_adjustments': self._get_sensitivity_adjustments()
-        }
 ```
 
-#### Key Implementation Features:
-- **Standardized Data Format**: `cross_lobe_sensory_data` type with consistent structure
-- **Hormone-Triggered Propagation**: Dynamic priority adjustment based on dopamine, cortisol, norepinephrine, and serotonin levels
-- **Propagation Rule System**: Configurable rules for data routing between specific lobes
-- **Adaptive Sensitivity Management**: Cross-column learning and hormone-based sensitivity modulation
-- **Comprehensive Statistics**: Detailed tracking of sharing activity, rule usage, and performance metrics
-- **Real-Time Integration**: Immediate cross-lobe data availability with feedback processing
+### Genetic System Integration
 
-### 4.2 P2P Genetic Data Exchange (Implemented)
-
-The P2P genetic data exchange system enables secure, decentralized sharing of optimizations using genetic-inspired encoding:
+Environmental adaptation through genetic triggers:
 
 ```python
-# Example: P2P genetic data exchange implementation
-class P2PGeneticSystem:
-    def __init__(self, organism_id: str, port: int):
-        self.p2p_node = P2PNetworkNode(organism_id, port)
-        self.genetic_exchange = GeneticDataExchange(organism_id)
-        self.engram_manager = EngramTransferManager(organism_id, self.p2p_node)
-        self.orchestrator = GeneticNetworkOrchestrator()
-        
-    async def share_neural_optimization(self, neural_data, target_peers=None):
-        """Share neural network optimizations with genetic encoding."""
-        
-        # Create genetic packet with integration instructions
-        genetic_packet = self.genetic_exchange.create_genetic_packet(
-            data_type='neural_network',
-            data=neural_data,
-            metadata={
-                'integration_when': 'performance_threshold_0.8',
-                'integration_where': 'pattern_recognition_lobe',
-                'integration_how': 'weighted_merge',
-                'integration_why': 'improve_pattern_accuracy',
-                'integration_what': 'neural_weights',
-                'integration_order': 'after_validation'
-            }
+from mcp.genetic_trigger_system import GeneticTriggerSystem
+
+class AdaptiveLobe:
+    def __init__(self):
+        self.genetic_system = GeneticTriggerSystem()
+    
+    async def adapt_to_environment(self, environment):
+        should_adapt = await self.genetic_system.should_activate(
+            environment=environment,
+            threshold=0.7
         )
         
-        # Share via P2P network
-        if target_peers:
-            for peer in target_peers:
-                success = await self.p2p_node.share_genetic_data_to_peer(genetic_packet, peer)
-        else:
-            success = await self.p2p_node.broadcast_genetic_data(genetic_packet)
-        
-        return success
-    
-    async def receive_and_integrate_optimization(self, genetic_packet):
-        """Receive and integrate genetic optimization data."""
-        
-        # Decode genetic packet
-        decoded_data = self.genetic_exchange.decode_genetic_packet(genetic_packet)
-        
-        # Validate integration criteria
-        if self._validate_integration_criteria(decoded_data):
-            # Apply genetic instructions for integration
-            integration_result = await self._apply_genetic_integration(decoded_data)
-            return integration_result
-        
-        return {'success': False, 'reason': 'validation_failed'}
-    
-    def _validate_integration_criteria(self, decoded_data):
-        """Validate that integration criteria are met."""
-        metadata = decoded_data.get('metadata', {})
-        
-        # Check performance threshold
-        when_condition = metadata.get('integration_when', '')
-        if 'performance_threshold' in when_condition:
-            threshold = float(when_condition.split('_')[-1])
-            current_performance = self._get_current_performance()
-            return current_performance >= threshold
-        
-        return True
+        if should_adapt:
+            await self.trigger_adaptation(environment)
 ```
 
-#### Key P2P Features:
-- **256-Codon Genetic Encoding**: Extended genetic alphabet for rich metadata encoding
-- **Integration Instructions**: When, where, how, why, what, and order specifications
-- **Privacy-Preserving**: Multi-stage data sanitization and cryptographic security
-- **DHT Routing**: Distributed hash table for efficient peer discovery and data routing
-- **Validation Pipeline**: Multi-stage validation for data integrity and source authenticity
+## Brain-Inspired Development Patterns
+
+### Lobe Structure Pattern
+
+```python
+class BrainInspiredLobe:
+    """Standard pattern for brain-inspired lobe implementation."""
+    
+    def __init__(self, memory_manager, hormone_system, genetic_system):
+        self.memory = memory_manager
+        self.hormones = hormone_system
+        self.genetics = genetic_system
+        
+        # Dual implementations
+        self.code_impl = CodeImplementation()
+        self.neural_impl = NeuralImplementation()
+        self.performance_tracker = PerformanceTracker()
+    
+    async def process(self, input_data):
+        # Choose implementation based on performance
+        if self.should_use_neural():
+            result = await self.neural_impl.process(input_data)
+        else:
+            result = await self.code_impl.process(input_data)
+        
+        # Store result in memory
+        await self.memory.store(
+            key=f"result_{input_data.id}",
+            data=result,
+            context="processing"
+        )
+        
+        # Release appropriate hormones
+        await self.release_completion_hormones(result)
+        
+        return result
+    
+    def should_use_neural(self):
+        """Decide between code and neural implementation."""
+        return self.performance_tracker.neural_performs_better()
+```
+
+### Asynchronous Processing Pattern
+
+```python
+import asyncio
+
+class AsyncLobeProcessor:
+    async def process_concurrent(self, requests):
+        """Process multiple requests concurrently."""
+        tasks = [
+            self.process_single(request) 
+            for request in requests
+        ]
+        
+        results = await asyncio.gather(
+            *tasks, 
+            return_exceptions=True
+        )
+        
+        return self.aggregate_results(results)
+```
 
 ## Development Workflow
 
-### 1. Feature Development
+### 1. Feature Development Process
 
-1. **Create feature branch**:
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
+1. **Design Phase**
+   - Review [[development/Core-Architecture]] for design patterns
+   - Create design document following brain-inspired principles
+   - Get design review from team
 
-2. **Implement feature**:
-   - Follow coding standards
-   - Add comprehensive tests
-   - Update documentation
+2. **Implementation Phase**
+   - Follow [[development/Code-Standards]] for coding standards
+   - Implement both code and neural versions where applicable
+   - Add comprehensive logging and error handling
 
-3. **Run tests**:
-   ```bash
-   python -m pytest tests/ -v --cov=src
-   ```
+3. **Testing Phase**
+   - Write unit tests following [[development/Testing-Guide]]
+   - Add integration tests for cross-lobe communication
+   - Performance test both implementations
 
-4. **Code quality checks**:
-   ```bash
-   black src/
-   flake8 src/
-   mypy src/
-   ```
+4. **Review Phase**
+   - Submit PR following [[development/Code-Review]] guidelines
+   - Address feedback and iterate
+   - Ensure documentation is updated
 
-5. **Create pull request**:
-   - Include detailed description
-   - Reference related issues
-   - Request code review
+### 2. Code Quality Standards
 
-### 2. Testing Strategy
+- **Python 3.8+** with full type hints
+- **Black** formatting (88 character line length)
+- **Flake8** linting compliance
+- **Mypy** type checking
+- **Pytest** for testing with >90% coverage
+- **Async/await** for all I/O operations
 
-#### Unit Tests
-```python
-# Example unit test
-def test_task_creation():
-    task_manager = TaskManager()
-    task_id = task_manager.create_task("Test Task", "Description")
-    
-    assert task_id is not None
-    assert isinstance(task_id, int)
-    
-    task = task_manager.get_task(task_id)
-    assert task["title"] == "Test Task"
-```
+### 3. Brain-Inspired Naming
 
-#### Integration Tests
-```python
-# Example integration test
-def test_workflow_with_memory():
-    server = MCPServer()
-    
-    # Create workflow
-    workflow_id = server.workflow_manager.create_workflow("Test Project", "/tmp/test")
-    
-    # Add memory
-    memory_id = server.memory_manager.add_memory("Important requirement", "requirement")
-    
-    # Verify integration
-    context = server.context_manager.export_context()
-    assert "workflows" in context
-    assert "memories" in context
-```
-
-#### Performance Tests
-```python
-# Example performance test
-def test_memory_search_performance():
-    memory_manager = MemoryManager()
-    
-    # Add test data
-    for i in range(1000):
-        memory_manager.add_memory(f"Test memory {i}", "test")
-    
-    # Measure search performance
-    start_time = time.time()
-    results = memory_manager.search_memories("test", limit=100)
-    end_time = time.time()
-    
-    assert end_time - start_time < 1.0  # Should complete within 1 second
-```
-
-### 3. Code Quality Standards
-
-#### Code Style
-- Follow PEP 8 guidelines
-- Use Black for formatting
-- Maximum line length: 88 characters
-- Use type hints for all functions
-
-#### Documentation
-- Docstrings for all public functions
-- Inline comments for complex logic
-- Update README.md for user-facing changes
-- Update API documentation for interface changes
-
-#### Error Handling
-```python
-# Example error handling
-def safe_operation(self, operation_func, *args, **kwargs):
-    try:
-        return operation_func(*args, **kwargs)
-    except DatabaseError as e:
-        logger.error(f"Database error: {e}")
-        raise MCPError("Database operation failed") from e
-    except Exception as e:
-        logger.error(f"Unexpected error: {e}")
-        raise MCPError("Operation failed") from e
-```
+- Use brain-inspired names: `engram_engine.py`, `dreaming_engine.py`
+- Lobe-based organization: `src/mcp/lobes/cognitive/`
+- Hormone-based communication: `release_dopamine()`, `cortisol_response()`
+- Memory-based operations: `consolidate_memories()`, `retrieve_engram()`
 
 ## Plugin Development
 
-### 1. Plugin Structure
+### Plugin Structure
 
 ```python
-# Example plugin structure
-class ExamplePlugin:
-    def __init__(self, metadata, config=None):
-        self.metadata = metadata
-        self.config = config or {}
+from mcp.plugin_system import PluginBase
+
+class ExamplePlugin(PluginBase):
+    def __init__(self):
+        super().__init__()
+        self.name = "example_plugin"
+        self.version = "1.0.0"
     
-    def process(self, data):
-        # Plugin logic here
-        return {"result": "processed_data"}
+    async def initialize(self, mcp_server):
+        """Initialize plugin with MCP server."""
+        self.server = mcp_server
+        self.memory = mcp_server.memory_manager
+        
+    async def process(self, request):
+        """Process plugin-specific requests."""
+        return await self.handle_request(request)
     
-    def cleanup(self):
-        # Cleanup resources
-        pass
+    def get_hooks(self):
+        """Return list of hooks this plugin provides."""
+        return ["before_task_creation", "after_memory_store"]
 ```
 
-### 2. Plugin Metadata
+For complete plugin development guide, see **[[PLUGIN_DEVELOPMENT]]**.
+
+## Database Integration
+
+### Lobe-Specific Database Pattern
 
 ```python
-# Plugin metadata
-metadata = PluginMetadata(
-    name="example_plugin",
-    version="1.0.0",
-    description="Example plugin for MCP server",
-    author="Developer Name",
-    dependencies=["requests", "numpy"]
-)
-```
+import sqlite3
+import aiosqlite
+from sqlalchemy.ext.asyncio import create_async_engine
 
-### 3. Plugin Testing
-
-```python
-# Plugin test
-def test_example_plugin():
-    plugin = ExamplePlugin(metadata)
+class LobeDatabase:
+    def __init__(self, db_path):
+        self.db_path = db_path
+        self.engine = create_async_engine(f"sqlite+aiosqlite:///{db_path}")
     
-    result = plugin.process({"input": "test"})
-    assert "result" in result
-    assert result["result"] == "processed_data"
-```
-
-## Database Schema
-
-### 1. Core Tables
-
-```sql
--- Tasks table
-CREATE TABLE tasks (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
-    description TEXT,
-    priority INTEGER DEFAULT 5,
-    status TEXT DEFAULT 'pending',
-    parent_id INTEGER,
-    is_meta BOOLEAN DEFAULT FALSE,
-    meta_type TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (parent_id) REFERENCES tasks (id)
-);
-
--- Memories table
-CREATE TABLE memories (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    text TEXT NOT NULL,
-    memory_type TEXT,
-    priority INTEGER DEFAULT 1,
-    vector_data BLOB,
-    metadata TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Workflows table
-CREATE TABLE workflows (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    project_path TEXT,
-    status TEXT DEFAULT 'active',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-### 2. Migration Strategy
-
-```python
-# Example migration
-def migrate_database(self, from_version, to_version):
-    if from_version < "1.1.0":
-        self._add_task_metadata_column()
+    async def initialize(self):
+        """Create tables and indexes."""
+        async with self.engine.begin() as conn:
+            await conn.execute(text(self.get_schema()))
     
-    if from_version < "1.2.0":
-        self._add_memory_vector_index()
+    async def store_data(self, key, data):
+        """Store data with proper indexing."""
+        async with self.engine.begin() as conn:
+            await conn.execute(
+                text("INSERT INTO lobe_data (key, data, created_at) VALUES (?, ?, ?)"),
+                (key, data, datetime.now())
+            )
 ```
 
 ## Performance Optimization
 
-### 1. Database Optimization
+### Memory Management
 
 ```python
-# Connection pooling
-class DatabaseManager:
-    def __init__(self, db_path, max_connections=10):
-        self.pool = QueuePool(
-            creator=lambda: sqlite3.connect(db_path),
-            max_overflow=0,
-            pool_size=max_connections
+class MemoryOptimizedLobe:
+    def __init__(self):
+        self.cache = {}
+        self.cache_size_limit = 1000
+    
+    async def get_with_cache(self, key):
+        if key in self.cache:
+            return self.cache[key]
+        
+        data = await self.fetch_from_storage(key)
+        
+        # Implement LRU cache
+        if len(self.cache) >= self.cache_size_limit:
+            oldest_key = next(iter(self.cache))
+            del self.cache[oldest_key]
+        
+        self.cache[key] = data
+        return data
+```
+
+### Async Optimization
+
+```python
+import asyncio
+from asyncio import Semaphore
+
+class ConcurrencyOptimizedLobe:
+    def __init__(self, max_concurrent=10):
+        self.semaphore = Semaphore(max_concurrent)
+    
+    async def process_with_limit(self, data):
+        async with self.semaphore:
+            return await self.expensive_operation(data)
+```
+
+## Testing Strategies
+
+### Unit Testing Pattern
+
+```python
+import pytest
+from unittest.mock import Mock, AsyncMock
+
+class TestCognitiveLobe:
+    @pytest.fixture
+    async def lobe(self):
+        memory_mock = Mock()
+        hormone_mock = Mock()
+        return CognitiveLobe(memory_mock, hormone_mock)
+    
+    @pytest.mark.asyncio
+    async def test_process_success(self, lobe):
+        result = await lobe.process(test_data)
+        assert result.success
+        lobe.hormones.release_hormone.assert_called_with(
+            hormone_type="dopamine"
         )
 ```
 
-### 2. Memory Management
+### Integration Testing
 
 ```python
-# Efficient memory usage
-class MemoryManager:
-    def __init__(self):
-        self.cache = LRUCache(maxsize=1000)
-        self.vector_cache = LRUCache(maxsize=500)
-```
-
-### 3. Async Processing
-
-```python
-# Async task processing
-async def process_tasks_async(self, tasks):
-    semaphore = asyncio.Semaphore(10)  # Limit concurrent tasks
-    
-    async def process_task(task):
-        async with semaphore:
-            return await self._process_single_task(task)
-    
-    return await asyncio.gather(*[process_task(task) for task in tasks])
+@pytest.mark.integration
+class TestCrossLobeIntegration:
+    @pytest.mark.asyncio
+    async def test_memory_hormone_integration(self):
+        # Test that memory operations trigger appropriate hormones
+        memory_manager = ThreeTierMemoryManager()
+        hormone_system = HormoneEngine()
+        
+        await memory_manager.store("test", "data", "context")
+        
+        # Verify hormone release
+        assert hormone_system.get_hormone_level("vasopressin") > 0
 ```
 
 ## Debugging and Troubleshooting
 
-### 1. Logging
+### Logging Pattern
 
 ```python
-# Configure logging
 import logging
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('debug.log'),
-        logging.StreamHandler()
-    ]
-)
+class DebuggableLobe:
+    def __init__(self):
+        self.logger = logging.getLogger(f"MCP.{self.__class__.__name__}")
+    
+    async def process(self, data):
+        self.logger.debug(f"Processing data: {data.id}")
+        
+        try:
+            result = await self.complex_operation(data)
+            self.logger.info(f"Successfully processed {data.id}")
+            return result
+        except Exception as e:
+            self.logger.error(f"Failed to process {data.id}: {e}")
+            raise
 ```
 
-### 2. Debug Mode
+### Performance Monitoring
 
 ```python
-# Enable debug mode
-server = MCPServer(debug=True)
-server.start()
+import time
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def performance_monitor(operation_name):
+    start_time = time.time()
+    try:
+        yield
+    finally:
+        duration = time.time() - start_time
+        logger.info(f"{operation_name} took {duration:.3f}s")
 ```
 
-### 3. Performance Profiling
+## Related Documentation
 
-```python
-# Profile performance
-import cProfile
-import pstats
+### Essential Reading
+- **[[development/Development-Setup]]** - Get your environment ready
+- **[[development/Core-Architecture]]** - Understand the system design
+- **[[API_DOCUMENTATION]]** - Complete API reference
+- **[[ARCHITECTURE]]** - High-level system overview
 
-def profile_function(func, *args, **kwargs):
-    profiler = cProfile.Profile()
-    profiler.enable()
-    result = func(*args, **kwargs)
-    profiler.disable()
-    
-    stats = pstats.Stats(profiler)
-    stats.sort_stats('cumulative')
-    stats.print_stats(10)
-    
-    return result
-```
+### Component Documentation
+- **[[Memory-System]]** - Memory architecture details
+- **[[Hormone-System]]** - Cross-lobe communication
+- **[[Genetic-System]]** - Environmental adaptation
+- **[[Pattern-Recognition]]** - Neural processing
 
-## Contributing Guidelines
+### Advanced Topics
+- **[[Performance-Optimization]]** - System optimization
+- **[[PLUGIN_DEVELOPMENT]]** - Plugin creation
+- **[[development/Testing-Guide]]** - Testing strategies
+- **[[Troubleshooting]]** - Common issues and solutions
 
-### 1. Code Review Process
+---
 
-1. **Self-review**: Review your own code before submitting
-2. **Peer review**: Request review from team members
-3. **Automated checks**: Ensure all CI checks pass
-4. **Documentation**: Update relevant documentation
-
-### 2. Commit Messages
-
-Follow conventional commit format:
-```
-feat: add new task creation endpoint
-fix: resolve memory leak in vector search
-docs: update API documentation
-test: add integration tests for workflow manager
-```
-
-### 3. Issue Reporting
-
-When reporting issues, include:
-- Detailed description of the problem
-- Steps to reproduce
-- Expected vs actual behavior
-- Environment information
-- Relevant logs
-
-### 4. Feature Requests
-
-When requesting features, include:
-- Clear description of the feature
-- Use cases and benefits
-- Implementation suggestions
-- Priority level
-
-## Deployment
-
-### 1. Development Deployment
-
-```bash
-# Run in development mode
-python -m src.mcp.cli server --debug --port 3000
-```
-
-### 2. Production Deployment
-
-```bash
-# Build portable environment
-python scripts/build_portable.py --output portable_mcp
-
-# Create archive
-python scripts/build_portable.py --archive --archive-name mcp_server.tar.gz
-```
-
-### 3. Docker Deployment
-
-```dockerfile
-# Dockerfile
-FROM python:3.11-slim
-
-WORKDIR /app
-COPY . .
-
-RUN pip install -r requirements.txt
-
-EXPOSE 3000
-CMD ["python", "-m", "src.mcp.cli", "server"]
-```
-
-## Resources
-
-### 1. Documentation
-- [API Documentation](API_DOCUMENTATION.md)
-- [Architecture Documentation](ARCHITECTURE.md)
-- [User Guide](USER_GUIDE.md)
-
-### 2. External Resources
-- [Model Context Protocol](https://modelcontextprotocol.io/)
-- [Python Documentation](https://docs.python.org/)
-- [SQLite Documentation](https://www.sqlite.org/docs.html)
-
-### 3. Development Tools
-- [VS Code](https://code.visualstudio.com/)
-- [PyCharm](https://www.jetbrains.com/pycharm/)
-- [Docker](https://www.docker.com/)
-
-## Getting Help
-
-### 1. Internal Resources
-- Code comments and docstrings
-- Test examples
-- Architecture documentation
-
-### 2. Team Communication
-- Code review discussions
-- Team meetings
-- Documentation updates
-
-### 3. External Support
-- Stack Overflow
-- Python community forums
-- MCP community discussions
-
-This developer guide provides comprehensive information for contributing to the MCP server project. Follow these guidelines to ensure high-quality contributions and maintain code consistency. 
+*This developer guide provides the essential information to get started with MCP development. For detailed information on specific topics, follow the cross-links to focused documentation.*

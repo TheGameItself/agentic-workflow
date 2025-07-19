@@ -1,0 +1,41 @@
+{
+  "mcpServers": {
+    "mcp-agentic-workflow": {
+      "command": "python",
+      "args": [
+        "-m", "src.mcp.server"
+      ],
+      "env": {
+        "MCP_PROJECT_PATH": "${workspaceFolder}",
+        "MCP_LOG_LEVEL": "INFO",
+        "MCP_DEBUG_MODE": "false",
+        "MCP_AUTO_UPDATE_ENABLED": "true",
+        "MCP_PERFORMANCE_MONITORING": "true",
+        "MCP_VECTOR_BACKEND": "faiss",
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "cwd": "${workspaceFolder}",
+      "disabled": false,
+      "autoApprove": [
+        "add_memory",
+        "search_memories",
+        "create_task",
+        "list_tasks",
+        "export_context",
+        "get_context_pack",
+        "performance_report",
+        "resource_status"
+      ]
+    }
+  },
+  "globalShortcuts": {
+    "mcp.exportContext": "Ctrl+Shift+E",
+    "mcp.searchMemories": "Ctrl+Shift+M",
+    "mcp.createTask": "Ctrl+Shift+T",
+    "mcp.performanceReport": "Ctrl+Shift+P"
+  },
+  "autoStart": true,
+  "reconnectOnFailure": true,
+  "maxReconnectAttempts": 5,
+  "reconnectDelay": 2000
+}

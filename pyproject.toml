@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "agentic-workflow"
-version = "2.0.0"
+version = "1.0.0"
 description = "Agentic Workflow MCP System with Brain-Inspired Architecture"
 authors = [
     {name = "Agentic Workflow Team", email = "team@agentic-workflow.com"}
@@ -133,7 +133,7 @@ extend-exclude = '''
 '''
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "1.0.0"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true

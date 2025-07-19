@@ -24,7 +24,7 @@ def read_requirements():
 
 setup(
     name="mcp-agentic-workflow",
-    version="2.0.0",
+    version="1.0.0",
     author="MCP Development Team",
     description="Portable, local-only Python MCP server for agentic development workflows",
     long_description=read_readme(),

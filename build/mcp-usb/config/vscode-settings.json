@@ -1,0 +1,60 @@
+{
+  "mcp.enable": true,
+  "mcp.servers": {
+    "mcp-agentic-workflow": {
+      "command": "python",
+      "args": ["-m", "src.mcp.server"],
+      "env": {
+        "MCP_PROJECT_PATH": "${workspaceFolder}",
+        "MCP_LOG_LEVEL": "INFO",
+        "MCP_DEBUG_MODE": "false",
+        "MCP_AUTO_UPDATE_ENABLED": "true",
+        "MCP_PERFORMANCE_MONITORING": "true",
+        "MCP_VECTOR_BACKEND": "faiss",
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "cwd": "${workspaceFolder}"
+    }
+  },
+  "mcp.trace.server": "verbose",
+  "mcp.autoStart": true,
+  "mcp.reconnect": true,
+  "mcp.timeout": 30000,
+  
+  "python.defaultInterpreterPath": "./venv/bin/python",
+  "python.terminal.activateEnvironment": true,
+  "python.linting.enabled": true,
+  "python.linting.pylintEnabled": true,
+  "python.linting.flake8Enabled": true,
+  "python.formatting.provider": "black",
+  "python.formatting.blackArgs": ["--line-length", "88"],
+  "python.sortImports.args": ["--profile", "black"],
+  
+  "files.associations": {
+    "*.md": "markdown",
+    "*.json": "jsonc",
+    "*.cfg": "ini"
+  },
+  
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": true,
+    "source.fixAll": true
+  },
+  
+  "terminal.integrated.env.linux": {
+    "MCP_PROJECT_PATH": "${workspaceFolder}",
+    "PYTHONPATH": "${workspaceFolder}"
+  },
+  "terminal.integrated.env.osx": {
+    "MCP_PROJECT_PATH": "${workspaceFolder}",
+    "PYTHONPATH": "${workspaceFolder}"
+  },
+  "terminal.integrated.env.windows": {
+    "MCP_PROJECT_PATH": "${workspaceFolder}",
+    "PYTHONPATH": "${workspaceFolder}"
+  },
+  
+  "tasks.version": "2.0.0",
+  "launch.version": "0.2.0"
+}

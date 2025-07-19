@@ -1,0 +1,66 @@
+[
+  {
+    "key": "ctrl+shift+e",
+    "command": "workbench.action.tasks.runTask",
+    "args": "MCP: Export Context",
+    "when": "editorTextFocus"
+  },
+  {
+    "key": "ctrl+shift+m",
+    "command": "workbench.action.tasks.runTask",
+    "args": "MCP: Search Memories",
+    "when": "editorTextFocus"
+  },
+  {
+    "key": "ctrl+shift+t",
+    "command": "workbench.action.tasks.runTask",
+    "args": "MCP: Create Task",
+    "when": "editorTextFocus"
+  },
+  {
+    "key": "ctrl+shift+p",
+    "command": "workbench.action.tasks.runTask",
+    "args": "MCP: Performance Report",
+    "when": "editorTextFocus"
+  },
+  {
+    "key": "ctrl+shift+l",
+    "command": "workbench.action.tasks.runTask",
+    "args": "MCP: List Tasks",
+    "when": "editorTextFocus"
+  },
+  {
+    "key": "ctrl+shift+a",
+    "command": "workbench.action.tasks.runTask",
+    "args": "MCP: Add Memory",
+    "when": "editorTextFocus"
+  },
+  {
+    "key": "ctrl+shift+i",
+    "command": "workbench.action.tasks.runTask",
+    "args": "MCP: Initialize Project",
+    "when": "editorTextFocus"
+  },
+  {
+    "key": "ctrl+shift+r",
+    "command": "workbench.action.tasks.runTask",
+    "args": "MCP: Start Research",
+    "when": "editorTextFocus"
+  },
+  {
+    "key": "ctrl+shift+u",
+    "command": "workbench.action.tasks.runTask",
+    "args": "MCP: Check Updates",
+    "when": "editorTextFocus"
+  },
+  {
+    "key": "f5",
+    "command": "workbench.action.debug.start",
+    "when": "debuggersAvailable && !inDebugMode"
+  },
+  {
+    "key": "ctrl+f5",
+    "command": "workbench.action.debug.run",
+    "when": "debuggersAvailable && !inDebugMode"
+  }
+]

@@ -1,486 +1,630 @@
-# MCP User Guide (Updated)
+# 🚀 MCP User Guide
 
-## Overview
-This guide explains how to use the upgraded MCP system.
+## Welcome to the MCP Agentic Workflow Accelerator
 
-- See [ARCHITECTURE.md](ARCHITECTURE.md) for system overview
-- See [API_DOCUMENTATION.md](API_DOCUMENTATION.md) for method details
+This guide will help you get the most out of MCP's powerful AI development acceleration capabilities. Whether you're a solo developer or part of a team, MCP transforms single prompts into complete applications through intelligent project management and workflow orchestration.
 
-## New Features
-- **Three-Tier Memory:** All memory operations are now managed by a unified system (see UnifiedMemoryManager)
-- **WebSocialEngine:** Enables web crawling, social media interaction, and digital identity management
-- **GeneticTrigger:** Advanced adaptation, dual code/neural, and A/B testing for environmental triggers
-- **P2P Benchmarking:** Secure, async benchmarking and global performance projection
+---
 
-## Usage Notes
-- Memory, web/social, and genetic features are accessible via the main MCP interface
-- P2P benchmarking and status visualization are available in the integration layer
+## 🎯 Quick Start
 
-## Cross-References
-- [ARCHITECTURE.md](ARCHITECTURE.md)
-- [API_DOCUMENTATION.md](API_DOCUMENTATION.md)
-- [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)
+### Your First MCP Project
 
-## Introduction
-
-The MCP (Model Context Protocol) Server is a powerful, portable development accelerator that provides intelligent assistance for LLM-driven development workflows. This guide will help you get started and make the most of the MCP server's capabilities.
-
-## Quick Start
-
-### Installation
-
-1. **Download the portable package** or use the installation script:
+1. **Initialize a new project**:
    ```bash
-   python scripts/install.py --install-dir ~/.mcp_server
+   mcp init-project "My AI App" --type "web-application"
    ```
 
-2. **Start the server**:
+2. **Start research phase**:
    ```bash
-   # Using the launcher script
-   ./start_mcp.sh  # Linux/macOS
-   start_mcp.bat   # Windows
-   
-   # Or directly
-   python -m src.mcp.cli server
+   mcp start-research "Modern web development best practices"
+   mcp add-research-topic "React performance optimization"
+   mcp add-research-topic "API security patterns"
    ```
 
-3. **Verify the server is running**:
+3. **Create task structure**:
    ```bash
-   python -m src.mcp.cli status
+   mcp create-task "Frontend Development" --priority 5
+   mcp create-task "Backend API" --priority 5
+   mcp create-task "Database Design" --priority 4
    ```
 
-### First Project
-
-1. **Create a new project**:
+4. **Export context for your LLM**:
    ```bash
-   python -m src.mcp.cli init-project "My Project" /path/to/project
+   mcp export-context --format json --max-tokens 2000
    ```
 
-2. **Add your project idea**:
-   ```bash
-   python -m src.mcp.cli add-memory "Build a web application for task management" --type "project_idea" --priority 5
-   ```
+### Understanding MCP's Brain-Inspired Architecture
 
-3. **Start the workflow**:
-   ```bash
-   python -m src.mcp.cli start-step "init"
-   ```
+MCP uses a brain-inspired architecture with specialized "lobes" that work together:
 
-## Core Concepts
+- **Memory System**: Stores and retrieves information across three tiers
+- **Pattern Recognition**: Identifies patterns and learns from your workflow
+- **Genetic System**: Evolves and optimizes based on your preferences
+- **Hormone System**: Coordinates communication between different components
+- **P2P Network**: Shares optimizations with other MCP instances
 
-### 1. Workflows
+---
 
-Workflows are the main organizational structure for your projects. Each workflow consists of steps that guide the development process.
+## 📋 Core Workflows
 
-**Default Workflow Steps:**
-- `init`: Project initialization and setup
-- `research`: Research and requirements gathering
-- `planning`: Project planning and architecture
-- `development`: Active development
-- `testing`: Testing and quality assurance
-- `deployment`: Deployment and delivery
+### 1. Project Management Workflow
 
-**Managing Workflows:**
+#### Project Initialization
 ```bash
-# List workflow steps
-python -m src.mcp.cli list-workflow-steps
-
-# Start a step
-python -m src.mcp.cli start-step "research"
-
-# Complete a step
-python -m src.mcp.cli complete-step "research"
-
-# Add feedback to a step
-python -m src.mcp.cli add-step-feedback "research" "Found excellent resources on React patterns" --impact 2
+# Create different types of projects
+mcp init-project "E-commerce Site" --type "full-stack"
+mcp init-project "Data Analysis Tool" --type "python-package"
+mcp init-project "Mobile App" --type "react-native"
+mcp init-project "API Service" --type "microservice"
 ```
 
-### 2. Tasks
-
-Tasks are individual work items within your project. They can be organized hierarchically and have dependencies.
-
-**Creating Tasks:**
+#### Project Configuration
 ```bash
-# Create a simple task
-python -m src.mcp.cli create-task "Setup development environment" "Install Node.js and dependencies" --priority 5
+# View project details
+mcp project-status
 
-# Create a task with parent
-python -m src.mcp.cli create-task "Install Node.js" "Download and install Node.js" --parent "Setup development environment"
+# Update project information
+mcp update-project --description "Advanced e-commerce platform with AI features"
+mcp update-project --add-tag "ai" --add-tag "ecommerce"
 
-# Create a meta task
-python -m src.mcp.cli create-task "Code Review" "Review all code changes" --meta --meta-type "review"
+# Set project preferences
+mcp set-preference "coding_style" "functional"
+mcp set-preference "testing_framework" "pytest"
 ```
 
-**Managing Tasks:**
+### 2. Research & Discovery Workflow
+
+#### Starting Research
 ```bash
-# List all tasks
-python -m src.mcp.cli list-tasks
+# Begin research on a topic
+mcp start-research "Machine Learning in Web Development"
 
-# Update task progress
-python -m src.mcp.cli update-task-progress <task-id> 75 "Almost done with implementation"
-
-# Add task notes
-python -m src.mcp.cli add-task-note <task-id> "Important: Remember to test edge cases" --line 42 --file src/main.py
-
-# Add task feedback
-python -m src.mcp.cli add-task-feedback <task-id> "Good progress, but need more error handling" --impact 1
+# Add specific research areas
+mcp add-research-topic "TensorFlow.js integration"
+mcp add-research-topic "Model deployment strategies"
+mcp add-research-topic "Performance optimization"
 ```
 
-### 3. Memory
-
-The memory system stores and retrieves information intelligently, helping you maintain context across sessions.
-
-**Adding Memories:**
+#### Managing Research Findings
 ```bash
-# Add project requirements
-python -m src.mcp.cli add-memory "Must support real-time collaboration" --type "requirement" --priority 5
-
 # Add research findings
-python -m src.mcp.cli add-memory "WebSocket is best for real-time features" --type "research" --priority 4
+mcp add-finding "TensorFlow.js can run models directly in browser" \
+  --source "https://tensorflow.org/js" \
+  --confidence 0.9 \
+  --tags "ml,browser,performance"
 
-# Add lessons learned
-python -m src.mcp.cli add-memory "Always validate user input" --type "lesson" --priority 3
+# Search existing research
+mcp search-research "tensorflow" --limit 10
+
+# Export research summary
+mcp export-research --format markdown
 ```
 
-**Searching Memories:**
+### 3. Task Management Workflow
+
+#### Creating and Organizing Tasks
 ```bash
-# Search for relevant memories
-python -m src.mcp.cli search-memories "real-time collaboration" --limit 10
+# Create hierarchical tasks
+mcp create-task "User Authentication System" --priority 5
+mcp create-task "Login Component" --parent "User Authentication System"
+mcp create-task "Registration Form" --parent "User Authentication System"
+mcp create-task "Password Reset" --parent "User Authentication System"
 
-# Search by type
-python -m src.mcp.cli search-memories "validation" --type "lesson"
-
-# Search by tags
-python -m src.mcp.cli search-memories "security" --tags "important" "critical"
+# Add task dependencies
+mcp add-task-dependency "Login Component" "Database Schema"
+mcp add-task-dependency "Registration Form" "Email Service Setup"
 ```
 
-### 4. Context Management
-
-The context manager provides intelligent context retrieval and optimization.
-
-**Exporting Context:**
+#### Task Progress Tracking
 ```bash
-# Export current context
-python -m src.mcp.cli export-context --output context.json
+# Update task progress
+mcp update-task-progress "Login Component" 75 \
+  --note "Basic authentication working, need to add validation"
 
-# Get relevant context for a query
-python -m src.mcp.cli get-relevant-context "database optimization" --limit 10
+# Mark tasks as complete
+mcp complete-task "Database Schema"
+
+# View task hierarchy
+mcp task-tree
+mcp task-tree --show-progress --show-notes
 ```
 
-## Advanced Features
-
-### 1. Experimental Lobes
-
-The MCP server includes advanced cognitive engines inspired by human brain functions.
-
-#### Alignment Engine
-Ensures your work stays aligned with your goals and preferences.
-
+#### Advanced Task Management
 ```bash
-# Analyze alignment of current work
-python -m src.mcp.cli analyze-alignment --task-id <task-id> --preferences '{"quality": 0.9, "speed": 0.7}'
+# Bulk operations
+mcp bulk-update-task-status --status "in-progress" \
+  --filter "priority>=4" --filter "status=pending"
+
+# Add feedback to tasks
+mcp add-task-feedback "Login Component" \
+  --feedback "Consider using JWT tokens for better security" \
+  --type "suggestion"
+
+# Task analytics
+mcp task-analytics --show-velocity --show-bottlenecks
 ```
 
-#### Pattern Recognition Engine
-Identifies patterns in your work to improve efficiency with neural column architecture.
+### 4. Memory & Context Management
 
+#### Working with Memory
 ```bash
-# Recognize patterns in recent tasks
-python -m src.mcp.cli recognize-patterns --pattern-type "success_failure" --limit 20
+# Add different types of memories
+mcp add-memory "Use React hooks for state management" --type "best-practice"
+mcp add-memory "API endpoint: /api/v1/users" --type "reference"
+mcp add-memory "Bug: Login fails on Safari" --type "issue" --priority 5
 
-# Process sensory input through pattern recognition
-python -m src.mcp.cli process-sensory-input "user feedback data" --modality "textual"
+# Search memories
+mcp search-memories "react hooks" --limit 5
+mcp search-memories --type "issue" --priority-min 4
 
-# Get cross-lobe sensory data (In Progress)
-python -m src.mcp.cli get-cross-lobe-data --modality "visual" --limit 10
+# Memory management
+mcp consolidate-memories  # Optimize memory storage
+mcp memory-stats          # View memory usage statistics
 ```
 
-#### Cross-Lobe Communication (Implemented)
-The system supports comprehensive brain-inspired communication between different cognitive lobes:
-
+#### Context Export for LLMs
 ```bash
-# View cross-lobe sharing statistics
-python -m src.mcp.cli cross-lobe-stats
+# Basic context export
+mcp export-context --format json
 
-# Monitor hormone-triggered data propagation
-python -m src.mcp.cli monitor-hormone-propagation --duration 60
+# Filtered context export
+mcp export-context \
+  --types "tasks,memories,research" \
+  --max-tokens 2000 \
+  --priority-min 3 \
+  --format json
 
-# Test cross-lobe sensory data sharing
-python -m src.mcp.cli test-cross-lobe-sharing --modality visual --priority 0.8
-
-# Configure propagation rules
-python -m src.mcp.cli configure-propagation-rule \
-  --source pattern_recognition \
-  --targets alignment_engine,hormone_engine \
-  --data-types success,error \
-  --priority 0.7
+# Context packs for specific purposes
+mcp get-context-pack "development" --include-code-examples
+mcp get-context-pack "debugging" --include-error-logs
+mcp get-context-pack "planning" --include-architecture
 ```
 
-#### P2P Genetic Data Exchange (Implemented)
-Secure, decentralized sharing of optimizations using genetic-inspired encoding:
+---
 
+## 🔧 Advanced Features
+
+### 1. Performance Optimization
+
+#### System Performance
 ```bash
-# Start P2P network node
-python -m src.mcp.cli start-p2p-node --node-id organism_1 --port 10000
+# Monitor system performance
+mcp performance-report
+mcp resource-status
 
-# Share genetic optimization data
-python -m src.mcp.cli share-genetic-data \
-  --data-type neural_network \
-  --data-file model_weights.pkl \
-  --target-peers peer1,peer2
+# Optimize system
+mcp optimize-system --target "memory"
+mcp optimize-system --target "speed"
 
-# Monitor genetic data exchange
-python -m src.mcp.cli monitor-genetic-exchange --duration 300
-
-# View genetic network statistics
-python -m src.mcp.cli genetic-network-stats
+# Performance analytics
+mcp performance-history --days 7
+mcp performance-compare --baseline "last-week"
 ```
 
-#### Mind Map Engine
-Creates visual associations between concepts and ideas.
-
+#### Workflow Optimization
 ```bash
-# Create a mind map node
-python -m src.mcp.cli create-mindmap-node "Database Design" --type "concept"
+# Analyze workflow efficiency
+mcp workflow-analytics
+mcp identify-bottlenecks
 
-# Create associations
-python -m src.mcp.cli create-mindmap-association "Database Design" "User Authentication" --relationship "enables"
+# Optimize task scheduling
+mcp optimize-task-schedule
+mcp suggest-task-priorities
 ```
 
-### 2. Performance Monitoring
+### 2. P2P Collaboration
 
-Monitor your development performance and get insights.
-
+#### Network Participation
 ```bash
-# Get performance report
-python -m src.mcp.cli performance-report --format json
+# Join P2P network
+mcp p2p-connect --network "development"
 
-# Get feedback analytics
-python -m src.mcp.cli feedback-analytics --export analytics.json
+# Share optimizations
+mcp p2p-share-optimization "task-prioritization" \
+  --description "Improved task priority algorithm"
 
-# Run self-assessment
-python -m src.mcp.cli self-assessment --detailed
+# Receive optimizations
+mcp p2p-sync-optimizations
+mcp p2p-list-available-optimizations
 ```
 
-### 3. Research Integration
-
-Automate research and information gathering.
-
+#### Collaboration Features
 ```bash
-# Start research session
-python -m src.mcp.cli start-research "React performance optimization" --sources 10
+# Share project templates
+mcp p2p-share-template "react-typescript-starter"
 
-# Get research results
-python -m src.mcp.cli get-research-results --topic "React performance"
+# Collaborate on research
+mcp p2p-share-research "AI development patterns"
 
-# Validate research sources
-python -m src.mcp.cli validate-sources --input sources.json
+# Network status
+mcp p2p-status
+mcp p2p-network-health
 ```
 
-## IDE Integration
+### 3. Genetic Evolution & Learning
 
-### VS Code
-
-1. **Install the MCP extension** (if available)
-2. **Configure the server** in VS Code settings:
-   ```json
-   {
-     "mcp.servers": {
-       "mcp-server": {
-         "command": "python",
-         "args": ["-m", "src.mcp.cli", "server"],
-         "env": {
-           "MCP_CONFIG_PATH": "/path/to/config/mcp-config.json"
-         }
-       }
-     }
-   }
-   ```
-
-### Cursor
-
-1. **Add MCP server to Cursor configuration**
-2. **Use MCP commands** through the command palette
-
-### Claude Desktop
-
-1. **Configure Claude to use the MCP server**
-2. **Access MCP functions** through Claude's interface
-
-## Configuration
-
-### Server Configuration
-
-Edit `config/mcp-config.json` to customize server settings:
-
-```json
-{
-  "server": {
-    "port": 3000,
-    "host": "localhost",
-    "debug": false
-  },
-  "database": {
-    "path": "data/mcp.db",
-    "backup_interval": 3600
-  },
-  "logging": {
-    "level": "INFO",
-    "file": "logs/mcp.log"
-  },
-  "security": {
-    "api_key": "your-api-key",
-    "rate_limit": 100
-  }
-}
-```
-
-### Environment Variables
-
-Set these environment variables for customization:
-
+#### System Learning
 ```bash
-export MCP_SERVER_PORT=3000
-export MCP_DB_PATH=/path/to/database
-export MCP_LOG_LEVEL=INFO
-export MCP_API_KEY=your-api-key
+# View learning progress
+mcp genetic-status
+mcp learning-analytics
+
+# Manual optimization triggers
+mcp trigger-evolution --focus "task-management"
+mcp trigger-evolution --focus "context-generation"
+
+# Learning preferences
+mcp set-learning-preference "exploration_rate" 0.3
+mcp set-learning-preference "adaptation_speed" "moderate"
 ```
 
-## Best Practices
+### 4. Integration with Development Tools
 
-### 1. Project Organization
+#### IDE Integration
+```bash
+# Configure IDE integration
+mcp configure-ide vscode
+mcp configure-ide cursor
+mcp configure-ide custom --config-file ide-config.json
 
-- **Use descriptive task names** that clearly indicate what needs to be done
-- **Break large tasks** into smaller, manageable subtasks
-- **Add context to memories** with relevant tags and metadata
-- **Regular progress updates** help the system learn and improve
+# IDE-specific features
+mcp vscode-export-tasks      # Export tasks to VS Code
+mcp cursor-sync-context      # Sync context with Cursor
+mcp ide-status              # Check integration status
+```
 
-### 2. Memory Management
+#### Git Integration
+```bash
+# Link with Git repository
+mcp git-link --repo "https://github.com/user/project"
 
-- **Tag memories appropriately** for better searchability
-- **Use different memory types** (requirement, research, lesson, etc.)
-- **Set appropriate priorities** to help with context selection
-- **Regular memory cleanup** to maintain relevance
+# Sync with Git workflow
+mcp git-sync-tasks          # Create tasks from issues
+mcp git-sync-progress       # Update progress from commits
+mcp git-export-context      # Export context for commit messages
+```
 
-### 3. Workflow Optimization
+---
 
-- **Complete workflow steps** before moving to the next
-- **Add feedback to steps** to improve future recommendations
-- **Use meta tasks** for high-level project management
-- **Leverage dependencies** to ensure proper task ordering
+## 🎨 Customization & Configuration
 
-### 4. Performance Monitoring
+### 1. Personal Preferences
 
-- **Regular self-assessments** help identify improvement areas
-- **Monitor performance metrics** to track progress
-- **Review feedback analytics** to understand patterns
-- **Use insights** to optimize your workflow
+#### Workflow Preferences
+```bash
+# Set coding preferences
+mcp set-preference "language" "python"
+mcp set-preference "framework" "fastapi"
+mcp set-preference "testing" "pytest"
+mcp set-preference "documentation" "sphinx"
 
-## Troubleshooting
+# Workflow style
+mcp set-preference "workflow_style" "agile"
+mcp set-preference "task_granularity" "detailed"
+mcp set-preference "research_depth" "thorough"
+```
+
+#### UI and Display
+```bash
+# Display preferences
+mcp set-preference "date_format" "ISO"
+mcp set-preference "time_zone" "UTC"
+mcp set-preference "color_scheme" "dark"
+
+# Output formatting
+mcp set-preference "output_format" "json"
+mcp set-preference "verbosity" "normal"
+```
+
+### 2. Advanced Configuration
+
+#### Memory Configuration
+```bash
+# Memory system tuning
+mcp configure-memory \
+  --working-memory-size 100 \
+  --short-term-retention 7d \
+  --long-term-compression 0.8
+
+# Vector search tuning
+mcp configure-search \
+  --similarity-threshold 0.7 \
+  --max-results 20 \
+  --search-algorithm "hybrid"
+```
+
+#### Performance Tuning
+```bash
+# Resource limits
+mcp configure-resources \
+  --max-memory 8GB \
+  --max-cpu-cores 4 \
+  --cache-size 1GB
+
+# Processing preferences
+mcp configure-processing \
+  --async-tasks true \
+  --batch-size 10 \
+  --timeout 30s
+```
+
+---
+
+## 📊 Monitoring & Analytics
+
+### 1. System Health
+
+#### Health Checks
+```bash
+# Basic health check
+mcp health-check
+
+# Detailed system status
+mcp system-status --detailed
+
+# Component status
+mcp component-status memory
+mcp component-status genetic-system
+mcp component-status p2p-network
+```
+
+#### Performance Monitoring
+```bash
+# Real-time monitoring
+mcp monitor --live
+
+# Performance metrics
+mcp metrics --component memory
+mcp metrics --component tasks
+mcp metrics --time-range 24h
+```
+
+### 2. Usage Analytics
+
+#### Productivity Analytics
+```bash
+# Personal productivity metrics
+mcp productivity-report --period week
+mcp productivity-trends --metric "tasks-completed"
+
+# Workflow efficiency
+mcp workflow-efficiency
+mcp time-tracking-summary
+```
+
+#### Learning Analytics
+```bash
+# Learning progress
+mcp learning-progress
+mcp adaptation-history
+
+# Optimization effectiveness
+mcp optimization-impact
+mcp genetic-evolution-stats
+```
+
+---
+
+## 🔍 Troubleshooting
 
 ### Common Issues
 
-1. **Server won't start**
-   - Check if port is already in use
-   - Verify Python environment is activated
-   - Check log files for errors
+#### Installation Problems
+```bash
+# Verify installation
+mcp --version
+mcp health-check
 
-2. **Database errors**
-   - Ensure database directory exists and is writable
-   - Check database file permissions
-   - Try recreating the database
+# Reinstall components
+mcp reinstall --component memory
+mcp reinstall --component genetic-system
 
-3. **Memory search not working**
-   - Verify memory was added successfully
-   - Check search query syntax
-   - Ensure vector database is properly initialized
+# Reset configuration
+mcp reset-config --backup
+```
 
-4. **Performance issues**
-   - Monitor system resources
-   - Check configuration settings
-   - Review log files for bottlenecks
+#### Performance Issues
+```bash
+# Diagnose performance problems
+mcp diagnose-performance
+mcp identify-bottlenecks
+
+# Clear caches
+mcp clear-cache --all
+mcp clear-cache --type memory
+mcp clear-cache --type search
+
+# Optimize system
+mcp optimize-system --aggressive
+```
+
+#### Memory Issues
+```bash
+# Memory diagnostics
+mcp memory-diagnostics
+mcp memory-usage --detailed
+
+# Memory cleanup
+mcp cleanup-memory --aggressive
+mcp consolidate-memories --force
+
+# Memory repair
+mcp repair-memory --check-integrity
+```
 
 ### Getting Help
 
-1. **Check the logs** in the `logs/` directory
-2. **Review configuration** in `config/mcp-config.json`
-3. **Run diagnostics**:
-   ```bash
-   python -m src.mcp.cli diagnose
-   ```
-4. **Export debug information**:
-   ```bash
-   python -m src.mcp.cli export-debug --output debug_info.json
-   ```
-
-## Advanced Usage
-
-### Custom Plugins
-
-Create custom plugins to extend functionality:
-
-1. **Create plugin directory**:
-   ```bash
-   mkdir plugins/my_plugin
-   ```
-
-2. **Create plugin files**:
-   ```python
-   # plugins/my_plugin/plugin.py
-   class MyPlugin:
-       def process(self, data):
-           # Plugin logic here
-           return {"result": "processed"}
-   ```
-
-3. **Load plugin**:
-   ```bash
-   python -m src.mcp.cli load-plugin plugins/my_plugin
-   ```
-
-### API Integration
-
-Use the MCP server programmatically:
-
-```python
-from src.mcp.server import MCPServer
-
-# Initialize server
-server = MCPServer()
-
-# Create task
-task_id = server.task_manager.create_task("API Task", "Description")
-
-# Add memory
-memory_id = server.memory_manager.add_memory("API memory", "type")
-
-# Get context
-context = server.context_manager.export_context()
-```
-
-### Batch Operations
-
-Perform operations on multiple items:
-
+#### Built-in Help
 ```bash
-# Batch create tasks
-python -m src.mcp.cli batch-create-tasks tasks.json
+# Command help
+mcp help
+mcp help <command>
 
-# Batch update progress
-python -m src.mcp.cli batch-update-progress progress.json
+# Documentation
+mcp docs --topic "getting-started"
+mcp docs --search "task management"
 
-# Batch add memories
-python -m src.mcp.cli batch-add-memories memories.json
+# Examples
+mcp examples --category "project-setup"
+mcp examples --command "export-context"
 ```
 
-## Conclusion
+#### Documentation Resources
+- **[[CLI-Commands]]** - Complete CLI command reference
+- **[[Troubleshooting]]** - Comprehensive troubleshooting guide
+- **[[API_DOCUMENTATION]]** - Technical API reference
+- **[[DEVELOPER_GUIDE]]** - Development and integration guide
 
-The MCP server is designed to be your intelligent development companion. By following this guide and exploring the advanced features, you can significantly enhance your development workflow and productivity.
+#### Diagnostic Information
+```bash
+# System information
+mcp system-info
+mcp environment-info
 
-Remember to:
-- Start with simple workflows and gradually explore advanced features
-- Provide regular feedback to help the system learn
-- Use the monitoring tools to track your progress
-- Customize the configuration to match your needs
+# Log analysis
+mcp logs --level error --tail 50
+mcp logs --component memory --since 1h
 
-For more information, refer to the API documentation and advanced guides in the `docs/` directory. 
+# Export diagnostic data
+mcp export-diagnostics --include-logs --include-config
+```
+
+---
+
+## 🎯 Best Practices
+
+### 1. Project Organization
+
+#### Effective Project Setup
+- Use descriptive project names and types
+- Set up research topics before starting development
+- Create a logical task hierarchy from the beginning
+- Tag projects and tasks for easy filtering
+
+#### Memory Management
+- Add memories as you learn new things
+- Use specific, searchable memory descriptions
+- Regularly consolidate memories to improve performance
+- Set appropriate priority levels for different types of information
+
+### 2. Workflow Optimization
+
+#### Task Management
+- Break large tasks into smaller, manageable subtasks
+- Use dependencies to maintain proper task ordering
+- Update progress regularly with meaningful notes
+- Review and adjust priorities based on changing requirements
+
+#### Context Generation
+- Export context frequently during development
+- Use appropriate token limits for your LLM
+- Filter context based on current focus area
+- Maintain context relevance through regular cleanup
+
+### 3. Collaboration
+
+#### P2P Network Usage
+- Share optimizations that benefit the community
+- Regularly sync with network improvements
+- Contribute to shared research and templates
+- Maintain good network citizenship
+
+#### Team Integration
+- Establish consistent naming conventions
+- Share project templates and best practices
+- Coordinate research efforts to avoid duplication
+- Use collaborative features for knowledge sharing
+
+---
+
+## 🚀 Advanced Workflows
+
+### 1. Multi-Project Management
+
+#### Managing Multiple Projects
+```bash
+# Switch between projects
+mcp switch-project "E-commerce Site"
+mcp switch-project "Data Analysis Tool"
+
+# Cross-project operations
+mcp cross-project-search "authentication patterns"
+mcp share-memory-between-projects "security best practices"
+
+# Project comparison
+mcp compare-projects --metric "completion-rate"
+mcp project-analytics --all-projects
+```
+
+### 2. Automated Workflows
+
+#### Automation Setup
+```bash
+# Create automated workflows
+mcp create-workflow "daily-standup" \
+  --trigger "time:09:00" \
+  --action "export-context --type progress"
+
+mcp create-workflow "weekly-review" \
+  --trigger "time:friday:17:00" \
+  --action "generate-progress-report"
+
+# Workflow management
+mcp list-workflows
+mcp enable-workflow "daily-standup"
+mcp workflow-history
+```
+
+### 3. Custom Extensions
+
+#### Plugin Development
+```bash
+# Create custom plugin
+mcp create-plugin "jira-integration" \
+  --template "api-integration"
+
+# Install community plugins
+mcp install-plugin "github-sync"
+mcp install-plugin "slack-notifications"
+
+# Plugin management
+mcp list-plugins
+mcp plugin-status "jira-integration"
+```
+
+---
+
+## 📚 Learning Resources
+
+### Documentation
+- **[[INSTALLATION_GUIDE]]** - Complete setup instructions
+- **[[API_DOCUMENTATION]]** - Technical API reference
+- **[[DEVELOPER_GUIDE]]** - Development and customization
+- **[[ARCHITECTURE]]** - System design and components
+
+### Examples and Tutorials
+- **[[EXAMPLES]]** - Real-world usage examples
+- **[[TUTORIALS]]** - Step-by-step guides
+- **[[BEST_PRACTICES]]** - Proven strategies and patterns
+- **[[FAQ]]** - Frequently asked questions
+
+### Community Resources
+- **GitHub Repository** - Source code and issues
+- **Community Forum** - Discussions and support
+- **Plugin Registry** - Community-developed extensions
+- **Template Library** - Shared project templates
+
+---
+
+## 🎉 Conclusion
+
+The MCP Agentic Workflow Accelerator is a powerful tool that grows with you. Start with basic project management and gradually explore advanced features like P2P collaboration, genetic optimization, and custom automation.
+
+Remember that MCP learns from your usage patterns and continuously optimizes itself to better serve your development workflow. The more you use it, the more intelligent and helpful it becomes.
+
+**Happy developing with MCP!** 🚀
+
+---
+
+*For technical support, see [[TROUBLESHOOTING]] or visit our GitHub repository.*

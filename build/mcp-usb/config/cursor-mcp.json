@@ -1,0 +1,47 @@
+{
+  "name": "Agentic Workflow MCP",
+  "description": "Advanced MCP server for agentic development workflows with experimental lobes, memory management, and performance monitoring",
+  "command": "python",
+  "args": ["-m", "src.mcp.mcp_stdio"],
+  "env": {
+    "PYTHONPATH": "${workspaceFolder}/src",
+    "MCP_API_KEY": "changeme",
+    "MCP_PROJECT_PATH": "${workspaceFolder}",
+    "MCP_VECTOR_BACKEND": "sqlitefaiss",
+    "MCP_LOG_LEVEL": "INFO",
+    "MCP_DEBUG_MODE": "false"
+  },
+  "capabilities": {
+    "workflow_management": true,
+    "task_management": true,
+    "memory_management": true,
+    "context_management": true,
+    "rag_system": true,
+    "performance_monitoring": true,
+    "experimental_lobes": true,
+    "project_management": true,
+    "self_improvement": true
+  },
+  "methods": [
+    "create_project",
+    "get_project_status",
+    "update_configuration",
+    "start_workflow_step",
+    "create_task",
+    "update_task",
+    "get_tasks",
+    "add_memory",
+    "search_memories",
+    "get_context",
+    "rag_query",
+    "get_performance",
+    "optimize_system",
+    "run_lobe",
+    "get_lobe_status",
+    "list_endpoints",
+    "get_endpoint_schema"
+  ],
+  "version": "1.0.0",
+  "author": "Agentic Workflow Team",
+  "repository": "https://github.com/your-repo/agentic-workflow"
+} 
