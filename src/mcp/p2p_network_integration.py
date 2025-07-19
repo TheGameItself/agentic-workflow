@@ -26,6 +26,19 @@ from collections import defaultdict, deque
 
 from .environmental_state import EnvironmentalState
 
+# Add research tracking import
+try:
+    from .p2p_research_tracking import P2PResearchTracking, ResearchSource, ResearcherProfile, ResearchQuality, SourceType, ResearchDomain
+    RESEARCH_TRACKING_AVAILABLE = True
+except ImportError:
+    RESEARCH_TRACKING_AVAILABLE = False
+    P2PResearchTracking = None
+    ResearchSource = None
+    ResearcherProfile = None
+    ResearchQuality = None
+    SourceType = None
+    ResearchDomain = None
+
 
 class UserStatus(Enum):
     """User status types"""
@@ -74,6 +87,12 @@ class UserProfile:
     average_response_time: float = 0.0
     metadata: Dict[str, Any] = field(default_factory=dict)
     
+    # Add research tracking fields
+    research_reputation: float = 0.5
+    research_contributions: int = 0
+    expertise_domains: List[str] = field(default_factory=list)
+    research_activity_streak: int = 0
+    
     def update_status(self, new_status: UserStatus):
         """Update user status"""
         self.status = new_status
@@ -94,9 +113,13 @@ class UserProfile:
         """Update reputation score"""
         self.reputation_score = max(0.0, min(1.0, new_score))
     
+    def update_research_reputation(self, new_score: float):
+        """Update research reputation score"""
+        self.research_reputation = max(0.0, min(1.0, new_score))
+    
     def get_overall_score(self) -> float:
-        """Calculate overall capability score"""
-        # Weighted combination of reputation, reliability, and capability
+        """Calculate overall capability score including research reputation"""
+        # Weighted combination of reputation, reliability, capability, and research reputation
         capability_weight = {
             ServerCapability.BASIC: 0.2,
             ServerCapability.STANDARD: 0.4,
@@ -108,9 +131,10 @@ class UserProfile:
         capability_score = capability_weight.get(self.capability, 0.2)
         
         overall_score = (
-            self.reputation_score * 0.4 +
-            self.reliability_score * 0.3 +
-            capability_score * 0.3
+            self.reputation_score * 0.3 +
+            self.reliability_score * 0.25 +
+            capability_score * 0.25 +
+            self.research_reputation * 0.2
         )
         
         return overall_score
@@ -124,6 +148,12 @@ class UserProfile:
         return (self.reputation_score >= 0.8 and 
                 self.capability in [ServerCapability.EXPERT, ServerCapability.MASTER] and
                 self.reliability_score >= 0.7)
+    
+    def is_research_expert(self) -> bool:
+        """Check if user is a research expert"""
+        return (self.research_reputation >= 0.8 and 
+                self.research_contributions >= 10 and
+                self.research_activity_streak >= 7)
 
 
 @dataclass
@@ -170,11 +200,18 @@ class NetworkMetrics:
     query_success_rate: float = 0.0
     average_response_time: float = 0.0
     last_updated: datetime = field(default_factory=datetime.now)
+    
+    # Add research tracking metrics
+    total_research_sources: int = 0
+    high_quality_sources: int = 0
+    active_researchers: int = 0
+    average_research_reputation: float = 0.0
+    research_experts: int = 0
 
 
 class P2PNetworkIntegration:
     """
-    P2P network integration with comprehensive status visualization.
+    P2P network integration with comprehensive status visualization and research tracking.
     
     Features:
     - Real-time user status tracking
@@ -182,15 +219,19 @@ class P2PNetworkIntegration:
     - Status bar visualization with color-coded segments
     - Network health monitoring
     - Query routing and load balancing
+    - Research source tracking and quality assessment
+    - Research reputation management
     """
     
     def __init__(self, 
                  max_users: int = 1000,
                  update_interval: float = 1.0,
-                 reputation_decay_rate: float = 0.01):
+                 reputation_decay_rate: float = 0.01,
+                 enable_research_tracking: bool = True):
         self.max_users = max_users
         self.update_interval = update_interval
         self.reputation_decay_rate = reputation_decay_rate
+        self.enable_research_tracking = enable_research_tracking and RESEARCH_TRACKING_AVAILABLE
         
         self.logger = logging.getLogger("P2PNetworkIntegration")
         
@@ -198,6 +239,12 @@ class P2PNetworkIntegration:
         self.users: Dict[str, UserProfile] = {}
         self.status_bar_segments: List[StatusBarSegment] = []
         self.network_metrics = NetworkMetrics()
+        
+        # Research tracking integration
+        self.research_tracking: Optional[P2PResearchTracking] = None
+        if self.enable_research_tracking:
+            self.research_tracking = P2PResearchTracking(p2p_network=self)
+            self.research_tracking.add_network_callback(self._on_research_metrics_update)
         
         # Performance tracking
         self.query_history: List[Dict[str, Any]] = []
@@ -254,40 +301,42 @@ class P2PNetworkIntegration:
     
     def register_user(self, user_id: str, username: str, 
                      capability: ServerCapability = ServerCapability.BASIC,
-                     region: NetworkRegion = NetworkRegion.LOCAL) -> bool:
-        """
-        Register a new user in the P2P network.
-        
-        Args:
-            user_id: Unique user identifier
-            username: User display name
-            capability: Server capability level
-            region: Network region
-            
-        Returns:
-            True if registration was successful
-        """
-        if len(self.users) >= self.max_users:
-            self.logger.warning("Maximum users reached")
-            return False
-        
+                     region: NetworkRegion = NetworkRegion.LOCAL,
+                     expertise_domains: Optional[List[str]] = None) -> bool:
+        """Register a new user with research expertise tracking"""
         if user_id in self.users:
             self.logger.warning(f"User {user_id} already registered")
             return False
         
-        user_profile = UserProfile(
+        if len(self.users) >= self.max_users:
+            self.logger.warning("Maximum users reached")
+            return False
+        
+        user = UserProfile(
             user_id=user_id,
             username=username,
             capability=capability,
-            region=region
+            region=region,
+            expertise_domains=expertise_domains or []
         )
         
-        self.users[user_id] = user_profile
-        self.logger.info(f"Registered user {username} ({user_id})")
+        self.users[user_id] = user
         
-        # Trigger status update
-        asyncio.create_task(self._trigger_status_update())
+        # Register with research tracking if available
+        if self.research_tracking:
+            try:
+                # Create researcher profile
+                researcher_id = f"researcher_{user_id}"
+                self.research_tracking.researcher_profiles[researcher_id] = ResearcherProfile(
+                    researcher_id=researcher_id,
+                    username=username,
+                    user_id=user_id,
+                    expertise_domains=[ResearchDomain(d) for d in expertise_domains] if expertise_domains else []
+                )
+            except Exception as e:
+                self.logger.error(f"Error registering user with research tracking: {e}")
         
+        self.logger.info(f"Registered user: {username} (ID: {user_id})")
         return True
     
     def unregister_user(self, user_id: str) -> bool:
@@ -335,66 +384,54 @@ class P2PNetworkIntegration:
     
     def record_query_result(self, user_id: str, query_id: str, 
                           success: bool, response_time: float, 
-                          result_quality: float = 1.0) -> bool:
-        """
-        Record query result for reputation calculation.
-        
-        Args:
-            user_id: User who processed the query
-            query_id: Query identifier
-            success: Whether query was successful
-            response_time: Response time in seconds
-            result_quality: Quality of the result (0.0 to 1.0)
-            
-        Returns:
-            True if recording was successful
-        """
+                          result_quality: float = 1.0,
+                          research_sources: Optional[List[str]] = None) -> bool:
+        """Record query result with research source tracking"""
         if user_id not in self.users:
-            self.logger.warning(f"User {user_id} not found")
+            self.logger.error(f"User {user_id} not found")
             return False
         
-        user_profile = self.users[user_id]
+        user = self.users[user_id]
         
-        # Update query statistics
-        user_profile.total_queries_processed += 1
+        # Update basic metrics
+        user.total_queries_processed += 1
         if success:
-            user_profile.successful_queries += 1
-        
-        # Update average response time
-        if user_profile.average_response_time == 0.0:
-            user_profile.average_response_time = response_time
+            user.successful_queries += 1
         else:
-            user_profile.average_response_time = (
-                (user_profile.average_response_time + response_time) / 2
-            )
+            user.failed_queries += 1
         
-        # Calculate new reputation score
-        success_rate = user_profile.successful_queries / user_profile.total_queries_processed
-        time_efficiency = max(0.0, 1.0 - (response_time / 10.0))  # Normalize to 10 seconds
-        quality_factor = result_quality
+        # Update response time
+        if user.average_response_time == 0.0:
+            user.average_response_time = response_time
+        else:
+            user.average_response_time = (user.average_response_time * 0.9 + response_time * 0.1)
         
-        new_reputation = (success_rate * 0.5 + time_efficiency * 0.3 + quality_factor * 0.2)
-        user_profile.update_reputation(new_reputation)
+        # Update reliability score
+        success_rate = user.successful_queries / user.total_queries_processed
+        user.reliability_score = success_rate
         
-        # Record query history
-        query_record = {
-            'query_id': query_id,
-            'user_id': user_id,
-            'timestamp': datetime.now().isoformat(),
-            'success': success,
-            'response_time': response_time,
-            'result_quality': result_quality,
-            'new_reputation': new_reputation
-        }
-        self.query_history.append(query_record)
+        # Update research tracking if sources provided
+        if research_sources and self.research_tracking:
+            try:
+                researcher_id = f"researcher_{user_id}"
+                if researcher_id in self.research_tracking.researcher_profiles:
+                    researcher = self.research_tracking.researcher_profiles[researcher_id]
+                    researcher.network_contributions += 1
+                    researcher.last_activity = datetime.now()
+                    
+                    # Update research reputation based on result quality
+                    if result_quality > 0.8:
+                        researcher.research_reputation = min(1.0, researcher.research_reputation + 0.01)
+                    elif result_quality < 0.5:
+                        researcher.research_reputation = max(0.0, researcher.research_reputation - 0.01)
+                    
+                    # Update user's research reputation
+                    user.research_reputation = researcher.research_reputation
+                    user.research_contributions = researcher.network_contributions
+            except Exception as e:
+                self.logger.error(f"Error updating research tracking: {e}")
         
-        # Keep only recent history
-        if len(self.query_history) > 1000:
-            self.query_history = self.query_history[-1000:]
-        
-        self.logger.debug(f"Recorded query result for user {user_id}: success={success}, "
-                         f"response_time={response_time:.3f}s")
-        
+        self.logger.debug(f"Recorded query result for {user_id}: success={success}, quality={result_quality}")
         return True
     
     async def _update_network_status(self):
@@ -498,58 +535,57 @@ class P2PNetworkIntegration:
                 user_profile.update_reputation(new_reputation)
     
     async def _update_metrics(self):
-        """Update network-wide metrics"""
+        """Update network metrics including research tracking"""
         if not self.users:
             return
         
-        total_users = len(self.users)
-        active_users = sum(1 for u in self.users.values() if u.is_available_for_queries())
-        idle_users = sum(1 for u in self.users.values() if u.status == UserStatus.IDLE)
-        high_reputation_servers = sum(1 for u in self.users.values() if u.is_high_reputation_server())
+        # Update basic metrics
+        self.network_metrics.total_users = len(self.users)
+        self.network_metrics.active_users = len([u for u in self.users.values() if u.status == UserStatus.ACTIVE])
+        self.network_metrics.idle_users = len([u for u in self.users.values() if u.status == UserStatus.IDLE])
+        self.network_metrics.high_reputation_servers = len([u for u in self.users.values() if u.is_high_reputation_server()])
         
-        reputation_scores = [u.reputation_score for u in self.users.values()]
-        reliability_scores = [u.reliability_score for u in self.users.values()]
+        # Calculate averages
+        reputations = [u.reputation_score for u in self.users.values()]
+        reliabilities = [u.reliability_score for u in self.users.values()]
+        response_times = [u.average_response_time for u in self.users.values() if u.average_response_time > 0]
         
-        # Calculate network health
-        health_factors = []
-        if total_users > 0:
-            health_factors.append(active_users / total_users)  # Availability
-            health_factors.append(sum(reputation_scores) / len(reputation_scores))  # Average reputation
-            health_factors.append(sum(reliability_scores) / len(reliability_scores))  # Average reliability
+        self.network_metrics.average_reputation = np.mean(reputations) if reputations else 0.0
+        self.network_metrics.average_reliability = np.mean(reliabilities) if reliabilities else 0.0
+        self.network_metrics.average_response_time = np.mean(response_times) if response_times else 0.0
         
-        network_health = sum(health_factors) / len(health_factors) if health_factors else 0.0
-        
-        # Calculate query success rate
+        # Calculate success rate
         total_queries = sum(u.total_queries_processed for u in self.users.values())
         successful_queries = sum(u.successful_queries for u in self.users.values())
-        query_success_rate = successful_queries / total_queries if total_queries > 0 else 0.0
+        self.network_metrics.query_success_rate = successful_queries / total_queries if total_queries > 0 else 0.0
         
-        # Calculate average response time
-        response_times = [u.average_response_time for u in self.users.values() if u.average_response_time > 0]
-        average_response_time = sum(response_times) / len(response_times) if response_times else 0.0
+        # Calculate network health
+        health_factors = [
+            self.network_metrics.query_success_rate,
+            self.network_metrics.average_reliability,
+            min(1.0, self.network_metrics.active_users / max(self.network_metrics.total_users, 1))
+        ]
+        self.network_metrics.network_health = np.mean(health_factors)
         
-        # Update metrics
-        self.network_metrics = NetworkMetrics(
-            total_users=total_users,
-            active_users=active_users,
-            idle_users=idle_users,
-            high_reputation_servers=high_reputation_servers,
-            average_reputation=sum(reputation_scores) / len(reputation_scores) if reputation_scores else 0.0,
-            average_reliability=sum(reliability_scores) / len(reliability_scores) if reliability_scores else 0.0,
-            network_health=network_health,
-            query_success_rate=query_success_rate,
-            average_response_time=average_response_time,
-            last_updated=datetime.now()
-        )
+        # Update research tracking metrics
+        if self.research_tracking:
+            research_stats = self.research_tracking.get_research_network_stats()
+            self.network_metrics.total_research_sources = research_stats['total_sources']
+            self.network_metrics.high_quality_sources = research_stats['high_quality_sources']
+            self.network_metrics.active_researchers = research_stats['active_researchers']
+            self.network_metrics.average_research_reputation = research_stats['average_research_reputation']
+            self.network_metrics.research_experts = len([u for u in self.users.values() if u.is_research_expert()])
+        
+        self.network_metrics.last_updated = datetime.now()
         
         # Record performance history
         performance_record = {
             'timestamp': datetime.now().isoformat(),
-            'total_users': total_users,
-            'active_users': active_users,
-            'network_health': network_health,
-            'query_success_rate': query_success_rate,
-            'average_response_time': average_response_time
+            'total_users': self.network_metrics.total_users,
+            'active_users': self.network_metrics.active_users,
+            'network_health': self.network_metrics.network_health,
+            'query_success_rate': self.network_metrics.query_success_rate,
+            'average_response_time': self.network_metrics.average_response_time
         }
         self.performance_history.append(performance_record)
         
@@ -749,6 +785,178 @@ class P2PNetworkIntegration:
         self.query_history = state.get('query_history', [])
         
         self.logger.info(f"Network state loaded from {filepath}")
+
+    def _on_research_metrics_update(self, research_metrics: Dict[str, Any]):
+        """Callback for research metrics updates"""
+        self.logger.debug(f"Research metrics updated: {research_metrics}")
+        # Additional processing can be added here if needed
+
+    # Add new research tracking methods
+
+    def add_research_source(self, 
+                           title: str,
+                           authors: List[str],
+                           source_type: str,
+                           domain: str,
+                           url: Optional[str] = None,
+                           doi: Optional[str] = None,
+                           user_id: Optional[str] = None,
+                           **kwargs) -> Optional[str]:
+        """Add a research source through the P2P network"""
+        if not self.research_tracking:
+            self.logger.warning("Research tracking not enabled")
+            return None
+        
+        try:
+            source_type_enum = SourceType(source_type)
+            domain_enum = ResearchDomain(domain)
+            
+            source_id = self.research_tracking.add_research_source(
+                title=title,
+                authors=authors,
+                source_type=source_type_enum,
+                domain=domain_enum,
+                url=url,
+                doi=doi,
+                created_by=f"researcher_{user_id}" if user_id else None,
+                **kwargs
+            )
+            
+            # Update user's research contributions
+            if user_id and user_id in self.users:
+                self.users[user_id].research_contributions += 1
+                self.users[user_id].research_activity_streak += 1
+            
+            return source_id
+        except Exception as e:
+            self.logger.error(f"Error adding research source: {e}")
+            return None
+
+    def validate_research_source(self,
+                                source_id: str,
+                                user_id: str,
+                                validation_type: str,
+                                confidence: float,
+                                reasoning: str) -> bool:
+        """Validate or dispute a research source"""
+        if not self.research_tracking:
+            self.logger.warning("Research tracking not enabled")
+            return False
+        
+        try:
+            researcher_id = f"researcher_{user_id}"
+            success = self.research_tracking.validate_research_source(
+                source_id=source_id,
+                researcher_id=researcher_id,
+                validation_type=validation_type,
+                confidence=confidence,
+                reasoning=reasoning
+            )
+            
+            if success and user_id in self.users:
+                self.users[user_id].research_contributions += 1
+                self.users[user_id].research_activity_streak += 1
+            
+            return success
+        except Exception as e:
+            self.logger.error(f"Error validating research source: {e}")
+            return False
+
+    def get_research_sources(self,
+                           domain: Optional[str] = None,
+                           quality_level: Optional[str] = None,
+                           source_type: Optional[str] = None,
+                           limit: int = 100) -> List[Dict[str, Any]]:
+        """Get research sources with filtering"""
+        if not self.research_tracking:
+            return []
+        
+        try:
+            domain_enum = ResearchDomain(domain) if domain else None
+            quality_enum = ResearchQuality(quality_level) if quality_level else None
+            source_type_enum = SourceType(source_type) if source_type else None
+            
+            sources = self.research_tracking.get_research_sources(
+                domain=domain_enum,
+                quality_level=quality_enum,
+                source_type=source_type_enum,
+                limit=limit
+            )
+            
+            # Convert to dictionary format for API
+            return [
+                {
+                    'source_id': s.source_id,
+                    'title': s.title,
+                    'authors': s.authors,
+                    'source_type': s.source_type.value,
+                    'domain': s.domain.value,
+                    'url': s.url,
+                    'doi': s.doi,
+                    'quality_score': s.quality_score,
+                    'quality_level': s.quality_level.value,
+                    'network_reputation': s.network_reputation,
+                    'validation_count': s.validation_count,
+                    'dispute_count': s.dispute_count,
+                    'last_updated': s.last_updated.isoformat()
+                }
+                for s in sources
+            ]
+        except Exception as e:
+            self.logger.error(f"Error getting research sources: {e}")
+            return []
+
+    def get_research_network_stats(self) -> Dict[str, Any]:
+        """Get comprehensive research network statistics"""
+        if not self.research_tracking:
+            return {}
+        
+        try:
+            return self.research_tracking.get_research_network_stats()
+        except Exception as e:
+            self.logger.error(f"Error getting research network stats: {e}")
+            return {}
+
+    def get_top_researchers(self, domain: Optional[str] = None, limit: int = 10) -> List[Dict[str, Any]]:
+        """Get top researchers by reputation"""
+        if not self.research_tracking:
+            return []
+        
+        try:
+            domain_enum = ResearchDomain(domain) if domain else None
+            researchers = self.research_tracking.get_top_researchers(domain=domain_enum, limit=limit)
+            
+            return [
+                {
+                    'researcher_id': r.researcher_id,
+                    'username': r.username,
+                    'user_id': r.user_id,
+                    'research_reputation': r.research_reputation,
+                    'total_sources': r.total_sources,
+                    'validated_sources': r.validated_sources,
+                    'expertise_domains': [d.value for d in r.expertise_domains],
+                    'validation_accuracy': r.validation_accuracy,
+                    'network_contributions': r.network_contributions,
+                    'activity_streak': r.activity_streak,
+                    'last_activity': r.last_activity.isoformat()
+                }
+                for r in researchers
+            ]
+        except Exception as e:
+            self.logger.error(f"Error getting top researchers: {e}")
+            return []
+
+    def get_research_trends(self, domain: Optional[str] = None, days: int = 30) -> Dict[str, Any]:
+        """Get research trends and analysis"""
+        if not self.research_tracking:
+            return {}
+        
+        try:
+            domain_enum = ResearchDomain(domain) if domain else None
+            return self.research_tracking.get_research_trends(domain=domain_enum, days=days)
+        except Exception as e:
+            self.logger.error(f"Error getting research trends: {e}")
+            return {}
 
 
 # Import required enums

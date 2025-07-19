@@ -1,32 +1,60 @@
 {
+  "mcp.enable": true,
   "mcp.servers": {
-    "agentic-workflow": {
+    "mcp-agentic-workflow": {
       "command": "python",
-      "args": ["-m", "src.mcp.mcp_stdio"],
+      "args": ["-m", "src.mcp.server"],
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/src",
-        "MCP_API_KEY": "changeme",
         "MCP_PROJECT_PATH": "${workspaceFolder}",
-        "MCP_VECTOR_BACKEND": "sqlitefaiss",
         "MCP_LOG_LEVEL": "INFO",
-        "MCP_DEBUG_MODE": "false"
+        "MCP_DEBUG_MODE": "false",
+        "MCP_AUTO_UPDATE_ENABLED": "true",
+        "MCP_PERFORMANCE_MONITORING": "true",
+        "MCP_VECTOR_BACKEND": "faiss",
+        "PYTHONPATH": "${workspaceFolder}"
       },
-      "capabilities": {
-        "workflow_management": true,
-        "task_management": true,
-        "memory_management": true,
-        "context_management": true,
-        "rag_system": true,
-        "performance_monitoring": true,
-        "experimental_lobes": true,
-        "project_management": true,
-        "self_improvement": true
-      }
+      "cwd": "${workspaceFolder}"
     }
   },
-  "mcp.autoConnect": true,
-  "mcp.showNotifications": true,
-  "mcp.logLevel": "info",
-  "mcp.enableTelemetry": false,
-  "mcp.experimentalFeatures": true
-} 
+  "mcp.trace.server": "verbose",
+  "mcp.autoStart": true,
+  "mcp.reconnect": true,
+  "mcp.timeout": 30000,
+  
+  "python.defaultInterpreterPath": "./venv/bin/python",
+  "python.terminal.activateEnvironment": true,
+  "python.linting.enabled": true,
+  "python.linting.pylintEnabled": true,
+  "python.linting.flake8Enabled": true,
+  "python.formatting.provider": "black",
+  "python.formatting.blackArgs": ["--line-length", "88"],
+  "python.sortImports.args": ["--profile", "black"],
+  
+  "files.associations": {
+    "*.md": "markdown",
+    "*.json": "jsonc",
+    "*.cfg": "ini"
+  },
+  
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": true,
+    "source.fixAll": true
+  },
+  
+  "terminal.integrated.env.linux": {
+    "MCP_PROJECT_PATH": "${workspaceFolder}",
+    "PYTHONPATH": "${workspaceFolder}"
+  },
+  "terminal.integrated.env.osx": {
+    "MCP_PROJECT_PATH": "${workspaceFolder}",
+    "PYTHONPATH": "${workspaceFolder}"
+  },
+  "terminal.integrated.env.windows": {
+    "MCP_PROJECT_PATH": "${workspaceFolder}",
+    "PYTHONPATH": "${workspaceFolder}"
+  },
+  
+  "tasks.version": "2.0.0",
+  "launch.version": "0.2.0"
+}
