@@ -14,6 +14,11 @@ from src.mcp.brain_state_aggregator import BrainStateAggregator
 from src.mcp.lobes.experimental.lobe_event_bus import LobeEventBus
 # from src.mcp.core_system_infrastructure import CoreSystemInfrastructure
 
+# STUB: Add HormoneSystem for backward compatibility with legacy imports
+class HormoneSystem:
+    """Stub for legacy compatibility. Use HormoneSystemIntegration instead."""
+    pass
+
 class HormoneSystemIntegration:
     """
     Integration class for connecting HormoneSystemController with BrainStateAggregator.
@@ -204,7 +209,7 @@ class HormoneSystemIntegration:
         
     def start(self):
         """Start the integration system."""
-        self.hormone_controller.start()
+        # self.hormone_controller.start()  # Already started in __init__
         self.logger.info("HormoneSystemIntegration started")
         
     def update(self):
@@ -223,7 +228,7 @@ class HormoneSystemIntegration:
             
     def get_hormone_levels(self) -> Dict[str, float]:
         """Get current hormone levels."""
-        return self.hormone_controller.get_hormone_levels()
+        return self.hormone_controller.get_levels()
     
     def get_brain_state(self) -> Dict[str, Any]:
         """Get current brain state."""
@@ -236,33 +241,23 @@ class HormoneSystemIntegration:
         else:
             self.logger.warning(f"Receptor sensitivity adaptation not implemented for {lobe}:{hormone}")
         
-    def learn_optimal_hormone_profiles(self, context: Dict) -> Dict[str, float]:
+    def learn_optimal_hormone_profiles(self, context: Optional[Dict] = None) -> Dict[str, float]:
         """Learn optimal hormone profiles for specific contexts."""
-        if hasattr(self.hormone_controller, 'learn_optimal_profiles'):
-            return self.hormone_controller.learn_optimal_profiles(context)
-        else:
-            # Return a default profile based on context
-            default_profile = {
-                "dopamine": 0.6,
-                "serotonin": 0.7,
-                "cortisol": 0.3,
-                "acetylcholine": 0.5
-            }
-            
-            # Adjust based on context
-            if context.get("task_type") == "creative":
-                default_profile["dopamine"] = 0.8
-                default_profile["acetylcholine"] = 0.7
-            if context.get("priority") == "high":
-                default_profile["cortisol"] = 0.5
-                default_profile["adrenaline"] = 0.6
-                
-            return default_profile
+        if context is None:
+            context = {}
+        return self.hormone_controller.learn_optimal_hormone_profiles(context)
     
     def emit_event(self, event_type: str, data: Any, signal_type: str = "excitatory", 
-                  context: Dict = None, priority: int = 0):
+                  context: Optional[Dict] = None, priority: int = 0):
         """Emit an event on the event bus."""
-        self.event_bus.emit(event_type, data, signal_type, context, priority)
+        # LobeEventBus.emit only takes (event_type, data)
+        if context is not None:
+            if isinstance(data, dict):
+                data = dict(data)  # Copy to avoid mutating caller's dict
+                data["_context"] = context
+            else:
+                data = {"value": data, "_context": context}
+        self.event_bus.emit(event_type, data)
     
     def shutdown(self):
         """Shut down the integration system."""

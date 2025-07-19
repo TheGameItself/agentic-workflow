@@ -6,41 +6,46 @@ See idea.txt, README.md, and RESEARCH_SOURCES.md for details.
 
 from typing import Any, Dict, List, Optional
 import logging
-from src.mcp.lobes.shared_lobes.working_memory import WorkingMemory, ShortTermMemory, LongTermMemory
+from src.mcp.three_tier_memory_manager import ThreeTierMemoryManager, MemoryTier
 
 class MemoryLobe:
-    def __init__(self):
-        self.working_memory = WorkingMemory()
-        self.short_term_memory = ShortTermMemory()
-        self.long_term_memory = LongTermMemory()
+    def __init__(self, hormone_system: Optional[Any] = None, genetic_trigger_manager: Optional[Any] = None):
+        self.memory_manager = ThreeTierMemoryManager(hormone_system=hormone_system, genetic_trigger_manager=genetic_trigger_manager)
         self.logger = logging.getLogger("MemoryLobe")
 
     def store(self, memory: Dict[str, Any], memory_type: str = "working"):
         """Store a new memory in the specified memory type ('working', 'short_term', 'long_term')."""
         try:
+            key = memory.get("id") or str(hash(str(memory)))
+            # Map memory_type to tier_hint for ThreeTierMemoryManager
+            tier_hint = None
             if memory_type == "working":
-                self.working_memory.add(memory)
+                tier_hint = MemoryTier.WORKING
             elif memory_type == "short_term":
-                self.short_term_memory.add(memory)
+                tier_hint = MemoryTier.SHORT_TERM
             elif memory_type == "long_term":
-                key = memory.get("id") or str(len(self.long_term_memory.get_all()))
-                self.long_term_memory.add(key, memory)
+                tier_hint = MemoryTier.LONG_TERM
             else:
                 raise ValueError(f"Unknown memory_type: {memory_type}")
+            self.memory_manager.store(key, memory, tier_hint=tier_hint)
             self.logger.info(f"[MemoryLobe] Memory stored in {memory_type}: {memory}")
         except Exception as ex:
             self.logger.error(f"[MemoryLobe] Error storing memory: {ex}")
 
     def retrieve(self, memory_type: str = "working", query: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         """Retrieve memories from the specified memory type."""
+        tier_hint = None
         if memory_type == "working":
-            memories = self.working_memory.get_all()
+            tier_hint = MemoryTier.WORKING
         elif memory_type == "short_term":
-            memories = self.short_term_memory.get_all()
+            tier_hint = MemoryTier.SHORT_TERM
         elif memory_type == "long_term":
-            memories = list(self.long_term_memory.get_all().values())
+            tier_hint = MemoryTier.LONG_TERM
         else:
             raise ValueError(f"Unknown memory_type: {memory_type}")
+        # Use search to get all items in the tier
+        items = self.memory_manager.search(query="", tier=tier_hint, limit=1000)
+        memories = [item.data for item in items]
         if not query:
             return memories
         return [m for m in memories if all(m.get(k) == v for k, v in query.items())]
@@ -71,7 +76,22 @@ class MemoryLobe:
         """
         self.logger.info(f"[MemoryLobe] Cross-lobe integration called with {lobe_name}.")
         # Placeholder: simulate integration
-        return self.working_memory.get_all() + self.short_term_memory.get_all() + list(self.long_term_memory.get_all().values())
+        items = self.memory_manager.search(query="", limit=1000)
+        return [item.data for item in items]
+
+    def hormone_genetic_trigger_hook(self, event: str, data: Any = None):
+        """Handle hormone/genetic trigger events and route to memory manager integration points."""
+        self.logger.info(f"[MemoryLobe] Hormone/Genetic Trigger Event: {event}, Data: {data}")
+        # Example: trigger optimization or promotion based on event
+        if event == "optimize":
+            self.memory_manager.optimize(force=True)
+        elif event == "promote" and data:
+            key = data.get("key")
+            from_tier = data.get("from_tier")
+            to_tier = data.get("to_tier")
+            if key and from_tier and to_tier:
+                self.memory_manager._promote_item(key, from_tier, to_tier)
+        # Extend with more event types as needed
 
     def usage_example(self):
         """

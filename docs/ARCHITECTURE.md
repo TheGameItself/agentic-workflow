@@ -451,4 +451,55 @@ ltm.add("knowledge_1", {"fact": "persistent"})
 
 All lobes/engines should be updated to use the appropriate memory type for their needs.
 
-This architecture documentation provides a comprehensive overview of the MCP server's design, implementation, and future direction. 
+## Integration Points (Updated)
+
+- [[ThreeTierMemoryManager]]: Integrates WorkingMemory, ShortTermMemory, and LongTermMemory with hormone/genetic trigger hooks.
+- [[UnifiedMemoryManager]]: Combines all memory features and supports advanced engram operations.
+- [[MemoryLobe]]: Provides cross-lobe integration and hormone/genetic trigger hooks.
+- [[GeneticTriggerSystem]], [[GeneticDataExchange]], [[IntegratedP2PGeneticSystem]]: Full genetic system integration, cross-pollination, and P2P data exchange.
+- [[SharedSimulationState]], [[SimulatedReality]], [[PhysicsEngine]]: Simulation layer with shared state and cross-engine coordination.
+- [[ResourceOptimizationIntegration]], [[PredictiveResourceAllocationIntegration]]: Resource optimization and predictive allocation integration.
+- Experimental lobes: [[AdvancedEngramEngine]], [[DreamingEngine]], [[MindMapEngine]], etc. are cross-linked and referenced.
+- Documentation is Obsidian-friendly and all features are cross-linked for maximum explorability.
+
+## Planned Enhancements
+
+- **Periodic Reporting & Dynamic Tagging**: Planned for future implementation. Will automate periodic QA/security reporting and dynamic tagging across all lobes and integration points.
+
+This architecture documentation provides a comprehensive overview of the MCP server's design, implementation, and future direction.
+
+# MCP System Architecture (Updated)
+
+## Overview
+This document reflects the latest MCP System Upgrade, including:
+- Three-Tier Memory Manager (WorkingMemory, ShortTermMemory, LongTermMemory)
+- Simulation Layer: WebSocialEngine
+- Genetic Layer: Dual code/neural GeneticTrigger, hormone integration, A/B testing
+- Integration Layer: P2P benchmarking, async processing, global performance projection
+
+## Three-Tier Memory Manager
+- See [unified_memory.py](../src/mcp/unified_memory.py)
+- Integrates WorkingMemory, ShortTermMemory, LongTermMemory
+- Automatic tier transitions, cross-tier search, and consolidation
+- Used by all lobes/engines for memory operations
+
+## Simulation Layer: WebSocialEngine
+- See [web_social_engine.py](../src/mcp/lobes/web_social_engine.py)
+- Interfaces: crawl_and_analyze_content, interact_with_social_media, manage_digital_identity, handle_captcha_challenges, generate_secure_credentials, assess_source_credibility
+
+## Genetic Layer: GeneticTrigger System
+- See [genetic_trigger.py](../src/mcp/genetic_trigger_system/genetic_trigger.py)
+- Dual code/neural implementation, hormone system integration, split-brain A/B testing
+- Environmental adaptation, mutation, crossover, performance tracking
+
+## Integration Layer: P2P Benchmarking & Async
+- See [p2p_network.py](../src/mcp/p2p_network.py), [integrated_p2p_genetic_system.py](../src/mcp/integrated_p2p_genetic_system.py)
+- Secure benchmarking, async status visualization, global performance projection
+
+## Cross-References
+- [API_DOCUMENTATION.md](API_DOCUMENTATION.md)
+- [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)
+- [USER_GUIDE.md](USER_GUIDE.md)
+- [ADVANCED_API.md](ADVANCED_API.md)
+
+## For details on each component, see the respective source files and linked documentation. 

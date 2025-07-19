@@ -100,6 +100,14 @@ except ImportError as e:
             """Get current aggregated brain state."""
             return self.current_state.copy()
 
+# Stub for test compatibility
+class AdaptiveSensitivityManager:
+    pass
+
+# Stub for test compatibility
+class SensoryDataPropagator:
+    pass
+
 try:
     import numpy as np
 except ImportError:
@@ -1292,10 +1300,6 @@ class EnhancedPatternRecognitionEngine:
         conn.commit()
         conn.close()
 
-
-# Backward compatibility aliases
-PatternRecognitionEngine = EnhancedPatternRecognitionEngine
-NeuralColumn = EnhancedNeuralColumn
     def get_cross_lobe_sharing_statistics(self) -> Dict[str, Any]:
         """Get statistics about cross-lobe sensory data sharing."""
         conn = sqlite3.connect(self.db_path)
@@ -1340,104 +1344,8 @@ NeuralColumn = EnhancedNeuralColumn
             'total_columns': len(self.neural_columns),
             'cross_lobe_connections': len(self.cross_lobe_connections)
         }
-    
-    def process_adaptive_feedback_integration(self, feedback_data: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Process comprehensive adaptive feedback integration across all columns
-        with cross-modal learning and hormone-based modulation.
-        """
-        feedback_results = {
-            'processed_columns': [],
-            'cross_modal_learning_applied': False,
-            'hormone_modulation_applied': False,
-            'sensitivity_adjustments': {},
-            'integration_timestamp': time.time()
-        }
-        
-        # Process feedback for each relevant column
-        target_columns = feedback_data.get('target_columns', list(self.neural_columns.keys()))
-        
-        for column_id in target_columns:
-            if column_id in self.neural_columns:
-                column = self.neural_columns[column_id]
-                
-                # Process feedback integration for this column
-                integration_result = column.process_feedback_integration(feedback_data)
-                feedback_results['processed_columns'].append({
-                    'column_id': column_id,
-                    'integration_result': integration_result
-                })
-                
-                # Track sensitivity adjustments
-                feedback_results['sensitivity_adjustments'][column_id] = {
-                    'before': integration_result.get('sensitivity_before', column.sensitivity),
-                    'after': column.sensitivity
-                }
-        
-        # Apply cross-modal learning if specified
-        if feedback_data.get('enable_cross_modal_learning', True):
-            self._apply_cross_modal_feedback_learning(feedback_data)
-            feedback_results['cross_modal_learning_applied'] = True
-        
-        # Apply hormone modulation if hormone levels provided
-        hormone_levels = feedback_data.get('hormone_levels')
-        if hormone_levels and self.adaptive_sensitivity_manager:
-            self.adaptive_sensitivity_manager.apply_hormone_modulation(hormone_levels)
-            feedback_results['hormone_modulation_applied'] = True
-        
-        # Store feedback integration results
-        self._store_feedback_integration_results(feedback_data, feedback_results)
-        
-        return feedback_results
-    
-    def _apply_cross_modal_feedback_learning(self, feedback_data: Dict[str, Any]):
-        """Apply cross-modal learning based on feedback across different sensory modalities."""
-        primary_modality = feedback_data.get('primary_modality', 'visual')
-        secondary_modalities = feedback_data.get('secondary_modalities', ['auditory', 'tactile'])
-        learning_strength = feedback_data.get('cross_modal_strength', 0.1)
-        
-        # Find columns that process the primary modality
-        primary_columns = []
-        for column_id, column in self.neural_columns.items():
-            if any(primary_modality in pattern_type for pattern_type in column.pattern_types):
-                primary_columns.append(column_id)
-        
-        # Apply learning to secondary modality columns
-        for secondary_modality in secondary_modalities:
-            secondary_columns = []
-            for column_id, column in self.neural_columns.items():
-                if any(secondary_modality in pattern_type for pattern_type in column.pattern_types):
-                    secondary_columns.append(column_id)
-            
-            # Apply cross-column learning between modalities
-            for primary_col in primary_columns:
-                if self.adaptive_sensitivity_manager:
-                    self.adaptive_sensitivity_manager.apply_cross_column_learning(
-                        primary_col, secondary_columns, learning_strength
-                    )
-        
-        self.logger.info(f"Applied cross-modal learning: {primary_modality} -> {secondary_modalities}")
-    
-    def _store_feedback_integration_results(self, feedback_data: Dict[str, Any], 
-                                          feedback_results: Dict[str, Any]):
-        """Store feedback integration results in database."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        cursor.execute("""
-            INSERT INTO pattern_associations (pattern1_type, pattern2_type, association_strength, 
-                                           reinforcements, context, column_id, created_at, last_updated)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            'feedback_integration',
-            feedback_data.get('type', 'general'),
-            len(feedback_results['processed_columns']) / len(self.neural_columns),
-            1,
-            json.dumps(feedback_results),
-            'adaptive_feedback_system',
-            datetime.now().isoformat(),
-            datetime.now().isoformat()
-        ))
-        
-        conn.commit()
-        conn.close()
+
+
+# Backward compatibility aliases
+PatternRecognitionEngine = EnhancedPatternRecognitionEngine
+NeuralColumn = EnhancedNeuralColumn

@@ -1,4 +1,4 @@
-from typing import Final, Literal, Dict
+from typing import Final, Literal, Dict, Any
 from pathlib import Path
 import click
 import os
@@ -22,6 +22,7 @@ from .rag_system import RAGSystem
 from .reminder_engine import EnhancedReminderEngine
 from .advanced_memory import TFIDFEncoder, RaBitQEncoder
 from .server import MCPServer
+from .automatic_update_system import AutomaticUpdateSystem, UpdateStatus
 
 FEATURE_FLAGS: Final[Dict[str, bool]] = {
     'experimental_lobes': False,
@@ -2507,6 +2508,122 @@ def tail_logs(lines, follow, level):
                             click.echo(line, nl=False)
             except KeyboardInterrupt:
                 click.echo('\n[MCP] Log tailing stopped.')
+
+@cli.command()
+def check_updates():
+    """Check for available updates."""
+    try:
+        update_system = AutomaticUpdateSystem()
+        status, version_info = update_system.check_for_updates()
+        
+        if status == UpdateStatus.UPDATE_AVAILABLE and version_info:
+            click.echo(f"[MCP] Update available!")
+            click.echo(f"[MCP] Current version: {update_system.current_version}")
+            click.echo(f"[MCP] New version: {version_info.version}")
+            click.echo(f"[MCP] Release date: {version_info.release_date.strftime('%Y-%m-%d %H:%M:%S')}")
+            click.echo(f"[MCP] Size: {version_info.size} bytes")
+            click.echo(f"[MCP] Critical: {'Yes' if version_info.critical else 'No'}")
+            click.echo(f"[MCP] Auto-update: {'Yes' if version_info.auto_update else 'No'}")
+            click.echo(f"[MCP] Changelog: {version_info.changelog}")
+            click.echo(f"\n[MCP] Run 'perform-update' to install the update")
+        elif status == UpdateStatus.UP_TO_DATE:
+            click.echo(f"[MCP] System is up to date (version {update_system.current_version})")
+        else:
+            click.echo(f"[MCP] Failed to check for updates: {status.value}")
+    except Exception as e:
+        click.echo(f"[MCP] Error checking for updates: {str(e)}")
+
+@cli.command()
+def perform_update():
+    """Perform system update."""
+    try:
+        update_system = AutomaticUpdateSystem()
+        
+        # Check if update is available
+        status, version_info = update_system.check_for_updates()
+        if status != UpdateStatus.UPDATE_AVAILABLE or not version_info:
+            click.echo("[MCP] No update available")
+            return
+        
+        click.echo(f"[MCP] Starting update to version {version_info.version}...")
+        click.echo("[MCP] This may take a few minutes...")
+        
+        # Perform update
+        success = asyncio.run(update_system.perform_update(version_info))
+        
+        if success:
+            click.echo(f"[MCP] Successfully updated to version {version_info.version}")
+            click.echo(f"[MCP] Previous version: {update_system.current_version}")
+        else:
+            click.echo("[MCP] Update failed")
+    except Exception as e:
+        click.echo(f"[MCP] Error performing update: {str(e)}")
+
+@cli.command()
+def update_status():
+    """Show update system status."""
+    try:
+        update_system = AutomaticUpdateSystem()
+        status = update_system.get_status()
+        
+        click.echo("[MCP] Update System Status:")
+        click.echo("=" * 30)
+        click.echo(f"Current version: {status['current_version']}")
+        click.echo(f"Latest version: {status['latest_version'] or 'Unknown'}")
+        click.echo(f"Update status: {status['update_status']}")
+        click.echo(f"Auto-update enabled: {'Yes' if status['auto_update_enabled'] else 'No'}")
+        click.echo(f"System running: {'Yes' if status['running'] else 'No'}")
+        
+        if status['last_check_time']:
+            click.echo(f"Last check: {status['last_check_time']}")
+        
+        if status['update_history']:
+            click.echo(f"\nRecent updates ({len(status['update_history'])}):")
+            for update in status['update_history'][-3:]:  # Show last 3
+                click.echo(f"  {update['version']} ({update['timestamp'][:10]})")
+    except Exception as e:
+        click.echo(f"[MCP] Error getting update status: {str(e)}")
+
+@cli.command()
+def enable_auto_update():
+    """Enable automatic updates."""
+    try:
+        update_system = AutomaticUpdateSystem()
+        update_system.config.auto_update_enabled = True
+        click.echo("[MCP] Automatic updates enabled")
+    except Exception as e:
+        click.echo(f"[MCP] Error enabling automatic updates: {str(e)}")
+
+@cli.command()
+def disable_auto_update():
+    """Disable automatic updates."""
+    try:
+        update_system = AutomaticUpdateSystem()
+        update_system.config.auto_update_enabled = False
+        click.echo("[MCP] Automatic updates disabled")
+    except Exception as e:
+        click.echo(f"[MCP] Error disabling automatic updates: {str(e)}")
+
+@cli.command()
+def start_update_service():
+    """Start the automatic update service."""
+    try:
+        update_system = AutomaticUpdateSystem()
+        update_system.start()
+        click.echo("[MCP] Automatic update service started")
+        click.echo("[MCP] The service will check for updates every 24 hours")
+    except Exception as e:
+        click.echo(f"[MCP] Error starting update service: {str(e)}")
+
+@cli.command()
+def stop_update_service():
+    """Stop the automatic update service."""
+    try:
+        update_system = AutomaticUpdateSystem()
+        update_system.stop()
+        click.echo("[MCP] Automatic update service stopped")
+    except Exception as e:
+        click.echo(f"[MCP] Error stopping update service: {str(e)}")
 
 if __name__ == '__main__':
     cli() 

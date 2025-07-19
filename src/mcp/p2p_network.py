@@ -19,6 +19,7 @@ import socket
 import struct
 import time
 import uuid
+import zlib
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, List, Optional, Tuple, Any, Set, Callable
@@ -36,7 +37,7 @@ import base64
 
 # Import our genetic and engram systems
 from .genetic_data_exchange import GeneticDataExchange, GeneticDataPacket
-from .engram_transfer_system import MemoryEngram, EngramCompressor
+from .engram_transfer_system import MemoryEngram, EngramCompressor, EngramCompressionType
 
 
 class MessageType(Enum):
@@ -1126,6 +1127,72 @@ class P2PNetworkNode:
             },
             'connections': len(self.connections)
         }
+
+    async def benchmark_peer(self, peer_id: str) -> Dict[str, Any]:
+        """
+        Securely benchmark a peer for performance, latency, and reliability.
+        """
+        # TODO: Implement secure benchmarking protocol
+        return {"peer_id": peer_id, "latency": None, "bandwidth": None, "reputation": None}
+
+    async def visualize_status(self) -> Dict[str, Any]:
+        """
+        Async method to provide real-time status visualization data for UI.
+        """
+        # TODO: Implement status visualization
+        return {"status_bar": None, "user_segments": [], "reputation_scores": {}}
+
+    async def report_performance(self) -> Dict[str, Any]:
+        """
+        Generate a performance report for this node and its peers.
+        """
+        # TODO: Implement performance reporting
+        return {"node_id": self.node_id, "performance": None, "peers": []}
+
+
+class P2PNetwork:
+    """P2P Network wrapper for integrated systems."""
+    
+    def __init__(self, organism_id: str, port: int = 0):
+        """Initialize P2P network for an organism."""
+        self.organism_id = organism_id
+        self.port = port
+        self.node = P2PNetworkNode(organism_id, port)
+        self._running = False
+        
+    async def start(self, bootstrap_nodes: Optional[List[Tuple[str, int]]] = None):
+        """Start the P2P network."""
+        await self.node.start(bootstrap_nodes)
+        self._running = True
+        
+    async def stop(self):
+        """Stop the P2P network."""
+        await self.node.stop()
+        self._running = False
+        
+    async def share_genetic_data(self, genetic_packet, target_nodes=None):
+        """Share genetic data through the network."""
+        return await self.node.share_genetic_data(genetic_packet, target_nodes)
+        
+    async def share_engram(self, engram, compression_type=None, target_nodes=None):
+        """Share engram through the network."""
+        return await self.node.share_engram(engram, compression_type, target_nodes)
+        
+    async def benchmark_peer(self, peer_id: str):
+        """Benchmark a peer."""
+        return await self.node.benchmark_peer(peer_id)
+        
+    async def visualize_status(self):
+        """Get status visualization data."""
+        return await self.node.visualize_status()
+        
+    async def report_performance(self):
+        """Generate performance report."""
+        return await self.node.report_performance()
+        
+    def get_network_statistics(self):
+        """Get network statistics."""
+        return self.node.get_network_statistics()
 
 
 # Example usage and testing

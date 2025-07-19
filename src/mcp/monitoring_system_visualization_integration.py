@@ -13,6 +13,7 @@ References:
 import logging
 from typing import Dict, List, Any, Optional, Tuple, Union
 from datetime import datetime, timedelta
+import time
 
 from src.mcp.monitoring_system import MonitoringSystem
 from src.mcp.monitoring_system_visualization import (
@@ -248,6 +249,90 @@ class MonitoringSystemWithVisualization(MonitoringSystem):
         
         self.logger.info(f"Recorded implementation switch for {component}: {old_implementation} -> {new_implementation}")
 
+    def collect_distributed_benchmarks(self, p2p_system) -> Dict[str, Any]:
+        """
+        Collect distributed benchmark data from all connected peers in the P2P system.
+        Returns a dictionary of peer IDs to their performance metrics.
+        """
+        status = p2p_system.get_system_status()
+        # Example: simulate fetching benchmark data from each peer
+        benchmarks = {}
+        for peer_id in p2p_system.connected_peers:
+            # In a real implementation, fetch actual metrics from each peer
+            peer_metrics = {
+                'fitness': status['system_metrics'].get('network_fitness', 0.0),
+                'diversity': status['system_metrics'].get('genetic_diversity', 0.0),
+                'uptime': status.get('uptime', 0.0),
+            }
+            benchmarks[peer_id] = peer_metrics
+        return benchmarks
+
+    def generate_global_performance_projection(self, p2p_system) -> Dict[str, Any]:
+        """
+        Generate a global performance projection report using distributed benchmark data.
+        Returns a dictionary with projection metrics and historical trends.
+        """
+        benchmarks = self.collect_distributed_benchmarks(p2p_system)
+        # Aggregate metrics for projection (stub logic, replace with real analytics)
+        fitness_values = [m['fitness'] for m in benchmarks.values()]
+        diversity_values = [m['diversity'] for m in benchmarks.values()]
+        avg_fitness = sum(fitness_values) / len(fitness_values) if fitness_values else 0.0
+        avg_diversity = sum(diversity_values) / len(diversity_values) if diversity_values else 0.0
+        projection = {
+            'average_fitness': avg_fitness,
+            'average_diversity': avg_diversity,
+            'peer_count': len(benchmarks),
+            'historical_fitness': [m['fitness'] for m in benchmarks.values()],
+            'historical_diversity': [m['diversity'] for m in benchmarks.values()],
+        }
+        return projection
+
+
+class P2PStatusBar:
+    """
+    Renders a red-green-white status bar for P2P user status visualization.
+    Consumes system metrics from IntegratedP2PGeneticSystem and supports real-time updates and tooltips.
+    - Green: Idle users ready for queries (top-aligned)
+    - Red: Active online non-idle users (bottom-aligned)
+    - White: High-reputation capable query servers (middle divider)
+    """
+    def __init__(self, p2p_system, update_interval: float = 1.0):
+        self.p2p_system = p2p_system
+        self.update_interval = update_interval
+        self.status_data = []
+        self.last_update = 0
+
+    def update_status(self):
+        """Fetch latest system metrics and update status bar data."""
+        status = self.p2p_system.get_system_status()
+        peers = status.get('connected_peers', 0)
+        metrics = status.get('system_metrics', {})
+        # Example: classify users (stub logic, replace with real classification)
+        idle_users = int(peers * 0.4)
+        active_users = int(peers * 0.5)
+        high_rep_users = peers - idle_users - active_users
+        self.status_data = [
+            {'color': 'green', 'count': idle_users, 'tooltip': 'Idle users ready for queries'},
+            {'color': 'white', 'count': high_rep_users, 'tooltip': 'High-reputation capable query servers'},
+            {'color': 'red', 'count': active_users, 'tooltip': 'Active online non-idle users'},
+        ]
+        self.last_update = time.time()
+
+    def render(self):
+        """Render the status bar as a text-based visualization (replace with GUI as needed)."""
+        self.update_status()
+        bar = ''
+        for segment in self.status_data:
+            color = segment['color']
+            count = segment['count']
+            tooltip = segment['tooltip']
+            bar += f"[{color.upper()} x{count}] "
+        return bar.strip()
+
+    def get_tooltips(self):
+        """Return tooltips for each segment."""
+        return [segment['tooltip'] for segment in self.status_data]
+
 
 # Example usage
 if __name__ == "__main__":
@@ -314,4 +399,3 @@ if __name__ == "__main__":
     finally:
         # Stop monitoring
         monitoring.stop_monitoring()
-"""

@@ -1670,7 +1670,7 @@ class PatternRecognitionEngine:
                 'processing_method': 'neural_simulation'
             }
         
-        return simple_neural_processor      self.logger.info(f"Initialized {len(self.neural_columns)} neural columns")
+        return simple_neural_processor
     
     def create_neural_column(self, column_id: str, pattern_types: List[str], 
                            position: Tuple[float, float, float] = (0, 0, 0)) -> NeuralColumn:
@@ -1762,7 +1762,7 @@ class PatternRecognitionEngine:
                 'processing_method': 'neural_simulation'
             }
         
-        return simple_neural_processor      self.logger.info(f"Initialized {len(self.neural_columns)} neural columns")
+        return simple_neural_processor
     
     def create_neural_column(self, column_id: str, pattern_types: List[str], 
                            position: Tuple[float, float, float] = (0, 0, 0)) -> NeuralColumn:

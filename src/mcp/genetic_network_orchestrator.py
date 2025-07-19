@@ -75,14 +75,16 @@ class GeneticNetworkOrchestrator:
         await self._bootstrap_genetic_material()
         
         # Initialize hormone system
-        self.hormone_system.initialize_hormone_levels({
-            'dopamine': 0.6,
-            'serotonin': 0.7,
-            'cortisol': 0.3
-        })
+        # Note: HormoneSystem is a stub, so we'll skip initialization for now
+        # self.hormone_system.initialize_hormone_levels({
+        #     'dopamine': 0.6,
+        #     'serotonin': 0.7,
+        #     'cortisol': 0.3
+        # })
         
         # Initialize brain state
-        self.brain_state.initialize_monitoring()
+        # Note: BrainStateAggregator doesn't have initialize_monitoring method
+        # self.brain_state.initialize_monitoring()
         
     async def _bootstrap_genetic_material(self):
         """Bootstrap initial genetic material"""
@@ -142,7 +144,8 @@ class GeneticNetworkOrchestrator:
     async def _monitor_and_adapt(self):
         """Monitor system state and adapt"""
         # Get current brain state
-        brain_state = self.brain_state.get_current_state()
+        # Note: BrainStateAggregator doesn't have get_current_state method
+        brain_state = {}  # self.brain_state.get_current_state()
         
         # Update hormone levels based on performance
         if self.performance_history:
@@ -154,15 +157,16 @@ class GeneticNetworkOrchestrator:
     
     def _update_hormones_from_performance(self, performance: Dict[str, float]):
         """Update hormone levels based on performance"""
+        # Note: HormoneSystem is a stub, so we'll skip hormone updates for now
         # Dopamine based on fitness improvement
         fitness = performance.get('avg_fitness', 0.5)
         if fitness > 0.8:
-            self.hormone_system.release_hormone('dopamine', 0.2)
+            pass  # self.hormone_system.release_hormone('dopamine', 0.2)
         
         # Cortisol based on diversity (stress if too low)
         diversity = performance.get('genetic_diversity', 0.5)
         if diversity < 0.3:
-            self.hormone_system.release_hormone('cortisol', 0.3)
+            pass  # self.hormone_system.release_hormone('cortisol', 0.3)
     
     def _adapt_evolution_parameters(self, brain_state: Dict[str, Any]):
         """Adapt evolution parameters based on brain state"""
@@ -207,7 +211,7 @@ class GeneticNetworkOrchestrator:
             'innovation_events': len(self.innovation_events),
             'current_fitness': self.performance_history[-1]['avg_fitness'] if self.performance_history else 0.0,
             'genetic_diversity': self.performance_history[-1]['genetic_diversity'] if self.performance_history else 0.0,
-            'hormone_levels': self.hormone_system.get_current_levels(),
+            'hormone_levels': {},  # self.hormone_system.get_current_levels(),
             'config': {
                 'evolution_frequency': self.config.evolution_frequency,
                 'cross_pollination_rate': self.config.cross_pollination_rate,

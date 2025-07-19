@@ -22,6 +22,9 @@ from dataclasses import dataclass, field
 from src.mcp.brain_state_aggregator import BrainStateAggregator
 from src.mcp.hormone_system_controller import HormoneSystemController
 from src.mcp.lobes.experimental.lobe_event_bus import LobeEventBus
+from src.mcp.simulation.shared_state import SharedSimulationState
+from src.mcp.lobes.experimental.simulated_reality import SimulatedReality
+from src.mcp.physics_engine import PhysicsEngine
 
 
 @dataclass
@@ -40,10 +43,7 @@ class LobeRegistration:
 class CoreSystemInfrastructure:
     """
     Core infrastructure for the brain-inspired modular system.
-    
-    This class serves as the central integration point for all brain-inspired
-    components, managing lobe registration, hormone communication, and system-wide
-    state aggregation.
+    Now wires up a shared simulation state for all simulation lobes/engines.
     """
     
     def __init__(self):
@@ -64,15 +64,22 @@ class CoreSystemInfrastructure:
             event_bus=self.event_bus
         )
         
+        # Shared simulation state for all simulation lobes/engines
+        self.shared_simulation_state = SharedSimulationState()
+        
         # Registered lobes
         self.lobes: Dict[str, LobeRegistration] = {}
+        
+        # Instantiate simulation lobes/engines with shared state
+        self.simulated_reality = SimulatedReality(shared_state=self.shared_simulation_state)
+        self.physics_engine = PhysicsEngine(shared_state=self.shared_simulation_state)
         
         # System state
         self.running = False
         self.update_thread = None
         self.update_interval = 0.5  # seconds
         
-        self.logger.info("Core System Infrastructure initialized")
+        self.logger.info("Core System Infrastructure initialized with shared simulation state")
     
     def register_lobe(self, 
                      name: str, 
@@ -313,4 +320,4 @@ if __name__ == "__main__":
     finally:
         # Stop the system
         core_system.stop()
-"""
+""""""

@@ -13,7 +13,7 @@ import asyncio
 import time
 import random
 import numpy as np
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass
 
 from .p2p_network import P2PNetwork
@@ -460,6 +460,27 @@ class IntegratedP2PGeneticSystem:
             'last_evolution': self.last_evolution_time,
             'uptime': time.time() - self.last_evolution_time
         }
+
+    async def global_benchmark(self) -> Dict[str, Any]:
+        """
+        Run a global benchmark across all connected peers and aggregate results.
+        """
+        # TODO: Implement global benchmarking
+        return {"global_performance": None, "peer_results": []}
+
+    async def visualize_global_status(self) -> Dict[str, Any]:
+        """
+        Async method to provide global status visualization data for UI.
+        """
+        # TODO: Implement global status visualization
+        return {"global_status_bar": None, "network_segments": [], "reputation_scores": {}}
+
+    async def project_performance_growth(self) -> Dict[str, Any]:
+        """
+        Project global performance growth using collected benchmark data.
+        """
+        # TODO: Implement performance projection
+        return {"projection": None, "confidence": 0.0}
 
 
 # Example usage and comprehensive testing

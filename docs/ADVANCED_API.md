@@ -623,4 +623,39 @@ wm.add({"context": "session", "data": "temp"})
 ## Research References
 - See `idea.txt` and `ARCHITECTURE.md` for requirements and research sources.
 
-This advanced API documentation provides comprehensive coverage of all experimental lobes and advanced features in the MCP server. 
+This advanced API documentation provides comprehensive coverage of all experimental lobes and advanced features in the MCP server.
+
+# MCP Advanced API (Updated)
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) and [API_DOCUMENTATION.md](API_DOCUMENTATION.md) for core interfaces.
+
+## Advanced Features
+
+### Three-Tier Memory
+- UnifiedMemoryManager supports advanced memory consolidation, cross-tier search, and memory order management.
+- Automatic promotion/consolidation between WorkingMemory, ShortTermMemory, and LongTermMemory.
+
+### WebSocialEngine
+- Interfaces for web crawling, social media, digital identity, CAPTCHA, and source credibility.
+- Designed for async, secure, and privacy-preserving operations.
+
+### GeneticTrigger (Advanced)
+- Dual code/neural implementation with performance tracking and hot-swapping.
+- Hormone system integration: triggers hormone cascades on activation.
+- Split-brain A/B testing: register_ab_test_group('left' or 'right') for parallel evaluation.
+- Epigenetic markers and adaptive mutation controller (see code for stubs).
+
+### P2P Benchmarking & Async
+- Secure, async benchmarking of peers and global network.
+- Real-time and global status visualization for UI integration.
+- Performance projection and benchmarking APIs for distributed optimization.
+
+### Integration Patterns
+- All advanced features are modular and can be extended via plugin or lobe system.
+- Cross-lobe communication via hormone and genetic triggers.
+
+## Cross-References
+- [ARCHITECTURE.md](ARCHITECTURE.md)
+- [API_DOCUMENTATION.md](API_DOCUMENTATION.md)
+- [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)
+- [USER_GUIDE.md](USER_GUIDE.md) 

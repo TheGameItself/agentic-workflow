@@ -61,8 +61,12 @@ class ThreeTierMemoryManager:
                  short_term_capacity_gb: float = 1.0,
                  long_term_capacity_gb: float = 9.0,
                  vector_backend: BackendType = BackendType.SQLITE_FAISS,
-                 auto_optimize: bool = True):
-        
+                 auto_optimize: bool = True,
+                 hormone_system: Optional[Any] = None,
+                 genetic_trigger_manager: Optional[Any] = None):
+        """
+        Initialize the three-tier memory manager with optional hormone and genetic trigger integration.
+        """
         self.logger = logging.getLogger("ThreeTierMemoryManager")
         self._lock = threading.RLock()
         
@@ -96,6 +100,9 @@ class ThreeTierMemoryManager:
         
         # Cross-lobe integration tracking
         self.lobe_memory_usage: Dict[str, Dict[MemoryTier, int]] = {}
+        
+        self.hormone_system = hormone_system
+        self.genetic_trigger_manager = genetic_trigger_manager
         
         self.logger.info("[ThreeTierMemoryManager] Initialized three-tier memory architecture")
     
@@ -146,6 +153,25 @@ class ThreeTierMemoryManager:
                         self._store_vector_representation(key, data, metadata or {})
                     
                     self.logger.debug(f"[ThreeTierMemoryManager] Stored '{key}' in {target_tier.value} memory")
+                    
+                    # Integration hooks: notify hormone/genetic systems
+                    if self.hormone_system:
+                        try:
+                            self.hormone_system.release_hormone(
+                                source_lobe=lobe_id or "memory_manager",
+                                hormone_type="vasopressin",  # Example: memory consolidation hormone
+                                quantity=0.1,
+                                context={"operation": "store", "tier": target_tier.value, "key": key}
+                            )
+                        except Exception as e:
+                            self.logger.warning(f"Hormone system integration failed: {e}")
+                    if self.genetic_trigger_manager:
+                        try:
+                            self.genetic_trigger_manager.evaluate_triggers(
+                                environment={"operation": "store", "tier": target_tier.value, "key": key, "context": context}
+                            )
+                        except Exception as e:
+                            self.logger.warning(f"Genetic trigger integration failed: {e}")
                 
                 return success
                 
@@ -445,14 +471,11 @@ class ThreeTierMemoryManager:
             self._promote_item(key, current_tier, target_tier)
     
     def _promote_item(self, key: str, from_tier: MemoryTier, to_tier: MemoryTier):
-        """Promote an item from one tier to another."""
+        """Promote an item from one tier to another, with integration hooks."""
         try:
-            # Retrieve from current tier
             item = self.retrieve(key, tier_hint=from_tier)
             if not item:
                 return
-            
-            # Store in target tier
             success = self.store(
                 key=key,
                 data=item.data,
@@ -461,12 +484,27 @@ class ThreeTierMemoryManager:
                 tier_hint=to_tier,
                 metadata=item.metadata
             )
-            
             if success:
-                # Remove from original tier
                 self._remove_from_tier(key, from_tier, item.context)
                 self.logger.info(f"[ThreeTierMemoryManager] Promoted '{key}' from {from_tier.value} to {to_tier.value}")
-        
+                # Integration hooks: notify hormone/genetic systems
+                if self.hormone_system:
+                    try:
+                        self.hormone_system.release_hormone(
+                            source_lobe="memory_manager",
+                            hormone_type="growth_hormone",  # Example: promotion event
+                            quantity=0.05,
+                            context={"operation": "promote", "from": from_tier.value, "to": to_tier.value, "key": key}
+                        )
+                    except Exception as e:
+                        self.logger.warning(f"Hormone system integration failed: {e}")
+                if self.genetic_trigger_manager:
+                    try:
+                        self.genetic_trigger_manager.evaluate_triggers(
+                            environment={"operation": "promote", "from": from_tier.value, "to": to_tier.value, "key": key}
+                        )
+                    except Exception as e:
+                        self.logger.warning(f"Genetic trigger integration failed: {e}")
         except Exception as ex:
             self.logger.error(f"[ThreeTierMemoryManager] Error promoting '{key}': {ex}")
     
@@ -522,14 +560,12 @@ class ThreeTierMemoryManager:
             self.logger.debug(f"[ThreeTierMemoryManager] Could not create vector for '{key}': {ex}")
     
     def optimize(self, force: bool = False):
-        """Optimize memory usage across all tiers."""
+        """Optimize memory usage across all tiers, with integration hooks."""
         try:
             now = datetime.now()
             if not force and now - self.last_optimization < self.optimization_interval:
                 return
-            
             self.last_optimization = now
-            
             with self._lock:
                 self.logger.info("[ThreeTierMemoryManager] Starting memory optimization")
                 
@@ -548,6 +584,25 @@ class ThreeTierMemoryManager:
                 ]
                 for key in old_patterns:
                     del self.access_patterns[key]
+                
+                # Integration hooks: notify hormone/genetic systems
+                if self.hormone_system:
+                    try:
+                        self.hormone_system.release_hormone(
+                            source_lobe="memory_manager",
+                            hormone_type="serotonin",  # Example: optimization event
+                            quantity=0.05,
+                            context={"operation": "optimize"}
+                        )
+                    except Exception as e:
+                        self.logger.warning(f"Hormone system integration failed: {e}")
+                if self.genetic_trigger_manager:
+                    try:
+                        self.genetic_trigger_manager.evaluate_triggers(
+                            environment={"operation": "optimize"}
+                        )
+                    except Exception as e:
+                        self.logger.warning(f"Genetic trigger integration failed: {e}")
                 
                 self.logger.info(f"[ThreeTierMemoryManager] Optimization complete: "
                                f"cleaned {expired_working} working items, "
@@ -582,11 +637,467 @@ class ThreeTierMemoryManager:
                     'system': {
                         'auto_optimize': self.auto_optimize,
                         'last_optimization': self.last_optimization.isoformat(),
-                        'total_memory_tiers': 3
-                    }
+                        'optimization_interval_hours': self.optimization_interval.total_seconds() / 3600
+                    },
+                    'tier_transitions': self._get_tier_transition_stats(),
+                    'consolidation_stats': self._get_consolidation_stats()
                 }
-        
+                
         except Exception as ex:
+            self.logger.error(f"[ThreeTierMemoryManager] Error getting comprehensive stats: {ex}")
+            return {'error': str(ex)}
+    
+    def _get_tier_transition_stats(self) -> Dict[str, Any]:
+        """Get statistics about tier transitions."""
+        try:
+            transitions = {}
+            for key, pattern in self.access_patterns.items():
+                tier_history = pattern.get('tier_history', [])
+                if len(tier_history) > 1:
+                    for i in range(1, len(tier_history)):
+                        prev_tier = tier_history[i-1][0]
+                        curr_tier = tier_history[i][0]
+                        transition = f"{prev_tier}_to_{curr_tier}"
+                        transitions[transition] = transitions.get(transition, 0) + 1
+            
+            return {
+                'total_transitions': sum(transitions.values()),
+                'transition_types': transitions,
+                'keys_with_transitions': len([k for k, p in self.access_patterns.items() 
+                                            if len(p.get('tier_history', [])) > 1])
+            }
+        except Exception as ex:
+            self.logger.error(f"Error getting tier transition stats: {ex}")
+            return {'error': str(ex)}
+    
+    def _get_consolidation_stats(self) -> Dict[str, Any]:
+        """Get statistics about memory consolidation."""
+        try:
+            now = datetime.now()
+            recent_consolidations = 0
+            total_consolidations = 0
+            
+            for key, pattern in self.access_patterns.items():
+                operations = pattern.get('operations', [])
+                for op, timestamp in operations:
+                    if op == 'consolidate':
+                        total_consolidations += 1
+                        op_time = datetime.fromisoformat(timestamp)
+                        if (now - op_time).total_seconds() < 86400:  # Last 24 hours
+                            recent_consolidations += 1
+            
+            return {
+                'total_consolidations': total_consolidations,
+                'recent_consolidations_24h': recent_consolidations,
+                'consolidation_candidates': self._count_consolidation_candidates()
+            }
+        except Exception as ex:
+            self.logger.error(f"Error getting consolidation stats: {ex}")
+            return {'error': str(ex)}
+    
+    def _count_consolidation_candidates(self) -> int:
+        """Count items that are candidates for consolidation."""
+        try:
+            candidates = 0
+            now = datetime.now()
+            
+            for key, pattern in self.access_patterns.items():
+                # Items accessed frequently in working/short-term memory are candidates
+                if (pattern.get('access_count', 0) >= 3 and 
+                    pattern.get('last_tier') in ['working', 'short_term'] and
+                    (now - pattern.get('last_access', now)).total_seconds() > 3600):  # Not accessed in last hour
+                    candidates += 1
+            
+            return candidates
+        except Exception as ex:
+            self.logger.error(f"Error counting consolidation candidates: {ex}")
+            return 0
+    
+    def consolidate_memory(self, force: bool = False) -> Dict[str, Any]:
+        """
+        Perform memory consolidation between tiers based on access patterns and importance.
+        This implements the core consolidation workflow required by the task.
+        """
+        try:
+            with self._lock:
+                self.logger.info("[ThreeTierMemoryManager] Starting memory consolidation")
+                
+                consolidation_results = {
+                    'working_to_short': 0,
+                    'short_to_long': 0,
+                    'demotions': 0,
+                    'errors': []
+                }
+                
+                now = datetime.now()
+                
+                # Phase 1: Consolidate from working to short-term memory
+                working_candidates = self._find_working_consolidation_candidates()
+                for key, score in working_candidates:
+                    try:
+                        if self._consolidate_working_to_short(key, score):
+                            consolidation_results['working_to_short'] += 1
+                            self._update_access_pattern(key, MemoryTier.SHORT_TERM, 'consolidate')
+                    except Exception as ex:
+                        consolidation_results['errors'].append(f"Working->Short {key}: {ex}")
+                
+                # Phase 2: Consolidate from short-term to long-term memory
+                short_candidates = self._find_short_consolidation_candidates()
+                for key, score in short_candidates:
+                    try:
+                        if self._consolidate_short_to_long(key, score):
+                            consolidation_results['short_to_long'] += 1
+                            self._update_access_pattern(key, MemoryTier.LONG_TERM, 'consolidate')
+                    except Exception as ex:
+                        consolidation_results['errors'].append(f"Short->Long {key}: {ex}")
+                
+                # Phase 3: Demote rarely accessed items (if not forced)
+                if not force:
+                    demoted = self._demote_rarely_accessed_items()
+                    consolidation_results['demotions'] = demoted
+                
+                # Integration hooks: notify hormone/genetic systems
+                if self.hormone_system:
+                    try:
+                        self.hormone_system.release_hormone(
+                            source_lobe="memory_manager",
+                            hormone_type="vasopressin",  # Memory consolidation hormone
+                            quantity=0.2,
+                            context={"operation": "consolidate", "results": consolidation_results}
+                        )
+                    except Exception as e:
+                        self.logger.warning(f"Hormone system integration failed: {e}")
+                
+                if self.genetic_trigger_manager:
+                    try:
+                        self.genetic_trigger_manager.evaluate_triggers(
+                            environment={"operation": "consolidate", "results": consolidation_results}
+                        )
+                    except Exception as e:
+                        self.logger.warning(f"Genetic trigger integration failed: {e}")
+                
+                self.logger.info(f"[ThreeTierMemoryManager] Consolidation complete: {consolidation_results}")
+                return consolidation_results
+                
+        except Exception as ex:
+            self.logger.error(f"[ThreeTierMemoryManager] Error during consolidation: {ex}")
+            return {'error': str(ex)}
+    
+    def _find_working_consolidation_candidates(self) -> List[tuple]:
+        """Find working memory items that should be consolidated to short-term."""
+        candidates = []
+        now = datetime.now()
+        
+        try:
+            # Get working memory items
+            working_stats = self.working_memory.get_stats()
+            
+            for key, pattern in self.access_patterns.items():
+                if pattern.get('last_tier') == 'working':
+                    # Calculate consolidation score
+                    access_count = pattern.get('access_count', 0)
+                    last_access = pattern.get('last_access', now)
+                    age_hours = (now - last_access).total_seconds() / 3600
+                    
+                    # Consolidation criteria
+                    if (access_count >= 3 and age_hours > 1) or age_hours > 24:
+                        score = access_count / max(age_hours, 1)  # Higher score = higher priority
+                        candidates.append((key, score))
+            
+            # Sort by score (highest first)
+            candidates.sort(key=lambda x: x[1], reverse=True)
+            return candidates[:50]  # Limit to top 50 candidates
+            
+        except Exception as ex:
+            self.logger.error(f"Error finding working consolidation candidates: {ex}")
+            return []
+    
+    def _find_short_consolidation_candidates(self) -> List[tuple]:
+        """Find short-term memory items that should be consolidated to long-term."""
+        candidates = []
+        now = datetime.now()
+        
+        try:
+            for key, pattern in self.access_patterns.items():
+                if pattern.get('last_tier') == 'short_term':
+                    # Calculate consolidation score
+                    access_count = pattern.get('access_count', 0)
+                    last_access = pattern.get('last_access', now)
+                    age_days = (now - last_access).total_seconds() / 86400
+                    
+                    # Consolidation criteria for long-term storage
+                    if (access_count >= 5 and age_days > 1) or age_days > 7:
+                        score = access_count / max(age_days, 1)  # Higher score = higher priority
+                        candidates.append((key, score))
+            
+            # Sort by score (highest first)
+            candidates.sort(key=lambda x: x[1], reverse=True)
+            return candidates[:20]  # Limit to top 20 candidates
+            
+        except Exception as ex:
+            self.logger.error(f"Error finding short consolidation candidates: {ex}")
+            return []
+    
+    def _consolidate_working_to_short(self, key: str, score: float) -> bool:
+        """Consolidate an item from working to short-term memory."""
+        try:
+            # Retrieve from working memory
+            item = self.retrieve(key, tier_hint=MemoryTier.WORKING)
+            if not item:
+                return False
+            
+            # Store in short-term memory with enhanced metadata
+            metadata = item.metadata or {}
+            metadata['consolidation_score'] = score
+            metadata['consolidated_from'] = 'working'
+            metadata['consolidation_time'] = datetime.now().isoformat()
+            
+            success = self.store(
+                key=key,
+                data=item.data,
+                context=item.context,
+                priority=min(item.priority + 0.1, 1.0),  # Slight priority boost
+                tier_hint=MemoryTier.SHORT_TERM,
+                metadata=metadata
+            )
+            
+            if success:
+                # Remove from working memory
+                self._remove_from_tier(key, MemoryTier.WORKING, item.context)
+                return True
+            
+            return False
+            
+        except Exception as ex:
+            self.logger.error(f"Error consolidating {key} from working to short-term: {ex}")
+            return False
+    
+    def _consolidate_short_to_long(self, key: str, score: float) -> bool:
+        """Consolidate an item from short-term to long-term memory."""
+        try:
+            # Retrieve from short-term memory
+            item = self.retrieve(key, tier_hint=MemoryTier.SHORT_TERM)
+            if not item:
+                return False
+            
+            # Store in long-term memory with enhanced metadata
+            metadata = item.metadata or {}
+            metadata['consolidation_score'] = score
+            metadata['consolidated_from'] = 'short_term'
+            metadata['consolidation_time'] = datetime.now().isoformat()
+            
+            success = self.store(
+                key=key,
+                data=item.data,
+                context=item.context,
+                priority=min(item.priority + 0.2, 1.0),  # Higher priority boost for long-term
+                tier_hint=MemoryTier.LONG_TERM,
+                metadata=metadata
+            )
+            
+            if success:
+                # Remove from short-term memory (will expire naturally)
+                return True
+            
+            return False
+            
+        except Exception as ex:
+            self.logger.error(f"Error consolidating {key} from short-term to long-term: {ex}")
+            return False
+    
+    def _demote_rarely_accessed_items(self) -> int:
+        """Demote rarely accessed items to lower tiers."""
+        demoted = 0
+        now = datetime.now()
+        
+        try:
+            for key, pattern in self.access_patterns.items():
+                last_access = pattern.get('last_access', now)
+                access_count = pattern.get('access_count', 0)
+                current_tier = pattern.get('last_tier')
+                
+                # Demotion criteria
+                days_since_access = (now - last_access).total_seconds() / 86400
+                
+                if (current_tier == 'long_term' and access_count < 2 and days_since_access > 30):
+                    # Very rarely accessed long-term items could be archived or compressed
+                    # For now, just mark them for potential removal
+                    pattern['demotion_candidate'] = True
+                    demoted += 1
+                elif (current_tier == 'short_term' and access_count < 3 and days_since_access > 14):
+                    # Rarely accessed short-term items
+                    pattern['demotion_candidate'] = True
+                    demoted += 1
+            
+            return demoted
+            
+        except Exception as ex:
+            self.logger.error(f"Error demoting rarely accessed items: {ex}")
+            return 0
+    
+    def cross_tier_search(self, query: str, 
+                         context: Optional[str] = None,
+                         limit: int = 10,
+                         use_semantic: bool = True,
+                         tier_weights: Optional[Dict[MemoryTier, float]] = None,
+                         lobe_id: Optional[str] = None) -> List[MemoryItem]:
+        """
+        Enhanced cross-tier search with optimization and tier weighting.
+        This implements the cross-tier search optimization required by the task.
+        """
+        try:
+            with self._lock:
+                # Default tier weights (working memory gets highest priority for recency)
+                if not tier_weights:
+                    tier_weights = {
+                        MemoryTier.WORKING: 1.0,
+                        MemoryTier.SHORT_TERM: 0.8,
+                        MemoryTier.LONG_TERM: 0.6
+                    }
+                
+                all_results = []
+                
+                # Search each tier and apply weights
+                for tier in MemoryTier:
+                    tier_results = self.search(
+                        query=query,
+                        context=context,
+                        tier=tier,
+                        limit=limit * 2,  # Get more results to apply weighting
+                        use_semantic=use_semantic,
+                        lobe_id=lobe_id
+                    )
+                    
+                    # Apply tier weighting to results
+                    weight = tier_weights.get(tier, 0.5)
+                    for result in tier_results:
+                        # Adjust priority based on tier weight and recency
+                        recency_bonus = 0.0
+                        if result.accessed_at:
+                            hours_since_access = (datetime.now() - result.accessed_at).total_seconds() / 3600
+                            recency_bonus = max(0, 0.2 - (hours_since_access / 100))  # Bonus decreases with time
+                        
+                        result.priority = (result.priority * weight) + recency_bonus
+                        all_results.append(result)
+                
+                # Remove duplicates (same key from different tiers)
+                unique_results = {}
+                for result in all_results:
+                    if result.key not in unique_results or result.priority > unique_results[result.key].priority:
+                        unique_results[result.key] = result
+                
+                # Sort by adjusted priority and return top results
+                final_results = sorted(unique_results.values(), key=lambda x: x.priority, reverse=True)
+                
+                # Update access patterns for retrieved items
+                for result in final_results[:limit]:
+                    self._update_access_pattern(result.key, result.tier, 'cross_tier_search')
+                
+                self.logger.debug(f"[ThreeTierMemoryManager] Cross-tier search for '{query}' returned {len(final_results[:limit])} results")
+                return final_results[:limit]
+                
+        except Exception as ex:
+            self.logger.error(f"[ThreeTierMemoryManager] Error in cross-tier search: {ex}")
+            return []
+    
+    def get_memory_health(self) -> Dict[str, Any]:
+        """Get comprehensive memory system health metrics."""
+        try:
+            with self._lock:
+                stats = self.get_comprehensive_stats()
+                
+                # Calculate health scores
+                working_health = self._calculate_tier_health(MemoryTier.WORKING, stats['working_memory'])
+                short_health = self._calculate_tier_health(MemoryTier.SHORT_TERM, stats['short_term_memory'])
+                long_health = self._calculate_tier_health(MemoryTier.LONG_TERM, stats['long_term_memory'])
+                
+                overall_health = (working_health + short_health + long_health) / 3
+                
+                return {
+                    'overall_health': overall_health,
+                    'tier_health': {
+                        'working': working_health,
+                        'short_term': short_health,
+                        'long_term': long_health
+                    },
+                    'recommendations': self._generate_health_recommendations(stats),
+                    'last_updated': datetime.now().isoformat()
+                }
+                
+        except Exception as ex:
+            self.logger.error(f"[ThreeTierMemoryManager] Error getting memory health: {ex}")
+            return {'error': str(ex)}
+    
+    def _calculate_tier_health(self, tier: MemoryTier, tier_stats: Dict[str, Any]) -> float:
+        """Calculate health score for a specific memory tier."""
+        try:
+            if 'error' in tier_stats:
+                return 0.0
+            
+            # Base health factors
+            capacity_usage = tier_stats.get('capacity_usage_percent', 0) / 100
+            error_rate = tier_stats.get('error_rate', 0)
+            
+            # Health score calculation (0.0 to 1.0)
+            health = 1.0
+            
+            # Penalize high capacity usage
+            if capacity_usage > 0.9:
+                health -= 0.3
+            elif capacity_usage > 0.7:
+                health -= 0.1
+            
+            # Penalize high error rates
+            health -= min(error_rate * 2, 0.5)
+            
+            # Bonus for optimal usage
+            if 0.3 <= capacity_usage <= 0.7:
+                health += 0.1
+            
+            return max(0.0, min(1.0, health))
+            
+        except Exception as ex:
+            self.logger.error(f"Error calculating tier health: {ex}")
+            return 0.5  # Neutral health score
+    
+    def _generate_health_recommendations(self, stats: Dict[str, Any]) -> List[str]:
+        """Generate health recommendations based on system stats."""
+        recommendations = []
+        
+        try:
+            # Check capacity usage
+            for tier_name, tier_stats in [
+                ('working', stats.get('working_memory', {})),
+                ('short_term', stats.get('short_term_memory', {})),
+                ('long_term', stats.get('long_term_memory', {}))
+            ]:
+                if isinstance(tier_stats, dict):
+                    usage = tier_stats.get('capacity_usage_percent', 0)
+                    if usage > 90:
+                        recommendations.append(f"High {tier_name} memory usage ({usage}%) - consider cleanup or consolidation")
+                    elif usage < 10:
+                        recommendations.append(f"Low {tier_name} memory usage ({usage}%) - system may be underutilized")
+            
+            # Check consolidation needs
+            consolidation_stats = stats.get('consolidation_stats', {})
+            candidates = consolidation_stats.get('consolidation_candidates', 0)
+            if candidates > 10:
+                recommendations.append(f"High number of consolidation candidates ({candidates}) - run consolidation")
+            
+            # Check access patterns
+            access_patterns = stats.get('access_patterns', {})
+            tracked_keys = access_patterns.get('total_tracked_keys', 0)
+            if tracked_keys > 1000:
+                recommendations.append("Large number of tracked access patterns - consider pattern cleanup")
+            
+            if not recommendations:
+                recommendations.append("Memory system is operating within normal parameters")
+            
+            return recommendations
+            
+        except Exception as ex:
+            self.logger.error(f"Error generating health recommendations: {ex}")
+            return ["Unable to generate recommendations due to error"]
             self.logger.error(f"[ThreeTierMemoryManager] Error getting stats: {ex}")
             return {'error': str(ex)}
     

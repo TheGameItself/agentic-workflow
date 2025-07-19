@@ -1,4 +1,32 @@
-# MCP Server Developer Guide
+# MCP Developer Guide (Updated)
+
+## Overview
+This guide covers development patterns and requirements for the upgraded MCP system.
+
+- See [ARCHITECTURE.md](ARCHITECTURE.md) for system overview
+- See [API_DOCUMENTATION.md](API_DOCUMENTATION.md) for method signatures
+
+## Key Integration Patterns
+- All lobes/engines use the [UnifiedMemoryManager](../src/mcp/unified_memory.py) for memory operations
+- Simulation layer uses [WebSocialEngine](../src/mcp/lobes/web_social_engine.py) for web/social tasks
+- Genetic layer uses [GeneticTrigger](../src/mcp/genetic_trigger_system/genetic_trigger.py) with dual code/neural, hormone, and A/B testing
+- Integration layer uses [P2PNetworkNode](../src/mcp/p2p_network.py) and [IntegratedP2PGeneticSystem](../src/mcp/integrated_p2p_genetic_system.py) for benchmarking, async, and global coordination
+
+## Testing Requirements
+- All new features require pytest coverage
+- Dual code/neural implementations must be A/B tested (see GeneticTrigger)
+- P2P and async features require integration and performance tests
+
+## Development Conventions
+- Type hints required throughout
+- Docstrings for all public methods/classes
+- File size limit: 2000 lines
+- Brain-inspired naming and modular structure
+
+## Cross-References
+- [ARCHITECTURE.md](ARCHITECTURE.md)
+- [API_DOCUMENTATION.md](API_DOCUMENTATION.md)
+- [USER_GUIDE.md](USER_GUIDE.md)
 
 ## Introduction
 

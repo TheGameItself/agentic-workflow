@@ -169,20 +169,8 @@ class Finding:
     confidence: float
     domain: str
     supporting_experiments: List[str]
-    """
-    Advanced scientific process engine for hypothesis management, experiment design,
-    evidence tracking, and dynamic self-tuning. Integrates feedback loops, robust error handling,
-    and the MCP memory architecture (WorkingMemory, ShortTermMemory, LongTermMemory).
-    
-    This enhanced version implements the full hypothesis-experiment workflow including:
-    - Hypothesis formulation from observations
-    - Experiment design with methodology selection
-    - Experiment execution and data collection
-    - Statistical analysis of results
-    - Validation against research
-    - Knowledge base updating
-    """
-ScientificProcessEngine:
+
+class ScientificProcessEngine:
     """
     Advanced scientific process engine for hypothesis management, experiment design,
     evidence tracking, and dynamic self-tuning. Integrates feedback loops, robust error handling,
@@ -580,8 +568,9 @@ ScientificProcessEngine:
         return [
             {"id": row[0], "experiment_id": row[1], "data": row[2], "quality_score": row[3], "created_at": row[4]}
             for row in rows
-        ] 
-   def formulate_hypothesis(self, observation: Observation) -> int:
+        ]
+
+    def formulate_hypothesis(self, observation: Observation) -> int:
         """
         Formulate a hypothesis from an observation.
         
@@ -1441,149 +1430,7 @@ ceing.confiden   find            ment,
             ?, ?, ?)?, ?,LUES ( VA       
          _evidence)supportinge, domain, t, confidenc, statemenidg_  (findin           
    e_base  knowledgNSERT INTO      I    "
-      ""ecute( cursor.ex    
-       onn.cursor() = cursor          ch)
-  f.db_patct(sele3.connelit sqnn =         cobase
-   edge  knowldd to   # A         ]:
-"ed_validat"partially ated","validin [atus dation_stidation.valial        if vedge base
-owlknfindings to idated lly valiated or partvalidaOnly add 
-        # """
-        tsion resulValidatdation:        vali   
-  dingh finted researcg: Valida      findin
-            Args:      
-  gs.
-  ed findinalidat vth wibasewledge he kno Update t        """
- ne:
-      ult) -> NodationReson: Validatilinding, vang: Filf, findiedge_base(sewlnoef update_k d  
- ns
-tiomendacom  return re          
-")
-    in}.g.domand {findindomains beyod latestudy to red xten(f"Eons.appendecommendati     r
-        ")
-   fidence.ncrease cono instruments turement irecise measre pmopend("Use ions.apecommendat r           e < 0.7:
-nfidencnding.co fi    if  
-          ")
-s.e effectetect subtloaches to drement apprve measu alternatisider"Conns.append(datioenomm     rec
-            else:ty.")
-   izabili general test toplesiverse sam more de with"Replicatppend(ndations.a    recomme
-        > 0.5:ize g.effect_slif findin
-        e)effect."ge irm larsize to confmple r sageate with larlicpend("Repndations.apcomme       re 0.8:
-     size >ect_ffing.e  if find
-      ]
-        ons = [commendati     re
-   isticsg character on findintions basede recommendaenerat  # G"
-        ""     tions
-  recommenda List of         urns:
-   Ret   
-            
-    ingindarch feseg: R      findin    
-  gs: Ar       
-        
-dies.lication stuns for repatiorecommendenerate 
-        G    """
-    [str]:> Listding) -ding: Fin(self, finmendations_recomplicatione_renerat
-    def _ge.1, 0.9)
-rm(0random.uniforeturn ch
-        aresesting rst exiompare againon, would ctiimplementaeal # In a rnt
-        ty assessmemulate novel    # Si
-         """0)
-   0 to 1.y score (0.ovelt      Nrns:
-          Retu
-             ain
-   omrch dmain: Resea          doent
-  is statemhesent: Hypotsis_statemotheyp          h Args:
-              
- 
-  lated).imunding (sf a finovelty oe s thsses A       "
-""   t:
-     floain: str) -> : str, domaementsis_stathelf, hypotlty(seng_novedi_assess_fin    def     }
-
-   
- is."he hypothesion to tictvel} contrad_lentradictionies with {cot} studundies_co"Found {stu": fy  "summar         ain,
- ": dom   "domain      
-   _count,": studiescountstudies_         "_level,
-   ionntradictcoevel": on_lictitrad  "con         turn {
-         re
-        
-int(0, 10)andom.rand_count = res    studi  high"])
-  ", ""medium(["low", andom.choicelevel = rion_ntradict     co
-   abasessearch datry red queul woon,ementatimplal i In a re    #
-    esearchtradictory r condinge fin   # Simulat"
-         ""  on
-  h informatiesearcadictory r   Contr         turns:
-        Re  
-        in
-  h doman: Researcmai       doment
-     is statepothestatement: Hys_s  hypothesi         
-       Args:        
-  mulated).
-sis (sihe a hypoth forory researcradict  Find cont  
-         """Any]:
-   ict[str, r) -> D sttr, domain:nt: sstatemeothesis_elf, hypsearch(sadictory_retrf _find_con    de      }
-
-  othesis."
-or the hypt fvel} supporle {support_tudies withes_count} sstudiFound {" fary":mm     "su      in,
-  domaomain":     "dnt,
-       couies_ studcount":ies_ud    "st,
-        t_levelsupporrt_level": suppo  "      
-       return {
-        20)
-      ndint(5,andom.rat = roun  studies_c"])
-      um", "highdi "mew",oice(["lo = random.chupport_level  s     abases
- datarch  query reseon, wouldtatiimplemeneal # In a r         research
-ortingsuppfinding  # Simulate   "
-          ""mation
-    inforresearchorting pp  Su        s:
-       Return       
-   in
-      domasearchomain: Re         dnt
-   statemeothesis ent: Hypstatemhesis_    hypot:
-          Args       
-  .
-      (simulated)ypothesisch for a hesearing rFind support"
-              ""Any]:
-  [str,  Dict str) ->n:omai dement: str,_statthesisf, hypoel(schg_researind_supportin def _fed"
-
-   "unvalidateturn      r      else:
-        ed"
- lidatally_vaartireturn "p         0.7:
-    e > confidenc 0.5 andize >effect_s   elif     dated"
- turn "vali          re:
-  ce > 0.9nd confidenze > 0.8 a_sieffect    if   ""
-     "atus
-     lidation st          Vaeturns:
-        R     
-       evel
-  idence lnce: Confonfide        cze
-    ffect sit_size: E       effecgs:
-           Ar    
-  ce.
-    dennd confize aect sion eff based n statusidatiomine val      Deter    """
-   
-   tr:at) -> sence: flot, confid: float_sizeeclf, effon_status(setilidane_vaetermi def _d
-
-   lidationn va      retur 
-         ct__})
-_dialidation._e vels_") _fields_lassdatac"__tion, dattr(valiion) if hasa(validaton": asdictlidatidd({"va_memory.atermt_ self.shor      )
- status}tion_alidaus": vidation_statid, "valnding.g_id": fi, "findine_finding""validat: "action"mory.add({g_meelf.workin s
-       temsemory sys m# Add to
-        
-        tatus}")n_siovalidatstatus {th nding.id} wi{fig ndinValidated fissEngine] ficProceienti"[Scgger.info(f     self.lo 
-         )
- nn.close(
-        co)mit(.com  conn        ))
-ons)
-      mmendatiecotion_replica(rn.dumpsjso           ,
- relty_scoove        n   vidence),
- radictory_eumps(cont.d        jsont),
-    orh_supprcresea.dumps(   json         on_status,
-idati  val
-          ng.id,findi       
-     , (  """   ?)
-   , ?, ?, ?, ? VALUES (?,      ) 
-      mmendationsn_recoatiocore, replic novelty_snce,videtradictory_ert, con_suppos, researchn_statuatiod, validding_i   (fin         
-_results onlidatiRT INTO va    INSE      ""
-  te("ecu  cursor.ex   
+      ""ecute( cursor.ex   
    sor()n.curcursor = con
         lf.db_path)ct(se.connenn = sqlite3co
         n resultlidatio Store va        #

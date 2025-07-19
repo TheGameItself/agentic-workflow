@@ -18,7 +18,6 @@ import time
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, List, Optional, Tuple, Any, Set
-import numpy as np
 from collections import defaultdict
 import sqlite3
 import pickle
@@ -27,6 +26,24 @@ from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import base64
+
+try:
+    import numpy as np
+except ImportError:
+    np = None
+    import logging
+    logging.warning('numpy is not available, some features will be disabled.')
+
+try:
+    from cryptography.fernet import Fernet
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+except ImportError:
+    Fernet = None
+    hashes = None
+    PBKDF2HMAC = None
+    import logging
+    logging.warning('cryptography is not available, encryption features will be disabled.')
 
 
 class GeneticElementType(Enum):
@@ -143,7 +160,8 @@ class GeneticCodonTable:
         for ops_list in [neural_ops, memory_ops, hormone_ops, task_ops, adapt_ops, p2p_ops]:
             for op in ops_list:
                 # Generate unique 4-base codon for extended operations
-                codon = ''.join([bases[i] for i in np.base_repr(codon_idx, 4).zfill(4)])
+                base_repr = np.base_repr(codon_idx, 4).zfill(4)
+                codon = ''.join([bases[int(i)] for i in base_repr])
                 extended_codons[codon] = op
                 codon_idx += 1
         
@@ -545,11 +563,18 @@ class GeneticDataExchange:
         else:
             compressed_weights = normalized_weights[:64]
         
+        # Ensure compressed_weights is a 1D array
+        if compressed_weights.ndim > 1:
+            compressed_weights = compressed_weights.flatten()
+        
         # Convert to genetic sequence
         bases = ['A', 'U', 'G', 'C']
         sequence = ""
         
-        for weight in compressed_weights:
+        # Convert numpy array to list of Python floats
+        weight_list = [float(w) for w in compressed_weights]
+        
+        for weight in weight_list:
             # Each weight becomes 3 bases (1 codon)
             base_indices = [
                 int(weight * 4) % 4,
@@ -730,36 +755,31 @@ class GeneticDataExchange:
         bases = ['A', 'U', 'G', 'C']
         
         for value in content_vector[:32]:  # Limit to 32 values for manageable sequence length
-            # Each value becomes 3 bases (1 codon)
-            base_indices = [
-                int(value * 4) % 4,
-                int(value * 16) % 4,
-                int(value * 64) % 4
-            ]
-            sequence += ''.join(bases[i] for i in base_indices)
+            base_index = int(value * 4) % 4
+            sequence += bases[base_index] * 3  # 3 bases per component
         
         return sequence
     
     def _encode_association(self, association: Dict[str, Any]) -> str:
         """Encode memory association into genetic sequence"""
-        assoc_type = association.get('type', 'semantic')
         strength = association.get('strength', 0.5)
+        association_type = association.get('type', 'semantic')
         
         type_codons = {
-            'semantic': 'AUGU',
-            'temporal': 'AUGC',
-            'spatial': 'AUGG',
-            'emotional': 'AUGA'
+            'semantic': 'SEMA',
+            'episodic': 'EPIS',
+            'procedural': 'PROC',
+            'emotional': 'EMOT'
         }
         
-        base_codon = type_codons.get(assoc_type, 'AAAA')
+        base_codon = type_codons.get(association_type, 'ASSN')
         strength_sequence = self._encode_parameter('strength', strength)
         
         return base_codon + strength_sequence
     
     def _encode_consolidation_state(self, consolidation_level: float) -> str:
         """Encode memory consolidation state"""
-        return 'CONS' + self._encode_parameter('level', consolidation_level)
+        return "CONS" + self._encode_parameter('level', consolidation_level)
     
     def create_genetic_packet(self, data_type: str, data: Dict[str, Any], 
                             privacy_level: str = 'medium') -> GeneticDataPacket:
@@ -1956,6 +1976,265 @@ class GeneticDataExchange:
         
         return max(0.0, min(1.0, base_fitness))
 
+    def encode_prompt_circuit(self, circuit: Dict[str, Any], layout: str = "sequential", interruption_points: Optional[List[int]] = None, alignment_hooks: Optional[List[str]] = None, reputation: float = 0.5, universal_hooks: Optional[List[str]] = None) -> GeneticChromosome:
+        """
+        Encode a prompt circuit (graph of nodes/edges) into a genetic chromosome using the 256-codon system.
+        Supports interruption points, alignment hooks, multiple layouts, reputation, and universal hooks.
+        Args:
+            circuit: Dict with 'nodes' (list of node dicts) and 'edges' (list of edge dicts)
+            layout: Layout type (sequential, parallel, hierarchical, etc.)
+            interruption_points: List of node indices where execution can be paused/interrupted
+            alignment_hooks: List of cross-lobe alignment hook names
+            reputation: Reputation/performance score for this circuit
+            universal_hooks: List of universal development hooks for integration
+        Returns:
+            GeneticChromosome representing the encoded circuit
+        """
+        elements = []
+        codon_table = GeneticCodonTable()
+        # Encode layout as a regulatory element
+        elements.append(GeneticElement(
+            element_id="layout",
+            element_type=GeneticElementType.PROMOTER,
+            sequence=layout,
+            position=0,
+            length=len(layout),
+            expression_level=1.0,
+            chromatin_state=ChromatinState.EUCHROMATIN
+        ))
+        # Encode interruption points
+        if interruption_points:
+            for idx in interruption_points:
+                elements.append(GeneticElement(
+                    element_id=f"interrupt_{idx}",
+                    element_type=GeneticElementType.INSULATOR,
+                    sequence=f"INTERRUPT_{idx}",
+                    position=idx,
+                    length=len(f"INTERRUPT_{idx}"),
+                    expression_level=0.0,
+                    chromatin_state=ChromatinState.FACULTATIVE
+                ))
+        # Encode alignment hooks
+        if alignment_hooks:
+            for hook in alignment_hooks:
+                elements.append(GeneticElement(
+                    element_id=f"align_{hook}",
+                    element_type=GeneticElementType.ENHANCER,
+                    sequence=f"ALIGN_{hook}",
+                    position=len(elements),
+                    length=len(f"ALIGN_{hook}"),
+                    expression_level=0.7,
+                    chromatin_state=ChromatinState.EUCHROMATIN
+                ))
+        # Encode universal hooks
+        if universal_hooks:
+            for hook in universal_hooks:
+                elements.append(GeneticElement(
+                    element_id=f"universal_{hook}",
+                    element_type=GeneticElementType.PROMOTER,
+                    sequence=f"HOOK_{hook}",
+                    position=len(elements),
+                    length=len(f"HOOK_{hook}"),
+                    expression_level=0.6,
+                    chromatin_state=ChromatinState.EUCHROMATIN
+                ))
+        # Encode nodes
+        for i, node in enumerate(circuit.get('nodes', [])):
+            node_data = json.dumps(node, sort_keys=True)
+            node_bytes = node_data.encode('utf-8')
+            node_seq = ''.join(codon_table.codon_table[format(b, '02x')] if format(b, '02x') in codon_table.codon_table else 'AAAA' for b in node_bytes)
+            elements.append(GeneticElement(
+                element_id=f"node_{i}",
+                element_type=GeneticElementType.EXON,
+                sequence=node_seq,
+                position=len(elements),
+                length=len(node_seq),
+                expression_level=1.0,
+                chromatin_state=ChromatinState.EUCHROMATIN
+            ))
+        # Encode edges
+        for j, edge in enumerate(circuit.get('edges', [])):
+            edge_data = json.dumps(edge, sort_keys=True)
+            edge_bytes = edge_data.encode('utf-8')
+            edge_seq = ''.join(codon_table.codon_table[format(b, '02x')] if format(b, '02x') in codon_table.codon_table else 'AAAA' for b in edge_bytes)
+            elements.append(GeneticElement(
+                element_id=f"edge_{j}",
+                element_type=GeneticElementType.ENHANCER,
+                sequence=edge_seq,
+                position=len(elements),
+                length=len(edge_seq),
+                expression_level=0.8,
+                chromatin_state=ChromatinState.EUCHROMATIN
+            ))
+        # Quality metric: node/edge count, sequence diversity
+        quality = self.calculate_circuit_quality(circuit)
+        return GeneticChromosome(
+            chromosome_id=f"prompt_circuit_{hash(json.dumps(circuit, sort_keys=True))}",
+            elements=elements,
+            telomere_length=500,
+            crossover_hotspots=[len(elements)//2],
+            structural_variants=[{"quality": quality, "reputation": reputation, "layout": layout}]
+        )
+
+    def scaffold_b_star_search(self, circuit: Dict[str, Any], start: str, goal: str) -> list:
+        """
+        Scaffold for B* search-based navigation of a prompt circuit graph.
+        Args:
+            circuit: Dict with 'nodes' and 'edges'
+            start: Start node id
+            goal: Goal node id
+        Returns:
+            List of node ids representing the path (stub)
+        """
+        # TODO: Implement B* search with controlled randomness
+        return [start, goal]
+
+    def scaffold_condition_chain(self, chromosome: GeneticChromosome) -> bool:
+        """
+        Scaffold for evaluating complex gene expression condition chains with dependency resolution.
+        Args:
+            chromosome: GeneticChromosome
+        Returns:
+            True if all conditions met (stub)
+        """
+        # TODO: Implement condition chain evaluation
+        return True
+
+    def decode_prompt_circuit(self, chromosome: GeneticChromosome) -> Dict[str, Any]:
+        """
+        Decode a genetic chromosome back into a prompt circuit (nodes/edges).
+        Args:
+            chromosome: GeneticChromosome from encode_prompt_circuit
+        Returns:
+            Dict with 'nodes' and 'edges'
+        """
+        codon_table = GeneticCodonTable()
+        reverse_table = {v: k for k, v in codon_table.codon_table.items()}
+        nodes, edges = [], []
+        for element in chromosome.elements:
+            # Convert sequence back to bytes
+            seq = element.sequence
+            byte_chunks = [seq[i:i+4] for i in range(0, len(seq), 4)]
+            bytes_arr = bytearray()
+            for chunk in byte_chunks:
+                # Find byte value for codon
+                for k, v in codon_table.codon_table.items():
+                    if k == chunk:
+                        try:
+                            bytes_arr.append(int(v, 16))
+                        except Exception:
+                            bytes_arr.append(0)
+                        break
+                else:
+                    bytes_arr.append(0)
+            try:
+                data = json.loads(bytes_arr.decode('utf-8'))
+            except Exception:
+                data = {}
+            if element.element_type == GeneticElementType.EXON:
+                nodes.append(data)
+            elif element.element_type == GeneticElementType.ENHANCER:
+                edges.append(data)
+        return {"nodes": nodes, "edges": edges}
+
+    def calculate_circuit_quality(self, circuit: Dict[str, Any]) -> float:
+        """
+        Calculate a quality metric for a prompt circuit: combines node/edge count and diversity.
+        Returns a float between 0 and 1.
+        """
+        nodes = circuit.get('nodes', [])
+        edges = circuit.get('edges', [])
+        node_count = len(nodes)
+        edge_count = len(edges)
+        node_types = set(json.dumps(n, sort_keys=True) for n in nodes)
+        edge_types = set(json.dumps(e, sort_keys=True) for e in edges)
+        diversity = (len(node_types) + len(edge_types)) / (node_count + edge_count + 1e-6)
+        # Normalize: more nodes/edges and higher diversity = higher quality
+        quality = min(1.0, 0.5 * (node_count + edge_count) / 100 + 0.5 * diversity)
+        return quality
+
+    def cross_pollinate(self, chrom1: GeneticChromosome, chrom2: GeneticChromosome) -> GeneticChromosome:
+        """
+        Cross-pollinate two chromosomes based on compatibility and diversity metrics.
+        Returns a new child chromosome.
+        """
+        # Simple compatibility: number of matching element_ids
+        ids1 = {e.element_id for e in chrom1.elements}
+        ids2 = {e.element_id for e in chrom2.elements}
+        compatibility = len(ids1 & ids2) / max(1, len(ids1 | ids2))
+        # Diversity: Jaccard distance
+        diversity = 1.0 - compatibility
+        # Mix elements, favoring diversity
+        child_elements = []
+        for e1, e2 in zip(chrom1.elements, chrom2.elements):
+            chosen = e1 if random.random() < diversity else e2
+            child_elements.append(chosen)
+        # Add any extra elements from longer parent
+        longer = chrom1.elements if len(chrom1.elements) > len(chrom2.elements) else chrom2.elements
+        child_elements += longer[len(child_elements):]
+        # Lineage tracking
+        lineage = chrom1.chromosome_id + "|" + chrom2.chromosome_id
+        return GeneticChromosome(
+            chromosome_id=f"child_{hash(lineage)}",
+            elements=child_elements,
+            telomere_length=min(chrom1.telomere_length, chrom2.telomere_length),
+            crossover_hotspots=[len(child_elements)//2],
+            structural_variants=[{"lineage": lineage, "compatibility": compatibility, "diversity": diversity}]
+        )
+
+    def evaluate_fitness_multiobjective(self, chromosome: GeneticChromosome, objectives: Dict[str, float]) -> float:
+        """
+        Evaluate chromosome fitness using multiple objectives (Pareto front).
+        Returns a normalized fitness score.
+        """
+        # For demo: weighted sum
+        score = 0.0
+        for k, v in objectives.items():
+            score += v
+        return min(1.0, max(0.0, score / (len(objectives) or 1)))
+
+    def calculate_diversity(self, population: list) -> float:
+        """
+        Calculate diversity of a population of chromosomes (Jaccard index avg).
+        """
+        if len(population) < 2:
+            return 0.0
+        total = 0.0
+        count = 0
+        for i in range(len(population)):
+            for j in range(i+1, len(population)):
+                ids1 = {e.element_id for e in population[i].elements}
+                ids2 = {e.element_id for e in population[j].elements}
+                total += 1.0 - (len(ids1 & ids2) / max(1, len(ids1 | ids2)))
+                count += 1
+        return total / count if count else 0.0
+
+    def track_lineage(self, chromosome: GeneticChromosome) -> list:
+        """
+        Return the lineage history from structural_variants.
+        """
+        return [sv.get("lineage") for sv in chromosome.structural_variants if "lineage" in sv]
+
+    def rollback_to_ancestor(self, chromosome: GeneticChromosome, ancestor_id: str) -> GeneticChromosome:
+        """
+        Rollback chromosome to a specified ancestor if present in lineage.
+        Returns a new chromosome (stub).
+        """
+        # TODO: Implement full rollback logic
+        if any(ancestor_id in (sv.get("lineage") or "") for sv in chromosome.structural_variants):
+            # For now, just return the same chromosome
+            return chromosome
+        else:
+            return chromosome
+
+    def neighborhood_analysis(self, population: list, target: GeneticChromosome) -> list:
+        """
+        Analyze neighborhood of a chromosome in the population (stub).
+        Returns a list of similar chromosomes.
+        """
+        # TODO: Implement real neighborhood analysis
+        return [c for c in population if c != target][:3]
+
 
 # Example usage and testing functions
 async def main():
@@ -2039,794 +2318,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-        
-        for value in content_vector[:32]:  # Limit to 32 components
-            base_index = int(value * 4) % 4
-            sequence += bases[base_index] * 3  # 3 bases per component
-        
-        return sequence
-    
-    def _encode_association(self, association: Dict[str, Any]) -> str:
-        """Encode memory association into genetic sequence"""
-        strength = association.get('strength', 0.5)
-        association_type = association.get('type', 'semantic')
-        
-        type_codons = {
-            'semantic': 'SEMA',
-            'episodic': 'EPIS',
-            'procedural': 'PROC',
-            'emotional': 'EMOT'
-        }
-        
-        base_codon = type_codons.get(association_type, 'ASSN')
-        strength_sequence = self._encode_parameter('strength', strength)
-        
-        return base_codon + strength_sequence
-    
-    def _encode_consolidation_state(self, consolidation_level: float) -> str:
-        """Encode memory consolidation state into genetic sequence"""
-        return "CONS" + self._encode_parameter('level', consolidation_level)
-    
-    def create_genetic_packet(self, data_type: str, data: Dict[str, Any], 
-                            privacy_level: str = "public") -> GeneticDataPacket:
-        """Create genetic data packet for P2P sharing"""
-        # Encode data based on type
-        if data_type == "neural_network":
-            chromosomes = [self.encode_neural_network(data)]
-        elif data_type == "hormone_profile":
-            chromosomes = [self.encode_hormone_profile(data)]
-        elif data_type == "memory_engram":
-            chromosomes = [self.encode_memory_engram(data)]
-        else:
-            # Generic encoding
-            chromosomes = [self._encode_generic_data(data)]
-        
-        # Calculate fitness score
-        fitness_score = self._calculate_fitness_score(data, data_type)
-        
-        # Create integration instructions
-        integration_instructions = self._create_integration_instructions(data_type, data)
-        
-        # Generate validation checksum
-        packet_data = {
-            'chromosomes': chromosomes,
-            'data_type': data_type,
-            'timestamp': time.time()
-        }
-        validation_checksum = hashlib.sha256(
-            json.dumps(packet_data, default=str).encode()
-        ).hexdigest()
-        
-        packet = GeneticDataPacket(
-            packet_id=f"{self.organism_id}_{int(time.time())}_{random.randint(1000, 9999)}",
-            source_organism=self.organism_id,
-            chromosomes=chromosomes,
-            metadata={
-                'data_type': data_type,
-                'creation_method': 'genetic_encoding',
-                'encoding_version': '1.0'
-            },
-            integration_instructions=integration_instructions,
-            validation_checksum=validation_checksum,
-            privacy_level=privacy_level,
-            performance_metrics=data.get('performance_metrics', {}),
-            environmental_context=self.environmental_state.copy(),
-            timestamp=time.time(),
-            telomere_age=0,
-            fitness_score=fitness_score
-        )
-        
-        return packet
-    
-    def _encode_generic_data(self, data: Dict[str, Any]) -> GeneticChromosome:
-        """Generic encoding for arbitrary data"""
-        elements = []
-        
-        for key, value in data.items():
-            sequence = self._encode_parameter(key, value)
-            element = GeneticElement(
-                element_id=f"data_{key}",
-                element_type=GeneticElementType.EXON,
-                sequence=sequence,
-                position=len(elements),
-                length=len(sequence)
-            )
-            elements.append(element)
-        
-        return GeneticChromosome(
-            chromosome_id="generic_data",
-            elements=elements,
-            telomere_length=500
-        )
-    
-    def _calculate_fitness_score(self, data: Dict[str, Any], data_type: str) -> float:
-        """Calculate fitness score for genetic data"""
-        base_fitness = 0.5
-        
-        # Performance-based fitness
-        performance_metrics = data.get('performance_metrics', {})
-        if performance_metrics:
-            accuracy = performance_metrics.get('accuracy', 0.5)
-            efficiency = performance_metrics.get('efficiency', 0.5)
-            stability = performance_metrics.get('stability', 0.5)
-            
-            performance_fitness = (accuracy + efficiency + stability) / 3.0
-            base_fitness = 0.3 * base_fitness + 0.7 * performance_fitness
-        
-        # Age-based fitness (newer is generally better)
-        age_factor = 1.0 - min(0.5, (time.time() - data.get('creation_time', time.time())) / (30 * 24 * 3600))
-        base_fitness *= age_factor
-        
-        # Complexity penalty (simpler is often better)
-        complexity = len(str(data)) / 10000.0
-        complexity_penalty = max(0.5, 1.0 - complexity)
-        base_fitness *= complexity_penalty
-        
-        return max(0.0, min(1.0, base_fitness))
-    
-    def _create_integration_instructions(self, data_type: str, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Create genetic integration instructions"""
-        return {
-            'when': {
-                'environmental_triggers': ['performance_degradation', 'learning_opportunity'],
-                'temporal_conditions': ['low_activity_period', 'maintenance_window'],
-                'fitness_threshold': 0.6
-            },
-            'where': {
-                'target_systems': self._get_target_systems(data_type),
-                'integration_sites': ['neural_networks', 'memory_systems', 'hormone_regulation'],
-                'exclusion_zones': ['critical_safety_systems']
-            },
-            'how': {
-                'integration_method': 'gradual_replacement',
-                'validation_steps': ['performance_testing', 'safety_checks', 'rollback_capability'],
-                'success_criteria': {'performance_improvement': 0.05, 'stability_maintained': True}
-            },
-            'why': {
-                'expected_benefits': self._get_expected_benefits(data_type),
-                'risk_assessment': 'low',
-                'reversibility': True
-            },
-            'what': {
-                'data_summary': f"{data_type} optimization",
-                'key_components': list(data.keys())[:5],
-                'estimated_impact': 'moderate'
-            },
-            'order': {
-                'prerequisites': [],
-                'sequence': ['backup_current_state', 'gradual_integration', 'validation', 'cleanup'],
-                'dependencies': []
-            }
-        }
-    
-    def _get_target_systems(self, data_type: str) -> List[str]:
-        """Get target systems for integration based on data type"""
-        target_map = {
-            'neural_network': ['neural_networks', 'pattern_recognition', 'decision_making'],
-            'hormone_profile': ['hormone_system', 'emotional_regulation', 'stress_response'],
-            'memory_engram': ['memory_systems', 'association_networks', 'recall_mechanisms'],
-            'task_optimization': ['task_manager', 'workflow_orchestration', 'priority_systems']
-        }
-        return target_map.get(data_type, ['general_systems'])
-    
-    def _get_expected_benefits(self, data_type: str) -> List[str]:
-        """Get expected benefits for data type"""
-        benefit_map = {
-            'neural_network': ['improved_accuracy', 'faster_inference', 'better_generalization'],
-            'hormone_profile': ['better_emotional_regulation', 'improved_stress_response', 'enhanced_motivation'],
-            'memory_engram': ['faster_recall', 'better_associations', 'improved_learning'],
-            'task_optimization': ['better_prioritization', 'improved_efficiency', 'reduced_conflicts']
-        }
-        return benefit_map.get(data_type, ['general_improvement'])    
-
-    async def share_genetic_data(self, packet: GeneticDataPacket, 
-                               target_organisms: Optional[List[str]] = None) -> bool:
-        """Share genetic data packet with P2P network"""
-        try:
-            # Encrypt sensitive data
-            encrypted_data = self._encrypt_packet(packet)
-            
-            # Store in local database
-            self._store_packet(encrypted_data)
-            
-            # Broadcast to network (simulated - would use actual P2P protocol)
-            success = await self._broadcast_packet(encrypted_data, target_organisms)
-            
-            return success
-        except Exception as e:
-            print(f"Error sharing genetic data: {e}")
-            return False
-    
-    def _encrypt_packet(self, packet: GeneticDataPacket) -> Dict[str, Any]:
-        """Encrypt genetic data packet for secure transmission"""
-        # Serialize packet data
-        packet_data = {
-            'packet_id': packet.packet_id,
-            'source_organism': packet.source_organism,
-            'chromosomes': [self._serialize_chromosome(c) for c in packet.chromosomes],
-            'metadata': packet.metadata,
-            'integration_instructions': packet.integration_instructions,
-            'validation_checksum': packet.validation_checksum,
-            'privacy_level': packet.privacy_level,
-            'performance_metrics': packet.performance_metrics,
-            'environmental_context': packet.environmental_context,
-            'timestamp': packet.timestamp,
-            'telomere_age': packet.telomere_age,
-            'fitness_score': packet.fitness_score
-        }
-        
-        # Compress and encrypt
-        compressed_data = zlib.compress(json.dumps(packet_data).encode())
-        encrypted_data = self.encryption_key.encrypt(compressed_data)
-        
-        return {
-            'encrypted_payload': encrypted_data,
-            'packet_id': packet.packet_id,
-            'source_organism': packet.source_organism,
-            'privacy_level': packet.privacy_level,
-            'fitness_score': packet.fitness_score,
-            'timestamp': packet.timestamp
-        }
-    
-    def _serialize_chromosome(self, chromosome: GeneticChromosome) -> Dict[str, Any]:
-        """Serialize chromosome for storage/transmission"""
-        return {
-            'chromosome_id': chromosome.chromosome_id,
-            'elements': [self._serialize_element(e) for e in chromosome.elements],
-            'telomere_length': chromosome.telomere_length,
-            'centromere_position': chromosome.centromere_position,
-            'crossover_hotspots': chromosome.crossover_hotspots,
-            'structural_variants': chromosome.structural_variants
-        }
-    
-    def _serialize_element(self, element: GeneticElement) -> Dict[str, Any]:
-        """Serialize genetic element for storage/transmission"""
-        return {
-            'element_id': element.element_id,
-            'element_type': element.element_type.value,
-            'sequence': element.sequence,
-            'position': element.position,
-            'length': element.length,
-            'expression_level': element.expression_level,
-            'chromatin_state': element.chromatin_state.value,
-            'epigenetic_markers': [self._serialize_marker(m) for m in element.epigenetic_markers],
-            'regulatory_targets': element.regulatory_targets,
-            'environmental_responsiveness': element.environmental_responsiveness
-        }
-    
-    def _serialize_marker(self, marker: EpigeneticMarker) -> Dict[str, Any]:
-        """Serialize epigenetic marker for storage/transmission"""
-        return {
-            'position': marker.position,
-            'marker_type': marker.marker_type,
-            'strength': marker.strength,
-            'environmental_trigger': marker.environmental_trigger,
-            'stability': marker.stability,
-            'inheritance_probability': marker.inheritance_probability
-        }
-    
-    def _store_packet(self, encrypted_packet: Dict[str, Any]):
-        """Store genetic packet in local database"""
-        conn = sqlite3.connect(self.database_path)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            INSERT OR REPLACE INTO genetic_packets 
-            (packet_id, source_organism, data, metadata, timestamp, fitness_score, 
-             validation_checksum, privacy_level)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            encrypted_packet['packet_id'],
-            encrypted_packet['source_organism'],
-            encrypted_packet['encrypted_payload'],
-            json.dumps({}),  # Metadata stored separately for privacy
-            encrypted_packet['timestamp'],
-            encrypted_packet['fitness_score'],
-            '',  # Checksum stored separately
-            encrypted_packet['privacy_level']
-        ))
-        
-        conn.commit()
-        conn.close()
-    
-    async def _broadcast_packet(self, encrypted_packet: Dict[str, Any], 
-                              target_organisms: Optional[List[str]] = None) -> bool:
-        """Broadcast genetic packet to P2P network"""
-        # Simulated P2P broadcast - in real implementation would use
-        # protocols like BitTorrent, IPFS, or custom P2P networking
-        
-        print(f"Broadcasting genetic packet {encrypted_packet['packet_id']} "
-              f"from {encrypted_packet['source_organism']}")
-        
-        if target_organisms:
-            print(f"Targeting organisms: {target_organisms}")
-        else:
-            print("Broadcasting to all network participants")
-        
-        # Simulate network delay
-        await asyncio.sleep(0.1)
-        
-        return True
-    
-    async def receive_genetic_data(self, encrypted_packet: Dict[str, Any]) -> bool:
-        """Receive and process genetic data from P2P network"""
-        try:
-            # Decrypt packet
-            packet = self._decrypt_packet(encrypted_packet)
-            
-            # Validate packet integrity
-            if not self._validate_packet(packet):
-                print(f"Invalid packet received: {packet.packet_id}")
-                return False
-            
-            # Check if we should integrate this data
-            if await self._should_integrate_packet(packet):
-                success = await self._integrate_genetic_data(packet)
-                
-                # Record integration attempt
-                self._record_integration(packet.packet_id, success)
-                
-                return success
-            
-            return True
-        except Exception as e:
-            print(f"Error receiving genetic data: {e}")
-            return False
-    
-    def _decrypt_packet(self, encrypted_packet: Dict[str, Any]) -> GeneticDataPacket:
-        """Decrypt genetic data packet"""
-        # Decrypt payload
-        decrypted_data = self.encryption_key.decrypt(encrypted_packet['encrypted_payload'])
-        decompressed_data = zlib.decompress(decrypted_data)
-        packet_data = json.loads(decompressed_data.decode())
-        
-        # Reconstruct packet
-        chromosomes = [self._deserialize_chromosome(c) for c in packet_data['chromosomes']]
-        
-        return GeneticDataPacket(
-            packet_id=packet_data['packet_id'],
-            source_organism=packet_data['source_organism'],
-            chromosomes=chromosomes,
-            metadata=packet_data['metadata'],
-            integration_instructions=packet_data['integration_instructions'],
-            validation_checksum=packet_data['validation_checksum'],
-            privacy_level=packet_data['privacy_level'],
-            performance_metrics=packet_data['performance_metrics'],
-            environmental_context=packet_data['environmental_context'],
-            timestamp=packet_data['timestamp'],
-            telomere_age=packet_data['telomere_age'],
-            fitness_score=packet_data['fitness_score']
-        )
-    
-    def _deserialize_chromosome(self, data: Dict[str, Any]) -> GeneticChromosome:
-        """Deserialize chromosome from stored data"""
-        elements = [self._deserialize_element(e) for e in data['elements']]
-        
-        return GeneticChromosome(
-            chromosome_id=data['chromosome_id'],
-            elements=elements,
-            telomere_length=data['telomere_length'],
-            centromere_position=data['centromere_position'],
-            crossover_hotspots=data['crossover_hotspots'],
-            structural_variants=data['structural_variants']
-        )
-    
-    def _deserialize_element(self, data: Dict[str, Any]) -> GeneticElement:
-        """Deserialize genetic element from stored data"""
-        markers = [self._deserialize_marker(m) for m in data['epigenetic_markers']]
-        
-        return GeneticElement(
-            element_id=data['element_id'],
-            element_type=GeneticElementType(data['element_type']),
-            sequence=data['sequence'],
-            position=data['position'],
-            length=data['length'],
-            expression_level=data['expression_level'],
-            chromatin_state=ChromatinState(data['chromatin_state']),
-            epigenetic_markers=markers,
-            regulatory_targets=data['regulatory_targets'],
-            environmental_responsiveness=data['environmental_responsiveness']
-        )
-    
-    def _deserialize_marker(self, data: Dict[str, Any]) -> EpigeneticMarker:
-        """Deserialize epigenetic marker from stored data"""
-        return EpigeneticMarker(
-            position=data['position'],
-            marker_type=data['marker_type'],
-            strength=data['strength'],
-            environmental_trigger=data['environmental_trigger'],
-            stability=data['stability'],
-            inheritance_probability=data['inheritance_probability']
-        )
-    
-    def _validate_packet(self, packet: GeneticDataPacket) -> bool:
-        """Validate genetic data packet integrity"""
-        # Check basic structure
-        if not packet.packet_id or not packet.source_organism:
-            return False
-        
-        # Validate chromosomes
-        for chromosome in packet.chromosomes:
-            if not self._validate_chromosome(chromosome):
-                return False
-        
-        # Check fitness score range
-        if not (0.0 <= packet.fitness_score <= 1.0):
-            return False
-        
-        # Validate timestamp (not too old or future)
-        current_time = time.time()
-        if packet.timestamp > current_time + 3600:  # Not more than 1 hour in future
-            return False
-        if packet.timestamp < current_time - 30 * 24 * 3600:  # Not more than 30 days old
-            return False
-        
-        return True
-    
-    def _validate_chromosome(self, chromosome: GeneticChromosome) -> bool:
-        """Validate chromosome structure"""
-        if not chromosome.chromosome_id or not chromosome.elements:
-            return False
-        
-        # Check telomere length (aging mechanism)
-        if chromosome.telomere_length < 0:
-            return False
-        
-        # Validate elements
-        for element in chromosome.elements:
-            if not self._validate_element(element):
-                return False
-        
-        return True
-    
-    def _validate_element(self, element: GeneticElement) -> bool:
-        """Validate genetic element structure"""
-        if not element.element_id or not element.sequence:
-            return False
-        
-        # Check expression level range
-        if not (0.0 <= element.expression_level <= 1.0):
-            return False
-        
-        # Validate sequence contains only valid bases
-        valid_bases = set('AUGC')
-        if not all(base in valid_bases for base in element.sequence):
-            return False
-        
-        return True
-    
-    async def _should_integrate_packet(self, packet: GeneticDataPacket) -> bool:
-        """Determine if genetic packet should be integrated"""
-        # Check fitness threshold
-        if packet.fitness_score < 0.6:
-            return False
-        
-        # Check privacy level
-        if packet.privacy_level == "private" and packet.source_organism != self.organism_id:
-            return False
-        
-        # Check environmental compatibility
-        env_compatibility = self._calculate_environmental_compatibility(packet)
-        if env_compatibility < 0.5:
-            return False
-        
-        # Check integration instructions
-        instructions = packet.integration_instructions
-        when_conditions = instructions.get('when', {})
-        
-        # Check fitness threshold
-        fitness_threshold = when_conditions.get('fitness_threshold', 0.6)
-        if packet.fitness_score < fitness_threshold:
-            return False
-        
-        # Check environmental triggers
-        env_triggers = when_conditions.get('environmental_triggers', [])
-        if env_triggers and not any(trigger in self.environmental_state for trigger in env_triggers):
-            return False
-        
-        return True
-    
-    def _calculate_environmental_compatibility(self, packet: GeneticDataPacket) -> float:
-        """Calculate environmental compatibility score"""
-        if not packet.environmental_context or not self.environmental_state:
-            return 0.5  # Neutral compatibility
-        
-        # Calculate similarity between environments
-        common_keys = set(packet.environmental_context.keys()) & set(self.environmental_state.keys())
-        if not common_keys:
-            return 0.5
-        
-        similarity_scores = []
-        for key in common_keys:
-            packet_value = packet.environmental_context[key]
-            current_value = self.environmental_state[key]
-            
-            # Calculate normalized difference
-            max_val = max(abs(packet_value), abs(current_value), 1.0)
-            difference = abs(packet_value - current_value) / max_val
-            similarity = 1.0 - difference
-            similarity_scores.append(similarity)
-        
-        return sum(similarity_scores) / len(similarity_scores)
-    
-    async def _integrate_genetic_data(self, packet: GeneticDataPacket) -> bool:
-        """Integrate genetic data into current organism"""
-        try:
-            integration_success = True
-            
-            for chromosome in packet.chromosomes:
-                # Find compatible chromosome in current organism
-                target_chromosome = self._find_compatible_chromosome(chromosome)
-                
-                if target_chromosome:
-                    # Perform genetic recombination
-                    new_chromosome1, new_chromosome2 = self.recombination_engine.crossover(
-                        target_chromosome, chromosome
-                    )
-                    
-                    # Apply mutations
-                    mutated_chromosome = self.recombination_engine.mutate(new_chromosome1)
-                    
-                    # Replace target chromosome
-                    self._replace_chromosome(target_chromosome, mutated_chromosome)
-                else:
-                    # Add as new chromosome via horizontal gene transfer
-                    transferred_chromosome = self.recombination_engine.horizontal_gene_transfer(
-                        self.chromosomes[0] if self.chromosomes else chromosome,
-                        chromosome.elements
-                    )
-                    self.chromosomes.append(transferred_chromosome)
-                
-                # Update epigenetic markers based on current environment
-                self._update_epigenetic_markers(chromosome)
-            
-            # Update fitness history
-            self.fitness_history.append({
-                'timestamp': time.time(),
-                'source_packet': packet.packet_id,
-                'fitness_before': self._calculate_current_fitness(),
-                'integration_type': 'genetic_recombination'
-            })
-            
-            return integration_success
-        except Exception as e:
-            print(f"Error integrating genetic data: {e}")
-            return False
-    
-    def _find_compatible_chromosome(self, chromosome: GeneticChromosome) -> Optional[GeneticChromosome]:
-        """Find compatible chromosome for recombination"""
-        for existing_chromosome in self.chromosomes:
-            # Check for similar chromosome types based on element composition
-            existing_types = set(e.element_type for e in existing_chromosome.elements)
-            new_types = set(e.element_type for e in chromosome.elements)
-            
-            # Calculate type overlap
-            overlap = len(existing_types & new_types) / len(existing_types | new_types)
-            
-            if overlap > 0.3:  # 30% similarity threshold
-                return existing_chromosome
-        
-        return None
-    
-    def _replace_chromosome(self, old_chromosome: GeneticChromosome, 
-                          new_chromosome: GeneticChromosome):
-        """Replace chromosome in organism"""
-        for i, chromosome in enumerate(self.chromosomes):
-            if chromosome.chromosome_id == old_chromosome.chromosome_id:
-                self.chromosomes[i] = new_chromosome
-                break
-    
-    def _update_epigenetic_markers(self, chromosome: GeneticChromosome):
-        """Update epigenetic markers based on current environment"""
-        for element in chromosome.elements:
-            for marker in element.epigenetic_markers:
-                # Check if environmental trigger is present
-                if marker.environmental_trigger in self.environmental_state:
-                    trigger_strength = self.environmental_state[marker.environmental_trigger]
-                    
-                    # Update marker strength based on trigger
-                    marker.strength = min(1.0, marker.strength + trigger_strength * 0.1)
-                else:
-                    # Decay marker strength over time
-                    marker.strength = max(0.0, marker.strength - 0.01)
-    
-    def _calculate_current_fitness(self) -> float:
-        """Calculate current organism fitness"""
-        if not self.chromosomes:
-            return 0.5
-        
-        # Average fitness across all chromosomes
-        chromosome_fitness = []
-        for chromosome in self.chromosomes:
-            # Calculate based on telomere length (aging)
-            age_factor = chromosome.telomere_length / 1000.0
-            
-            # Calculate based on element expression levels
-            expression_levels = [e.expression_level for e in chromosome.elements]
-            avg_expression = sum(expression_levels) / len(expression_levels) if expression_levels else 0.5
-            
-            # Calculate based on epigenetic diversity
-            epigenetic_diversity = len(set(
-                marker.marker_type for element in chromosome.elements 
-                for marker in element.epigenetic_markers
-            )) / 10.0  # Normalize by expected max diversity
-            
-            fitness = (age_factor + avg_expression + epigenetic_diversity) / 3.0
-            chromosome_fitness.append(fitness)
-        
-        return sum(chromosome_fitness) / len(chromosome_fitness)
-    
-    def _record_integration(self, packet_id: str, success: bool):
-        """Record integration attempt in database"""
-        conn = sqlite3.connect(self.database_path)
-        cursor = conn.cursor()
-        
-        integration_id = f"int_{packet_id}_{int(time.time())}"
-        
-        cursor.execute('''
-            INSERT INTO integration_history 
-            (integration_id, packet_id, integration_timestamp, success, performance_delta, notes)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (
-            integration_id,
-            packet_id,
-            time.time(),
-            success,
-            0.0,  # Performance delta calculated later
-            f"Integration {'successful' if success else 'failed'}"
-        ))
-        
-        conn.commit()
-        conn.close()
-    
-    def update_environmental_state(self, new_state: Dict[str, float]):
-        """Update current environmental state"""
-        self.environmental_state.update(new_state)
-        
-        # Trigger epigenetic responses
-        for chromosome in self.chromosomes:
-            self._update_epigenetic_markers(chromosome)
-    
-    def get_genetic_diversity_metrics(self) -> Dict[str, float]:
-        """Calculate genetic diversity metrics"""
-        if not self.chromosomes:
-            return {'diversity': 0.0, 'complexity': 0.0, 'stability': 0.0}
-        
-        # Calculate sequence diversity
-        all_sequences = [element.sequence for chromosome in self.chromosomes 
-                        for element in chromosome.elements]
-        unique_sequences = set(all_sequences)
-        sequence_diversity = len(unique_sequences) / len(all_sequences) if all_sequences else 0.0
-        
-        # Calculate element type diversity
-        all_types = [element.element_type for chromosome in self.chromosomes 
-                    for element in chromosome.elements]
-        unique_types = set(all_types)
-        type_diversity = len(unique_types) / len(GeneticElementType) if all_types else 0.0
-        
-        # Calculate epigenetic diversity
-        all_markers = [marker.marker_type for chromosome in self.chromosomes 
-                      for element in chromosome.elements for marker in element.epigenetic_markers]
-        unique_markers = set(all_markers)
-        epigenetic_diversity = len(unique_markers) / 10.0 if all_markers else 0.0  # Normalize
-        
-        # Calculate complexity (average elements per chromosome)
-        avg_complexity = sum(len(c.elements) for c in self.chromosomes) / len(self.chromosomes)
-        normalized_complexity = min(1.0, avg_complexity / 50.0)  # Normalize to 50 elements max
-        
-        # Calculate stability (average telomere length)
-        avg_telomere = sum(c.telomere_length for c in self.chromosomes) / len(self.chromosomes)
-        stability = avg_telomere / 1000.0  # Normalize to initial telomere length
-        
-        overall_diversity = (sequence_diversity + type_diversity + epigenetic_diversity) / 3.0
-        
-        return {
-            'diversity': overall_diversity,
-            'complexity': normalized_complexity,
-            'stability': stability,
-            'sequence_diversity': sequence_diversity,
-            'type_diversity': type_diversity,
-            'epigenetic_diversity': epigenetic_diversity
-        }
-    
-    async def evolve_organism(self, generations: int = 10) -> Dict[str, Any]:
-        """Evolve organism through multiple generations"""
-        evolution_history = []
-        
-        for generation in range(generations):
-            # Calculate current fitness
-            current_fitness = self._calculate_current_fitness()
-            
-            # Apply aging (telomere shortening)
-            for chromosome in self.chromosomes:
-                chromosome.telomere_length = max(0, chromosome.telomere_length - 1)
-            
-            # Apply mutations
-            mutated_chromosomes = []
-            for chromosome in self.chromosomes:
-                mutated = self.recombination_engine.mutate(chromosome)
-                mutated_chromosomes.append(mutated)
-            
-            # Replace with mutated versions
-            self.chromosomes = mutated_chromosomes
-            
-            # Calculate new fitness
-            new_fitness = self._calculate_current_fitness()
-            
-            # Record generation
-            generation_data = {
-                'generation': generation,
-                'fitness_before': current_fitness,
-                'fitness_after': new_fitness,
-                'fitness_delta': new_fitness - current_fitness,
-                'diversity_metrics': self.get_genetic_diversity_metrics(),
-                'timestamp': time.time()
-            }
-            evolution_history.append(generation_data)
-            
-            # Simulate environmental pressure
-            await asyncio.sleep(0.01)  # Small delay for async operation
-        
-        return {
-            'evolution_history': evolution_history,
-            'final_fitness': self._calculate_current_fitness(),
-            'generations_completed': generations,
-            'genetic_diversity': self.get_genetic_diversity_metrics()
-        }
-
-
-# Example usage and testing functions
-async def example_genetic_evolution():
-    """Example of genetic evolution system in action"""
-    # Create two organisms
-    organism1 = GeneticDataExchange("organism_alpha")
-    organism2 = GeneticDataExchange("organism_beta")
-    
-    # Create sample neural network data
-    neural_data = {
-        'model_id': 'test_model_1',
-        'architecture': {
-            'dense': {'units': 128, 'activation': 'relu'},
-            'dropout': {'rate': 0.2},
-            'output': {'units': 10, 'activation': 'softmax'}
-        },
-        'weights': {
-            'layer1': np.random.randn(784, 128),
-            'layer2': np.random.randn(128, 10)
-        },
-        'training_params': {
-            'learning_rate': 0.001,
-            'batch_size': 32,
-            'epochs': 100
-        },
-        'performance_metrics': {
-            'accuracy': 0.85,
-            'efficiency': 0.7,
-            'stability': 0.9
-        }
-    }
-    
-    # Create genetic packet
-    packet = organism1.create_genetic_packet("neural_network", neural_data)
-    
-    # Share genetic data
-    await organism1.share_genetic_data(packet)
-    
-    # Simulate organism2 receiving the data
-    encrypted_packet = organism1._encrypt_packet(packet)
-    await organism2.receive_genetic_data(encrypted_packet)
-    
-    # Evolve both organisms
-    evolution1 = await organism1.evolve_organism(5)
-    evolution2 = await organism2.evolve_organism(5)
-    
-    print("Evolution Results:")
-    print(f"Organism 1 final fitness: {evolution1['final_fitness']:.3f}")
-    print(f"Organism 2 final fitness: {evolution2['final_fitness']:.3f}")
-    print(f"Organism 1 diversity: {evolution1['genetic_diversity']['diversity']:.3f}")
-    print(f"Organism 2 diversity: {evolution2['genetic_diversity']['diversity']:.3f}")
-
-
-if __name__ == "__main__":
-    # Run example
-    asyncio.run(example_genetic_evolution())

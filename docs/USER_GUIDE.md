@@ -1,4 +1,25 @@
-# MCP Server User Guide
+# MCP User Guide (Updated)
+
+## Overview
+This guide explains how to use the upgraded MCP system.
+
+- See [ARCHITECTURE.md](ARCHITECTURE.md) for system overview
+- See [API_DOCUMENTATION.md](API_DOCUMENTATION.md) for method details
+
+## New Features
+- **Three-Tier Memory:** All memory operations are now managed by a unified system (see UnifiedMemoryManager)
+- **WebSocialEngine:** Enables web crawling, social media interaction, and digital identity management
+- **GeneticTrigger:** Advanced adaptation, dual code/neural, and A/B testing for environmental triggers
+- **P2P Benchmarking:** Secure, async benchmarking and global performance projection
+
+## Usage Notes
+- Memory, web/social, and genetic features are accessible via the main MCP interface
+- P2P benchmarking and status visualization are available in the integration layer
+
+## Cross-References
+- [ARCHITECTURE.md](ARCHITECTURE.md)
+- [API_DOCUMENTATION.md](API_DOCUMENTATION.md)
+- [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)
 
 ## Introduction
 

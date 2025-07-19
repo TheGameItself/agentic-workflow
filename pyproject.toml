@@ -1,78 +1,128 @@
 [build-system]
-requires = ["setuptools>=45", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
-name = "mcp-agentic-workflow"
+name = "agentic-workflow"
 version = "2.0.0"
-description = "Portable, local-only Python MCP server for agentic development workflows"
-readme = "README.md"
-license = {text = "MIT"}
+description = "Agentic Workflow MCP System with Brain-Inspired Architecture"
 authors = [
-    {name = "MCP Development Team"}
+    {name = "Agentic Workflow Team", email = "team@agentic-workflow.com"}
 ]
-keywords = ["mcp", "agentic", "workflow", "development", "local", "portable"]
-classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Topic :: Software Development :: Libraries :: Python Modules",
-    "Topic :: Software Development :: Libraries :: Application Frameworks",
-    "Topic :: System :: Systems Administration",
-    "Topic :: Utilities",
-]
-requires-python = ">=3.8"
+readme = "README.md"
+requires-python = ">=3.11"
 dependencies = [
-    "click>=8.0.0",
-    "rich",
-    "sqlalchemy",
-    "pytest",
-    "typing-extensions>=4.0.0",
+    "numpy>=2.0.0",
+    "psutil>=7.0.0",
+    "pytest>=8.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-xdist>=3.0.0",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=6.0",
-    "pytest-cov>=2.0",
-    "black>=21.0",
-    "flake8>=3.8",
-    "mypy>=0.800",
+    "pytest>=8.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-xdist>=3.0.0",
+    "flake8>=6.0.0",
+    "black>=23.0.0",
+    "mypy>=1.0.0",
 ]
 
-[project.scripts]
-mcp = "mcp.cli:cli"
+[tool.pytest.ini_options]
+# Use importlib mode for better test discovery
+addopts = [
+    "--import-mode=importlib",
+    "--tb=short",
+    "--strict-markers",
+    "--disable-warnings",
+    "--color=yes",
+    "--durations=10",
+    "--cov=src",
+    "--cov-report=term-missing",
+    "--cov-report=html:tests/logs/coverage_html",
+    "--cov-fail-under=70",
+]
 
-[project.urls]
-Homepage = "https://github.com/your-username/mcp-agentic-workflow"
-Documentation = ""
-Repository = "https://github.com/your-username/mcp-agentic-workflow"
-Issues = "https://github.com/your-username/mcp-agentic-workflow/issues"
-"Bug Tracker" = ""
+# Test discovery
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
 
-[tool.setuptools]
-package-dir = {"" = "src"}
+# Python path for src layout
+pythonpath = ["src"]
 
-[tool.setuptools.packages.find]
-where = ["src"]
+# Markers
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests", 
+    "performance: Performance tests",
+    "slow: Slow running tests",
+    "fast: Fast running tests",
+    "genetic: Genetic system tests",
+    "hormone: Hormone system tests",
+    "memory: Memory system tests",
+    "p2p: P2P network tests",
+    "async: Async processing tests",
+    "brain: Brain-inspired architecture tests",
+    "mcp: MCP system tests",
+]
 
-[tool.setuptools.package-data]
-mcp = ["*.cfg", "*.json"]
+# Logging
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s [%(levelname)8s] %(name)s: %(message)s"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+
+# Test organization
+norecursedirs = [
+    ".git",
+    ".tox", 
+    "dist",
+    "build",
+    "*.egg",
+    "venv",
+    "test_venv",
+    "__pycache__",
+    ".pytest_cache",
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/test_venv/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
 
 [tool.black]
 line-length = 88
-target-version = ['py38']
+target-version = ['py311']
 include = '\.pyi?$'
 extend-exclude = '''
 /(
   # directories
   \.eggs
+  | \.git
   | \.hg
   | \.mypy_cache
   | \.tox
@@ -82,14 +132,8 @@ extend-exclude = '''
 )/
 '''
 
-[tool.isort]
-profile = "black"
-multi_line_output = 3
-line_length = 88
-known_first_party = ["mcp"]
-
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
@@ -105,46 +149,8 @@ strict_equality = true
 
 [[tool.mypy.overrides]]
 module = [
-    "click.*",
+    "tests.*",
+    "test_*",
 ]
-ignore_missing_imports = true
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-python_files = ["test_*.py"]
-python_classes = ["Test*"]
-python_functions = ["test_*"]
-addopts = [
-    "--strict-markers",
-    "--strict-config",
-    "--cov=mcp",
-    "--cov-report=term-missing",
-    "--cov-report=html",
-]
-markers = [
-    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
-    "integration: marks tests as integration tests",
-    "unit: marks tests as unit tests",
-]
-
-[tool.coverage.run]
-source = ["src/mcp"]
-omit = [
-    "*/tests/*",
-    "*/test_*",
-    "*/__pycache__/*",
-]
-
-[tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
-    "def __repr__",
-    "if self.debug:",
-    "if settings.DEBUG",
-    "raise AssertionError",
-    "raise NotImplementedError",
-    "if 0:",
-    "if __name__ == .__main__.:",
-    "class .*\\bProtocol\\):",
-    "@(abc\\.)?abstractmethod",
-] 
+disallow_untyped_defs = false
+disallow_incomplete_defs = false 

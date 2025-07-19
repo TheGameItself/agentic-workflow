@@ -731,4 +731,38 @@ ltm.add("knowledge_1", {"fact": "persistent"})
 
 See `ARCHITECTURE.md` and `idea.txt` for more details and research references.
 
-This API documentation provides a comprehensive guide to using all MCP Server features effectively. 
+This API documentation provides a comprehensive guide to using all MCP Server features effectively.
+
+# MCP API Documentation (Updated)
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for system overview.
+
+## UnifiedMemoryManager
+- `add_memory(text: str, ...) -> Dict[str, Any]`: Add memory to three-tier system
+- `cross_tier_search(query: str, limit: int = 10) -> List[Dict[str, Any]]`: Search all memory tiers
+- `consolidate_workflow()`: Automatic memory consolidation
+
+## WebSocialEngine
+- `crawl_and_analyze_content(url: str) -> Dict[str, Any]`
+- `interact_with_social_media(platform: str, action: str, payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]`
+- `manage_digital_identity(identity: Dict[str, Any]) -> Dict[str, Any]`
+- `handle_captcha_challenges(captcha: Any) -> Dict[str, Any]`
+- `generate_secure_credentials(service: str) -> Dict[str, str]`
+- `assess_source_credibility(source: str) -> float`
+
+## GeneticTrigger
+- `async should_activate(environment: Dict[str, Any], threshold: float = 0.7) -> bool`: Dual code/neural, hormone feedback
+- `register_ab_test_group(group: str) -> None`: Split-brain A/B testing
+
+## P2P Integration
+### P2PNetworkNode
+- `async benchmark_peer(peer_id: str) -> Dict[str, Any]`
+- `async visualize_status() -> Dict[str, Any]`
+- `async report_performance() -> Dict[str, Any]`
+
+### IntegratedP2PGeneticSystem
+- `async global_benchmark() -> Dict[str, Any]`
+- `async visualize_global_status() -> Dict[str, Any]`
+- `async project_performance_growth() -> Dict[str, Any]`
+
+## See [ARCHITECTURE.md](ARCHITECTURE.md) for more details and cross-links. 

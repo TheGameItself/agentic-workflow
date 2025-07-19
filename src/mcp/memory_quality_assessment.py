@@ -122,8 +122,9 @@ class MemoryQualityAssessment:
         """)
         
         conn.commit()
-        conn.close()    def g
-et_memory_quality_report(self, memory_id: int) -> Dict[str, Any]:
+        conn.close()
+
+    def get_memory_quality_report(self, memory_id: int) -> Dict[str, Any]:
         """
         Generate a comprehensive quality report for a memory.
         
@@ -236,8 +237,9 @@ et_memory_quality_report(self, memory_id: int) -> Dict[str, Any]:
                 'last_accessed': last_accessed
             },
             'improvement_suggestions': suggestions
-        }    d
-ef _calculate_specificity_score(self, text: str) -> float:
+        }
+
+    def _calculate_specificity_score(self, text: str) -> float:
         """Calculate specificity score based on text content."""
         if not text:
             return 0.3
@@ -379,8 +381,9 @@ ef _calculate_specificity_score(self, text: str) -> float:
         elif access_count > 0:
             return 0.3
         else:
-            return 0.1    def _
-calculate_source_reliability_score(self, text: str, context: str) -> float:
+            return 0.1
+
+    def _calculate_source_reliability_score(self, text: str, context: str) -> float:
         """Calculate source reliability score."""
         # Base score
         score = 0.5
@@ -499,8 +502,9 @@ calculate_source_reliability_score(self, text: str, context: str) -> float:
         if any(re.search(pattern, text) for pattern in technical_precision):
             score += 0.15
         
-        return min(score, 1.0)   
- def _calculate_temporal_relevance_score(self, created_at: str, last_accessed: str, access_count: int) -> float:
+        return min(score, 1.0)
+    
+    def _calculate_temporal_relevance_score(self, created_at: str, last_accessed: str, access_count: int) -> float:
         """Calculate temporal relevance score based on recency and access patterns."""
         # Default score if dates are missing
         if not created_at:
@@ -651,8 +655,9 @@ calculate_source_reliability_score(self, text: str, context: str) -> float:
         # Sort by overall strength
         relationships.sort(key=lambda x: x['overall_strength'], reverse=True)
         
-        return relationships 
-   def _calculate_text_similarity(self, text1: str, text2: str) -> float:
+        return relationships
+    
+    def _calculate_text_similarity(self, text1: str, text2: str) -> float:
         """Calculate similarity between two text strings."""
         if not text1 or not text2:
             return 0.0
@@ -833,8 +838,9 @@ calculate_source_reliability_score(self, text: str, context: str) -> float:
             'contradiction', 'reference'
         ]
         
-        return relationship_type in bidirectional_types 
-   def store_memory_relationships(self, relationships: List[Dict[str, Any]]) -> int:
+        return relationship_type in bidirectional_types
+    
+    def store_memory_relationships(self, relationships: List[Dict[str, Any]]) -> int:
         """
         Store detected relationships in the database.
         

@@ -10,6 +10,7 @@ import subprocess
 from pathlib import Path
 import platform
 import sqlite3
+from scripts.security_audit import SecurityAuditor
 
 def print_banner():
     """Print the setup banner."""
@@ -300,6 +301,26 @@ def main():
             print(f"\n❌ Setup failed at: {step_name}")
             print("Please check the error messages above and try again.")
             return False
+    
+    # Run security audit after tests
+    print("\n🔒 Running Security Audit...")
+    auditor = SecurityAuditor()
+    audit_results = auditor.run_full_audit()
+    print(f"\nSecurity Audit Score: {audit_results.get('score', 'N/A')}")
+    print(f"Summary: {audit_results.get('summary', {})}")
+    if audit_results.get('issues'):
+        print(f"Issues found: {len(audit_results['issues'])}")
+        for issue in audit_results['issues']:
+            print(f"  - {issue}")
+    if audit_results.get('warnings'):
+        print(f"Warnings: {len(audit_results['warnings'])}")
+        for warning in audit_results['warnings']:
+            print(f"  - {warning}")
+    if audit_results.get('recommendations'):
+        print(f"Recommendations: {len(audit_results['recommendations'])}")
+        for rec in audit_results['recommendations']:
+            print(f"  - {rec}")
+    print("\nSecurity audit complete.")
     
     show_next_steps()
     return True

@@ -24,11 +24,14 @@ import sqlite3
 import pickle
 import zlib
 import math
+import logging
 
 from .genetic_data_exchange import (
     GeneticDataExchange, GeneticDataPacket, GeneticChromosome, 
     GeneticElement, GeneticElementType, ChromatinState, EpigeneticMarker
 )
+from .genetic_trigger_system import GeneticTrigger, GeneticSequence, EpigeneticMemory
+from .neural_network_models.performance_tracker import PerformanceTracker
 
 
 class GeneEditingType(Enum):
@@ -106,6 +109,40 @@ class MitochondrialGenome:
     mutation_rate: float
     inheritance_bias: float  # Maternal bias
     copy_number: int = 1000
+
+
+class GeneticExpressionType(Enum):
+    """Types of genetic expression patterns"""
+    SEQUENTIAL = "sequential"
+    PARALLEL = "parallel"
+    CONDITIONAL = "conditional"
+    LOOP = "loop"
+    INTERRUPT = "interrupt"
+    ALIGNMENT = "alignment"
+
+
+@dataclass
+class GeneticExpressionCondition:
+    """Condition for genetic expression"""
+    condition_id: str
+    expression_type: str
+    threshold: float
+    dependencies: List[str] = field(default_factory=list)
+    priority: float = 1.0
+    timeout: Optional[float] = None
+
+
+@dataclass
+class GeneticCircuitLayout:
+    """Layout for genetic circuit execution"""
+    layout_id: str
+    layout_type: GeneticExpressionType
+    nodes: List[str]
+    connections: List[Tuple[str, str]]
+    interruption_points: List[int] = field(default_factory=list)
+    alignment_hooks: List[str] = field(default_factory=list)
+    reputation_score: float = 0.5
+    universal_hooks: List[str] = field(default_factory=list)
 
 
 class AdvancedGeneticEditor:

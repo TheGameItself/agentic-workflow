@@ -5,16 +5,17 @@
 [![MCP](https://img.shields.io/badge/MCP-Compatible-brightgreen.svg)](https://modelcontextprotocol.io/)
 [![Local](https://img.shields.io/badge/Local-Only-orange.svg)](https://github.com/search?q=local+only+python)
 [![Portable](https://img.shields.io/badge/Portable-Yes-purple.svg)](https://github.com/search?q=portable+python+application)
+[![Auto-Update](https://img.shields.io/badge/Auto--Update-Enabled-brightgreen.svg)](https://github.com/search?q=automatic+update+system)
 
 > **Accelerate AI-powered development workflows with a portable, local MCP server for LLMs**
 
-- **Python 3.8+** | **MIT License** | **MCP-Compatible** | **Local-Only** | **Portable** | **"Advanced" API**
+- **Python 3.8+** | **MIT License** | **MCP-Compatible** | **Local-Only** | **Portable** | **Auto-Update** | **"Advanced" API**
 
 ---
 
 ## Overview
 
-The MCP Agentic Workflow Accelerator transforms single prompts into complete applications using intelligent project management, memory systems, and workflow orchestration. It is fully portable, requires no network, and is designed for seamless IDE integration.
+The MCP Agentic Workflow Accelerator transforms single prompts into complete applications using intelligent project management, memory systems, and workflow orchestration. It is fully portable, requires no network, and is designed for seamless IDE integration with **automatic self-updating capabilities**.
 
 ---
 
@@ -27,6 +28,47 @@ The MCP Agentic Workflow Accelerator transforms single prompts into complete app
 - **Context Optimization**: Minimal, relevant context for LLMs.
 - **Safety**: Accuracy-critical task protection.
 - **IDE Integration**: Works with Cursor, VS Code, and more.
+- **Automatic Updates**: Self-updating system with rollback capabilities.
+- **Performance Monitoring**: Real-time optimization and resource management.
+- **P2P Network**: Decentralized genetic data exchange and collaboration.
+
+---
+
+## Automatic Update System
+
+The MCP system includes a comprehensive automatic update system that ensures you always have the latest features and improvements:
+
+### Update Features
+- **Automatic Version Checking**: Regularly checks for updates without user intervention
+- **Smart Update Detection**: Identifies critical vs. optional updates
+- **Safe Installation**: Creates backups before updating with rollback capabilities
+- **Verification System**: Validates downloads and installations for security
+- **Cross-Platform Support**: Works on Linux, macOS, and Windows
+- **Local-Only Operation**: Can update from local sources without internet
+- **Health Monitoring**: Verifies system integrity after updates
+
+### Update Commands
+```bash
+# Check for updates
+python -m src.mcp.automatic_update_system --check
+
+# Perform update
+python -m src.mcp.automatic_update_system --update
+
+# Show update status
+python -m src.mcp.automatic_update_system --status
+
+# Enable/disable automatic updates
+python -m src.mcp.automatic_update_system --enable
+python -m src.mcp.automatic_update_system --disable
+```
+
+### Update Configuration
+The system can be configured via environment variables or config files:
+- `MCP_AUTO_UPDATE_ENABLED`: Enable/disable automatic updates
+- `MCP_UPDATE_CHECK_INTERVAL`: Hours between update checks (default: 24)
+- `MCP_UPDATE_SOURCES`: Comma-separated list of update sources
+- `MCP_BACKUP_ENABLED`: Enable backup before updates (default: true)
 
 ---
 
@@ -45,6 +87,8 @@ The MCP server is inspired by the human brain, with each "lobe" or engine respon
 - **Split Brain AB Test Engine**: Parallel A/B testing for continuous self-improvement.
 - **Multi-LLM Orchestrator**: Task routing and load balancing across multiple LLMs.
 - **Advanced Engram Engine**: Neural network-based memory compression, predictive modeling, and adaptive learning.
+- **Performance Optimization Engine**: Real-time resource monitoring and adaptive optimization.
+- **P2P Global Performance System**: Distributed benchmarking and performance projection.
 
 ### Cross-Lobe Communication (Implemented)
 
@@ -65,6 +109,7 @@ Secure, decentralized sharing of optimizations using genetic-inspired encoding:
 - **DHT Routing**: Distributed hash table for efficient peer discovery and data routing
 - **Engram Transfer**: Compressed memory structure sharing with multiple compression algorithms
 - **Network Orchestration**: Coordinated genetic operations across network nodes
+- **Status Visualization**: Real-time P2P network status with reputation scoring
 
 ### Data Flow
 
@@ -74,6 +119,8 @@ Secure, decentralized sharing of optimizations using genetic-inspired encoding:
   `Input → Preprocessing → Vectorization → Storage → Retrieval → Relevance Scoring → Context Assembly`
 - **Learning Flow**:  
   `Feedback → Pattern Recognition → Model Update → Optimization → Deployment`
+- **Update Flow**:  
+  `Version Check → Download → Verify → Backup → Install → Verify → Rollback (if needed)`
 
 ### Memory System
 
@@ -100,6 +147,12 @@ Or, for a simplified CLI:
 python simple_mcp_cli.py help
 ```
 
+For automatic setup and configuration:
+
+```bash
+python scripts/setup_wizard.py
+```
+
 ---
 
 ## CLI Commands (Summary)
@@ -110,6 +163,8 @@ python simple_mcp_cli.py help
 - **Task**: `create-task`, `list-tasks`, `update-task-progress`, `add-task-note`, `add-task-dependency`, `task-tree`
 - **Context**: `export-context`, `get-context-pack`
 - **Advanced**: `bulk-update-task-status`, `add-task-feedback`, `statistics`
+- **Updates**: `check-updates`, `perform-update`, `update-status`, `enable-auto-update`, `disable-auto-update`
+- **Performance**: `optimize-system`, `performance-report`, `resource-status`
 
 ---
 
@@ -132,6 +187,35 @@ See the `docs/` vault for ready-to-use configuration snippets for Cursor, JetBra
 
 ---
 
+## Performance & Monitoring
+
+The system includes comprehensive performance monitoring and optimization:
+
+### Performance Features
+- **Real-time Resource Monitoring**: CPU, memory, disk, and network usage tracking
+- **Adaptive Optimization**: Automatic resource allocation and constraint adaptation
+- **Predictive Resource Allocation**: Machine learning-based resource prediction
+- **Performance Analytics**: Detailed performance metrics and trend analysis
+- **Bottleneck Detection**: Automatic identification and resolution of performance issues
+- **P2P Benchmarking**: Global performance comparison and projection
+
+### Monitoring Commands
+```bash
+# Get performance report
+python mcp_cli.py performance-report
+
+# Optimize system
+python mcp_cli.py optimize-system
+
+# Check resource status
+python mcp_cli.py resource-status
+
+# Get P2P network status
+python mcp_cli.py p2p-status
+```
+
+---
+
 ## Project Structure
 
 - `src/` — Main source code (modular, lobe-based)
@@ -144,12 +228,71 @@ See the `docs/` vault for ready-to-use configuration snippets for Cursor, JetBra
 - `packages/` — Distribution packages
 - `deployment_packages/` — Portable deployment scripts
 - `usb_templates/` — USB deployment templates
+- `backups/` — Automatic update backups
+- `temp/` — Temporary files
+- `updates/` — Update packages
 - `README.md` — This file
 - `requirements.txt`, `pyproject.toml`, `setup.py` — Packaging
 - `start_mcp.sh`, `start_mcp.bat`, `start_mcp.ps1` — Launch scripts
-- `.gitignore`, `LICENSE`
+- `LICENSE`
 
 > For the full, up-to-date file tree, see [`docs/FILETREE.txt`](docs/FILETREE.txt).
+
+---
+
+## Installation Options
+
+### Standard Installation
+```bash
+git clone <repository>
+cd agentic-workflow
+python scripts/setup_wizard.py
+```
+
+### Portable Installation
+```bash
+# Download portable package
+python scripts/build_portable.py
+
+# Extract and run
+./mcp_agentic_workflow
+```
+
+### USB Installation
+```bash
+# Create USB deployment
+python scripts/universal_package_builder.py --usb
+
+# Copy to USB drive and run
+./start_mcp.sh
+```
+
+### Automatic Installation
+```bash
+# Run automatic installer
+python scripts/install.py --auto
+```
+
+---
+
+## Configuration
+
+The system uses a centralized configuration system:
+
+### Main Configuration
+- `config/config.cfg` — Central configuration file
+- `config/cursor-mcp.json` — Cursor IDE integration
+- `config/vscode-settings.json` — VS Code integration
+- `config/claude-mcp.json` — Claude integration
+
+### Environment Variables
+- `MCP_API_KEY` — API authentication key
+- `MCP_PROJECT_PATH` — Project root path
+- `MCP_VECTOR_BACKEND` — Vector database backend
+- `MCP_LOG_LEVEL` — Logging level
+- `MCP_DEBUG_MODE` — Debug mode toggle
+- `MCP_AUTO_UPDATE_ENABLED` — Automatic updates
+- `MCP_PERFORMANCE_MONITORING` — Performance monitoring
 
 ---
 
@@ -158,6 +301,7 @@ See the `docs/` vault for ready-to-use configuration snippets for Cursor, JetBra
 - Built on the latest research in memory, context, and agentic workflows.
 - All features and architecture are documented and cross-referenced in `docs/` and `idea.txt`.
 - See `docs/RESEARCH_SOURCES.md` for references and standards.
+- Implements cutting-edge research in neural networks, genetic algorithms, and brain-inspired computing.
 
 ---
 
@@ -165,9 +309,26 @@ See the `docs/` vault for ready-to-use configuration snippets for Cursor, JetBra
 
 - See `CONTRIBUTING.md` and `idea.txt` for guidelines and vision.
 - All contributions must be local, portable, and research-aligned.
+- The system automatically updates and improves based on research and feedback.
 
 ---
 
 ## License
 
 MIT License. See [LICENSE](LICENSE).
+
+---
+
+## Support
+
+For support and documentation:
+- **User Guide**: `docs/USER_GUIDE.md`
+- **Developer Guide**: `docs/DEVELOPER_GUIDE.md`
+- **API Documentation**: `docs/API_DOCUMENTATION.md`
+- **Troubleshooting**: `docs/TROUBLESHOOTING.md`
+- **Research Sources**: `docs/RESEARCH_SOURCES.md`
+
+The system includes comprehensive help and documentation accessible via:
+```bash
+python scripts/help_system.py
+```

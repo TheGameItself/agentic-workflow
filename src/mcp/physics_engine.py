@@ -16,6 +16,8 @@ from dataclasses import dataclass
 import threading
 from concurrent.futures import ThreadPoolExecutor
 import queue
+from src.mcp.simulation.shared_state import SharedSimulationState
+import logging
 
 # Optional imports for enhanced functionality
 try:
@@ -73,6 +75,7 @@ class ComputationResult:
 class PhysicsEngine:
     """
     Physics engine for advanced mathematical and scientific computations.
+    Now supports shared simulation state for cross-engine coordination.
     
     Features:
     - Advanced calculus operations
@@ -83,8 +86,9 @@ class PhysicsEngine:
     - Real-time computation optimization
     """
     
-    def __init__(self, db_path: Optional[str] = None):
-        """Initialize the physics engine with dynamic self-tuning for all non-user-editable settings (see idea.txt line 185)."""
+    def __init__(self, db_path: Optional[str] = None, shared_state: Optional[SharedSimulationState] = None):
+        """Initialize the physics engine with dynamic self-tuning and optional shared simulation state."""
+        self.logger = logging.getLogger("PhysicsEngine")
         if db_path is None:
             current_dir = os.path.dirname(os.path.abspath(__file__))
             project_root = os.path.join(current_dir, '..', '..')
@@ -95,6 +99,7 @@ class PhysicsEngine:
         self.db_path = db_path
         self.computation_queue = queue.Queue()
         self.active_computations = {}
+        self.shared_state = shared_state
         
         # Research-based parameters (dynamically tuned)
         self.gpu_acceleration = HAVE_CUPY  # Dynamically enabled/disabled based on hardware metrics
@@ -107,6 +112,7 @@ class PhysicsEngine:
         self._init_database()
         self._init_computation_engines()
         self._start_computation_scheduler()
+        self.simulation_engine = SimulationEngine(shared_state=shared_state)
     
     def _init_database(self):
         """Initialize the physics engine database."""
@@ -161,7 +167,6 @@ class PhysicsEngine:
         self.calculus_engine = CalculusEngine()
         self.logic_engine = LogicEngine()
         self.tensor_engine = TensorEngine()
-        self.simulation_engine = SimulationEngine()
     
     def _start_computation_scheduler(self):
         """Start the computation scheduler background thread."""
@@ -350,6 +355,44 @@ class PhysicsEngine:
         
         conn.close()
         return results
+
+    def _some_sympy_usage(self, *args, **kwargs):
+        logger = getattr(self, 'logger', logging.getLogger("PhysicsEngine"))
+        if HAVE_SYMPY and sympy is not None:
+            x = sympy.Symbol('x')
+            expr = sympy.sympify('x**2 + 2*x + 1')
+            diff = sympy.diff(expr, x)
+            return diff
+        else:
+            logger.warning("Sympy is not available. Returning None.")
+            return None
+
+    def _some_numpy_usage(self, *args, **kwargs):
+        logger = getattr(self, 'logger', logging.getLogger("PhysicsEngine"))
+        if HAVE_NUMPY and np is not None:
+            arr = np.array([1, 2, 3])
+            return arr.sum()
+        else:
+            logger.warning("Numpy is not available. Returning None.")
+            return None
+
+    def _some_torch_usage(self, *args, **kwargs):
+        logger = getattr(self, 'logger', logging.getLogger("PhysicsEngine"))
+        if HAVE_TORCH and torch is not None:
+            t = torch.tensor([1.0, 2.0, 3.0])
+            return t.mean().item()
+        else:
+            logger.warning("Torch is not available. Returning None.")
+            return None
+
+    def _some_cupy_usage(self, *args, **kwargs):
+        logger = getattr(self, 'logger', logging.getLogger("PhysicsEngine"))
+        if HAVE_CUPY and cupy is not None:
+            arr = cupy.array([1, 2, 3])
+            return cupy.sum(arr).item()
+        else:
+            logger.warning("Cupy is not available. Returning None.")
+            return None
 
 class CalculusEngine:
     """Advanced calculus operations engine."""
@@ -885,11 +928,12 @@ class TensorEngine:
             return tensor.tolist() if hasattr(tensor, 'tolist') else list(tensor)
 
 class SimulationEngine:
-    """Scientific simulation engine."""
+    """Scientific simulation engine. Now supports shared simulation state for cross-engine coordination."""
     
-    def __init__(self):
-        """Initialize the simulation engine."""
+    def __init__(self, shared_state: Optional[SharedSimulationState] = None):
+        """Initialize the simulation engine with optional shared simulation state."""
         self.simulation_models = self._init_simulation_models()
+        self.shared_state = shared_state
     
     def _init_simulation_models(self) -> Dict[str, Any]:
         """Initialize simulation models."""
@@ -923,20 +967,31 @@ class SimulationEngine:
             raise ValueError(f"Unknown simulation operation: {operation}")
     
     def _run_simulation(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
-        """Run a scientific simulation."""
+        """Run a scientific simulation and register results in shared state if available."""
         model_name = inputs.get('model', 'pendulum')
         parameters = inputs.get('parameters', {})
         duration = inputs.get('duration', 10.0)
         time_step = inputs.get('time_step', 0.01)
         
         if model_name == 'pendulum':
-            return self._simulate_pendulum(parameters, duration, time_step)
+            result = self._simulate_pendulum(parameters, duration, time_step)
         elif model_name == 'spring_mass':
-            return self._simulate_spring_mass(parameters, duration, time_step)
+            result = self._simulate_spring_mass(parameters, duration, time_step)
         elif model_name == 'lotka_volterra':
-            return self._simulate_lotka_volterra(parameters, duration, time_step)
+            result = self._simulate_lotka_volterra(parameters, duration, time_step)
         else:
             raise ValueError(f"Unknown simulation model: {model_name}")
+        
+        # Register simulation result as event in shared state
+        if self.shared_state:
+            self.shared_state.register_event({
+                'type': 'simulation_result',
+                'model': model_name,
+                'parameters': parameters,
+                'result': result,
+                'timestamp': datetime.now().isoformat()
+            })
+        return result
     
     def _simulate_pendulum(self, parameters: Dict[str, float], duration: float, time_step: float) -> Dict[str, Any]:
         """Simulate a simple pendulum."""

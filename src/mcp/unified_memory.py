@@ -10,13 +10,21 @@ import os
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 import logging
+import hashlib
+import time
 
 from .memory import MemoryManager
 from .advanced_memory import AdvancedMemoryManager, TFIDFEncoder, VectorEncoder
 from .reminder_engine import EnhancedReminderEngine
 
 class UnifiedMemoryManager:
-    """Unified memory management system combining all features. Supports pluggable vector encoder selection."""
+    """
+    Three-Tier Memory Manager: Integrates WorkingMemory, ShortTermMemory, and LongTermMemory into a unified interface.
+    - WorkingMemory: Immediate, fast-access, limited capacity
+    - ShortTermMemory: Efficient encoding, FAISS/SQLite hybrid
+    - LongTermMemory: Advanced engram compression and association
+    Provides automatic tier transitions, cross-tier search, and consolidation workflows.
+    """
     
     def __init__(self, db_path: Optional[str] = None, encoder: Optional[VectorEncoder] = None):
         """Initialize the unified memory manager. Optionally specify a vector encoder (TFIDFEncoder, RaBitQEncoder, etc.)."""
@@ -33,6 +41,11 @@ class UnifiedMemoryManager:
         self.basic_memory = MemoryManager(self.db_path)
         self.advanced_memory = AdvancedMemoryManager(self.db_path, encoder=self.encoder)
         self.reminder_engine = EnhancedReminderEngine(self.db_path)
+        # --- Three-Tier Memory Integration ---
+        from .lobes.shared_lobes.working_memory import WorkingMemory, ShortTermMemory, LongTermMemory
+        self.working_memory = WorkingMemory(capacity_mb=10.0, rolling_window_size=128)
+        self.short_term_memory = ShortTermMemory(db_path=self.db_path, capacity_gb=1.0)
+        self.long_term_memory = LongTermMemory(db_path=self.db_path, capacity_gb=9.0)
         self._init_unified_database()
     
     def _init_unified_database(self):
@@ -94,42 +107,29 @@ class UnifiedMemoryManager:
                    priority: float = 0.5, context: Optional[str] = None, 
                    tags: Optional[List[str]] = None, use_advanced: bool = True,
                    create_reminder: bool = False, memory_order: int = 1) -> Dict[str, Any]:
-        """Add a memory using the unified system, with memory order support."""
-        result = {
-            'basic_memory_id': None,
-            'advanced_memory_id': None,
-            'reminder_id': None,
-            'success': False
-        }
+        """
+        Add a memory using the three-tier system:
+        - Stage 1: Add to WorkingMemory (immediate access)
+        - Stage 2: Promote to ShortTermMemory (encoded, vectorized)
+        - Stage 3: Consolidate to LongTermMemory (compressed, associated)
+        """
+        key = hashlib.sha256(f"{text}-{time.time()}".encode()).hexdigest()[:16]
+        result = {'working_id': None, 'short_term_id': None, 'long_term_id': None, 'success': False}
         try:
-            safe_memory_type = memory_type if memory_type is not None else ''
-            safe_context = context if context is not None else ''
-            safe_tags = tags if tags is not None else []
-            basic_id = self.basic_memory.add_memory(text, safe_memory_type, priority, safe_context, safe_tags)
-            result['basic_memory_id'] = basic_id
-            if use_advanced and basic_id:
-                try:
-                    safe_memory_type_adv = memory_type if memory_type is not None else ''
-                    safe_context_adv = context if context is not None else ''
-                    safe_tags_adv = tags if tags is not None else []
-                    advanced_id = self.advanced_memory.add_advanced_memory(
-                        text, safe_memory_type_adv, priority, safe_context_adv, safe_tags_adv, '', memory_order
-                    )
-                    result['advanced_memory_id'] = advanced_id
-                    if basic_id and advanced_id:
-                        self._create_memory_mapping(basic_id, advanced_id)
-                    if create_reminder and advanced_id:
-                        try:
-                            reminder_id = self.reminder_engine.create_spaced_repetition_reminder(advanced_id)
-                            result['reminder_id'] = reminder_id
-                        except Exception as e:
-                            print(f"Warning: Could not create reminder: {e}")
-                except Exception as e:
-                    print(f"Warning: Could not add to advanced memory: {e}")
+            # 1. Add to WorkingMemory
+            wm_success = self.working_memory.add(key, text, context or "default", priority)
+            result['working_id'] = key if wm_success else None
+            # 2. Promote to ShortTermMemory if needed
+            if use_advanced:
+                stm_success = self.short_term_memory.add(key, text, context or "default", priority, memory_type or "general", tags)
+                result['short_term_id'] = key if stm_success else None
+                # 3. Consolidate to LongTermMemory if high priority or by policy
+                if priority > 0.8 or memory_order == 1:
+                    ltm_success = self.long_term_memory.add(key, text, category=memory_type or "general", tags=tags, importance_score=priority)
+                    result['long_term_id'] = key if ltm_success else None
             result['success'] = True
         except Exception as e:
             result['error'] = str(e)
-            print(f"Error adding memory: {e}")
         return result
     
     def _create_memory_mapping(self, basic_id: int, advanced_id: int):
@@ -823,7 +823,8 @@ class UnifiedMemoryManager:
         except Exception as e:
             print(f"[UnifiedMemoryManager] Pruning failed: {e}")
             return 0    
- def detect_memory_relationships(self, memory_id: int, max_candidates: int = 50) -> List[Dict[str, Any]]:
+
+    def detect_memory_relationships(self, memory_id: int, max_candidates: int = 50) -> List[Dict[str, Any]]:
         """
         Detect relationships between a memory and other memories in the system.
         
@@ -906,3 +907,56 @@ class UnifiedMemoryManager:
         except ImportError:
             # No fallback for memory optimization
             return {'error': 'Memory optimization not available'}
+
+    def cross_tier_search(self, query: str, limit: int = 10) -> List[Dict[str, Any]]:
+        """
+        Search across all three tiers and merge results by relevance.
+        """
+        results = []
+        # WorkingMemory search
+        wm_results = self.working_memory.get_all()
+        for r in wm_results:
+            if query.lower() in str(r.get('data', '')).lower():
+                results.append({'id': r.get('key'), 'data': r.get('data'), 'priority': r.get('priority', 0.5), 'source': 'working'})
+        # ShortTermMemory search
+        stm_results = self.short_term_memory.search(query, limit=limit)
+        for r in stm_results:
+            results.append({'id': r.get('key'), 'data': r.get('data'), 'priority': r.get('priority', 0.5), 'source': 'short_term'})
+        # LongTermMemory semantic search
+        ltm_results = self.long_term_memory.semantic_search(query, limit=limit)
+        for r in ltm_results:
+            results.append({'id': r.get('key'), 'data': r.get('content'), 'priority': r.get('importance_score', 0.5), 'source': 'long_term'})
+        # Sort and deduplicate by relevance/priority
+        results = sorted(results, key=lambda x: x.get('priority', 0), reverse=True)
+        seen = set()
+        deduped = []
+        for r in results:
+            mid = r.get('id')
+            if mid and mid not in seen:
+                deduped.append(r)
+                seen.add(mid)
+        return deduped[:limit]
+
+    def consolidate_workflow(self):
+        """
+        Automatic memory consolidation workflow:
+        - Move items from WorkingMemory to ShortTermMemory based on access/priority
+        - Consolidate ShortTermMemory to LongTermMemory periodically or by policy
+        """
+        # Promote from WorkingMemory to ShortTermMemory
+        for item in self.working_memory.get_all():
+            key = item['key']
+            text = item['data']
+            context = item.get('context', 'default')
+            priority = item.get('priority', 0.5)
+            self.short_term_memory.add(key, text, context, priority)
+            self.working_memory.remove(key, context)
+        # Consolidate ShortTermMemory to LongTermMemory
+        for item in self.short_term_memory.get_all():
+            key = item['key']
+            text = item['data']
+            context = item.get('context', 'default')
+            priority = item.get('priority', 0.5)
+            self.long_term_memory.add(key, text, category=context, importance_score=priority)
+            self.short_term_memory.remove(key, context)
+            self.long_term_memory.remove(key)

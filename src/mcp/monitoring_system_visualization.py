@@ -13,6 +13,7 @@ References:
 import logging
 import sqlite3
 import statistics
+import math
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Tuple, Union
 import json
@@ -63,8 +64,8 @@ class VisualizationOptions:
     normalize_values: bool = False
     logarithmic_scale: bool = False
     annotations: List[Dict[str, Any]] = field(default_factory=list)
-class M
-onitoringSystemVisualization:
+
+class MonitoringSystemVisualization:
     """
     Enhanced visualization and reporting capabilities for the MonitoringSystem.
     
@@ -756,18 +757,15 @@ onitoringSystemVisualization:
             "system_recommendations": system_recommendations
         }    
    
- def _apply_smoothing(self, values: List[float], smoothing_factor: float) -> List[float]:
+    def _apply_smoothing(self, values: List[float], smoothing_factor: float) -> List[float]:
         """Apply exponential smoothing to a time series."""
         if not values:
             return []
-            
         alpha = min(1.0, max(0.0, smoothing_factor))
         smoothed = [values[0]]
-        
         for i in range(1, len(values)):
             smoothed_val = alpha * values[i] + (1 - alpha) * smoothed[i-1]
             smoothed.append(smoothed_val)
-        
         return smoothed
     
     def _analyze_trend(self, values: List[float]) -> Tuple[str, float]:
@@ -820,7 +818,7 @@ onitoringSystemVisualization:
         if r_squared < 0.3:
             variance = statistics.variance(values) if len(values) > 1 else 0
             mean = statistics.mean(values)
-            coefficient_of_variation = (statistics.sqrt(variance) / mean) if mean != 0 else 0
+            coefficient_of_variation = (math.sqrt(variance) / mean) if mean != 0 else 0
             
             if coefficient_of_variation > 0.2:
                 direction = "fluctuating"
@@ -906,7 +904,7 @@ onitoringSystemVisualization:
         if variance1 == 0 or variance2 == 0:
             return 0.0
         
-        correlation = covariance / (statistics.sqrt(variance1) * statistics.sqrt(variance2))
+        correlation = covariance / (math.sqrt(variance1) * math.sqrt(variance2))
         
         return correlation
 

@@ -15,29 +15,36 @@ import logging
 from datetime import datetime
 import uuid
 import random
+from src.mcp.simulation.shared_state import SharedSimulationState
 
 class SimulatedReality:
     """
     SimulatedReality lobe for MCP: Maintains a comprehensive, self-correcting mental image of reality.
     Tracks entities, events, states, and causal relationships. Supports event-driven updates and reality queries.
     Extensible for integration with other lobes (e.g., dreaming, mind map, scientific process).
-    See idea.txt, arXiv:2412.17149, ICML 2023, WWW 2023.
+    Now supports shared simulation state for cross-engine coordination.
     """
-    def __init__(self):
-        self.entities: Dict[str, Dict[str, Any]] = {}
-        self.events: List[Dict[str, Any]] = []
-        self.states: Dict[str, Dict[str, Any]] = {}
-        self.causality_chains: List[Dict[str, Any]] = []
+    def __init__(self, shared_state: Optional[SharedSimulationState] = None):
+        self.shared_state = shared_state
         self.logger = logging.getLogger("SimulatedReality")
+        if shared_state is None:
+            self.entities: Dict[str, Dict[str, Any]] = {}
+            self.events: List[Dict[str, Any]] = []
+            self.states: Dict[str, Dict[str, Any]] = {}
+        self.causality_chains: List[Dict[str, Any]] = []
 
     def create_entity(self, entity_type: str, properties: Dict[str, Any]) -> str:
         """Create a new entity in the simulated reality."""
         entity_id = str(uuid.uuid4())
-        self.entities[entity_id] = {
+        entity_data = {
             "type": entity_type,
             "properties": properties,
             "created_at": datetime.now().isoformat(),
         }
+        if self.shared_state:
+            self.shared_state.register_entity(entity_id, entity_data)
+        else:
+            self.entities[entity_id] = entity_data
         self.logger.info(f"[SimulatedReality] Created entity {entity_id} of type {entity_type}.")
         return entity_id
 
@@ -51,7 +58,10 @@ class SimulatedReality:
             "properties": properties,
             "timestamp": datetime.now().isoformat(),
         }
-        self.events.append(event)
+        if self.shared_state:
+            self.shared_state.register_event(event)
+        else:
+            self.events.append(event)
         self.logger.info(f"[SimulatedReality] Created event {event_type} ({event_id}) for entities {entities}.")
         self._update_causality(event)
         return event_id
@@ -66,7 +76,10 @@ class SimulatedReality:
             "properties": properties,
             "timestamp": datetime.now().isoformat(),
         }
-        self.states[state_id] = state
+        if self.shared_state:
+            self.shared_state.register_state(state_id, state)
+        else:
+            self.states[state_id] = state
         self.logger.info(f"[SimulatedReality] Updated state {state_type} for entity {entity_id}.")
         return state_id
 

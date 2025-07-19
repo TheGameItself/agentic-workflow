@@ -411,15 +411,13 @@ class PerformanceTracker:
                        f"recommended={recommended}")
                        
         return comparison    
-  
-  def get_current_metrics(self, function_name: str, implementation_type: str = None) -> Union[Dict[str, PerformanceMetrics], PerformanceMetrics, None]:
+
+    def get_current_metrics(self, function_name: str, implementation_type: str = None) -> Union[Dict[str, PerformanceMetrics], PerformanceMetrics, None]:
         """
         Get current performance metrics.
-        
         Args:
             function_name: Name of the function.
             implementation_type: Optional type of implementation.
-            
         Returns:
             Current metrics for the specified function and implementation,
             or dictionary of all implementation metrics if implementation_type is None,
@@ -428,7 +426,6 @@ class PerformanceTracker:
         with self._lock:
             if function_name not in self.current_metrics:
                 return None
-                
             if implementation_type:
                 return self.current_metrics[function_name].get(implementation_type)
             else:
