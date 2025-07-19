@@ -6671,3 +6671,8 @@ MCP_SYSTEM_COMPLETION_SUMMARY.md
 .kiro/hooks/security-privacy-hook.kiro.hook
 .kiro/hooks/testing-intelligence-hook.kiro.hook
 .kiro/hooks/user-experience-intelligence-hook.kiro.hook
+build/mcp-docker.tar.xz
+build/mcp-portable-linux.tar.xz
+build/mcp-portable-macos.tar.xz
+build/mcp-portable-windows.tar.xz
+build/mcp-usb.tar.xz
