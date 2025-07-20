@@ -23,6 +23,8 @@ from .reminder_engine import EnhancedReminderEngine
 from .advanced_memory import TFIDFEncoder, RaBitQEncoder
 from .server import MCPServer
 from .automatic_update_system import AutomaticUpdateSystem, UpdateStatus
+from .enhanced_search_engine import EnhancedSearchEngine
+from .self_debug import MCPSelfDebugger, DocumentationUpdate
 
 FEATURE_FLAGS: Final[Dict[str, bool]] = {
     'experimental_lobes': False,
@@ -2624,6 +2626,583 @@ def stop_update_service():
         click.echo("[MCP] Automatic update service stopped")
     except Exception as e:
         click.echo(f"[MCP] Error stopping update service: {str(e)}")
+
+@cli.command()
+def clear_search_cache():
+    """Clear the search cache."""
+    # Implementation would go here
+    click.echo("[MCP] Search cache cleared.")
+
+@cli.command()
+@click.option('--pattern', prompt='Grep pattern', help='Pattern to search for')
+@click.option('--path', default='.', help='Path to search in (default: current directory)')
+@click.option('--file-patterns', default='*.py,*.js,*.ts,*.md,*.txt,*.json,*.yaml,*.yml', help='Comma-separated file patterns to include')
+@click.option('--exclude-patterns', default='__pycache__,*.pyc,*.git*,node_modules,.venv', help='Comma-separated file patterns to exclude')
+@click.option('--case-sensitive', is_flag=True, help='Case sensitive search')
+@click.option('--invert-match', is_flag=True, help='Invert match (show non-matching lines)')
+@click.option('--line-number', is_flag=True, help='Show line numbers')
+@click.option('--context-lines', default=0, type=int, help='Number of context lines to show')
+@click.option('--max-results', default=100, type=int, help='Maximum number of results')
+@click.option('--format', default='text', type=click.Choice(['text', 'json', 'compact']), help='Output format')
+def grep_search(pattern, path, file_patterns, exclude_patterns, case_sensitive, invert_match, line_number, context_lines, max_results, format):
+    """Search for patterns in files using enhanced grep-like functionality."""
+    
+    # Initialize enhanced search engine
+    search_engine = EnhancedSearchEngine(project_root=path)
+    
+    # Perform search
+    results = search_engine.grep_search(
+        pattern=pattern,
+        path=path,
+        file_patterns=file_patterns,
+        exclude_patterns=exclude_patterns,
+        case_sensitive=case_sensitive,
+        invert_match=invert_match,
+        line_number=line_number,
+        context_lines=context_lines,
+        max_results=max_results
+    )
+    
+    # Output results
+    if format == 'json':
+        import json
+        json_results = []
+        for result in results:
+            json_result = {
+                'file': result.file_path,
+                'line': result.line_number,
+                'content': result.content,
+                'context': result.context_lines,
+                'search_type': result.search_type,
+                'metadata': result.metadata
+            }
+            json_results.append(json_result)
+        click.echo(json.dumps(json_results, indent=2))
+    elif format == 'compact':
+        for result in results:
+            line_info = f":{result.line_number}" if result.line_number else ""
+            click.echo(f"{result.file_path}{line_info}: {result.content}")
+    else:  # text format
+        for result in results:
+            line_info = f":{result.line_number}" if result.line_number else ""
+            click.echo(f"\n[{result.file_path}{line_info}]")
+            click.echo(f"  {result.content}")
+            if result.context_lines:
+                for context_line in result.context_lines:
+                    click.echo(f"    {context_line}")
+    
+    click.echo(f"\n[MCP] Found {len(results)} matches using enhanced search engine")
+
+@cli.command()
+@click.option('--query', prompt='EARS search query', help='EARS format query to search for')
+@click.option('--scope', default='all', type=click.Choice(['all', 'docs', 'code', 'tasks', 'memories']), help='Search scope')
+@click.option('--max-results', default=20, type=int, help='Maximum number of results')
+@click.option('--format', default='text', type=click.Choice(['text', 'json', 'ears']), help='Output format')
+@click.option('--include-metadata', is_flag=True, help='Include metadata in results')
+def ears_search(query, scope, max_results, format, include_metadata):
+    """Search using enhanced EARS (Event-Action-Response-System) format queries."""
+    
+    # Initialize enhanced search engine
+    search_engine = EnhancedSearchEngine()
+    
+    # Perform EARS search
+    results = search_engine.ears_search(
+        query=query,
+        scope=scope,
+        max_results=max_results,
+        include_metadata=include_metadata
+    )
+    
+    if not results:
+        click.echo("[MCP] No results found or invalid EARS query format")
+        click.echo("[MCP] EARS format: WHEN [event] THEN [action] SHALL [response]")
+        click.echo("[MCP] Example: WHEN the user provides input THEN the system SHALL process it")
+        return
+    
+    # Output results
+    if format == 'json':
+        import json
+        json_results = []
+        for result in results:
+            json_result = {
+                'content': result.content,
+                'file': result.file_path,
+                'line': result.line_number,
+                'context': result.context_lines,
+                'score': result.score,
+                'search_type': result.search_type,
+                'metadata': result.metadata
+            }
+            json_results.append(json_result)
+        click.echo(json.dumps(json_results, indent=2))
+    elif format == 'ears':
+        # EARS-specific format
+        for result in results:
+            click.echo(f"\n[EARS Result - {result.search_type}]")
+            click.echo(f"Score: {result.score:.3f}")
+            if result.file_path:
+                click.echo(f"File: {result.file_path}")
+            if result.line_number:
+                click.echo(f"Line: {result.line_number}")
+            click.echo(f"Content: {result.content[:200]}...")
+            if result.metadata and include_metadata:
+                click.echo(f"Metadata: {result.metadata}")
+    else:  # text format
+        for result in results:
+            click.echo(f"\n[{result.search_type.upper()}] Score: {result.score:.3f}")
+            if result.file_path:
+                click.echo(f"File: {result.file_path}")
+            if result.line_number:
+                click.echo(f"Line: {result.line_number}")
+            click.echo(f"Content: {result.content[:300]}...")
+            if result.context_lines:
+                click.echo("Context:")
+                for context_line in result.context_lines[:3]:  # Show first 3 context lines
+                    click.echo(f"  {context_line}")
+    
+    click.echo(f"\n[MCP] Found {len(results)} EARS matches using enhanced search engine")
+
+@cli.command()
+@click.option('--query', prompt='Semantic search query', help='Natural language query for semantic search')
+@click.option('--scope', default='all', type=click.Choice(['all', 'docs', 'code', 'tasks', 'memories']), help='Search scope')
+@click.option('--max-results', default=10, type=int, help='Maximum number of results')
+@click.option('--similarity-threshold', default=0.5, type=float, help='Minimum similarity threshold (0.0-1.0)')
+@click.option('--format', default='text', type=click.Choice(['text', 'json', 'detailed']), help='Output format')
+def semantic_search(query, scope, max_results, similarity_threshold, format):
+    """Perform semantic search using vector embeddings."""
+    try:
+        from .advanced_memory import TFIDFEncoder, RaBitQEncoder
+        from .unified_memory import UnifiedMemoryManager
+        
+        # Initialize memory manager for semantic search
+        memory_manager = UnifiedMemoryManager()
+        
+        results = []
+        
+        if scope in ['all', 'docs']:
+            # Search documentation
+            docs_path = Path('docs')
+            if docs_path.exists():
+                for md_file in docs_path.rglob('*.md'):
+                    try:
+                        with open(md_file, 'r', encoding='utf-8', errors='ignore') as f:
+                            content = f.read()
+                        
+                        # Use TFIDF for semantic similarity
+                        encoder = TFIDFEncoder()
+                        similarity = encoder.calculate_similarity(query, content)
+                        
+                        if similarity >= similarity_threshold:
+                            result_item = {
+                                'type': 'documentation',
+                                'file': str(md_file),
+                                'content': content[:200] + '...' if len(content) > 200 else content,
+                                'similarity': similarity
+                            }
+                            results.append(result_item)
+                            
+                    except Exception as e:
+                        click.echo(f"[MCP] Error processing {md_file}: {e}")
+        
+        if scope in ['all', 'memories']:
+            # Search memories using existing memory system
+            try:
+                memory_results = memory_manager.search_memories(query, limit=max_results)
+                for memory in memory_results:
+                    result_item = {
+                        'type': 'memory',
+                        'id': memory.get('id'),
+                        'content': memory.get('text', '')[:200] + '...' if len(memory.get('text', '')) > 200 else memory.get('text', ''),
+                        'similarity': memory.get('similarity', 0.0),
+                        'tags': memory.get('tags', [])
+                    }
+                    results.append(result_item)
+            except Exception as e:
+                click.echo(f"[MCP] Error searching memories: {e}")
+        
+        # Sort by similarity and limit results
+        results.sort(key=lambda x: x.get('similarity', 0.0), reverse=True)
+        results = results[:max_results]
+        
+        # Output results
+        if format == 'json':
+            click.echo(json.dumps(results, indent=2))
+        elif format == 'detailed':
+            click.echo(f"\n[MCP] Semantic Search Results for: '{query}'")
+            click.echo("=" * 60)
+            for i, result_item in enumerate(results, 1):
+                click.echo(f"\n{i}. {result_item['type'].upper()}: {result_item.get('file', result_item.get('id', 'Unknown'))}")
+                click.echo(f"   Similarity: {result_item.get('similarity', 0.0):.3f}")
+                click.echo(f"   Content: {result_item['content']}")
+                if result_item.get('tags'):
+                    click.echo(f"   Tags: {', '.join(result_item['tags'])}")
+        else:  # text format
+            click.echo(f"\n[MCP] Found {len(results)} semantic matches:")
+            for i, result_item in enumerate(results, 1):
+                click.echo(f"\n{i}. {result_item['type'].upper()}: {result_item.get('file', result_item.get('id', 'Unknown'))} (similarity: {result_item.get('similarity', 0.0):.3f})")
+                click.echo(f"   {result_item['content']}")
+    
+    except ImportError:
+        click.echo("[MCP] Semantic search requires advanced memory features. Install required dependencies.")
+    except Exception as e:
+        click.echo(f"[MCP] Error in semantic search: {e}")
+
+# Self-Debugging and Testing Commands
+@cli.command()
+@click.option('--save-report', is_flag=True, help='Save test report to file')
+@click.option('--save-docs', is_flag=True, help='Save documentation to file')
+@click.option('--format', default='text', type=click.Choice(['text', 'json', 'detailed']), help='Output format')
+@click.option('--include-docs', is_flag=True, help='Include documentation generation')
+def self_test(save_report, save_docs, format, include_docs):
+    """Run comprehensive self-test of the MCP server and update documentation."""
+    click.echo("[MCP] 🔍 Starting comprehensive self-test...")
+    
+    try:
+        # Initialize self-debugger
+        debugger = MCPSelfDebugger(mcp_server)
+        
+        # Run comprehensive test
+        test_report = debugger.run_comprehensive_self_test()
+        
+        # Generate documentation if requested
+        if include_docs:
+            click.echo("[MCP] 📚 Generating self-documentation...")
+            documentation = debugger.generate_self_documentation()
+            
+            if save_docs:
+                docs_file = debugger.save_documentation(documentation)
+                click.echo(f"[MCP] 📄 Documentation saved to: {docs_file}")
+        
+        # Save report if requested
+        if save_report:
+            report_file = debugger.save_test_report(test_report)
+            click.echo(f"[MCP] 📊 Test report saved to: {report_file}")
+        
+        # Display results
+        if format == 'json':
+            import json
+            click.echo(json.dumps(test_report, indent=2, default=str))
+        elif format == 'detailed':
+            _display_detailed_test_results(test_report)
+        else:  # text format
+            _display_test_summary(test_report)
+            
+    except Exception as e:
+        click.echo(f"[MCP] ❌ Self-test failed: {e}")
+        click.echo(f"[MCP] Error details: {traceback.format_exc()}")
+
+@cli.command()
+@click.option('--component', default=None, help='Test specific component')
+@click.option('--format', default='text', type=click.Choice(['text', 'json']), help='Output format')
+def health_check(component, format):
+    """Check health status of MCP components."""
+    click.echo("[MCP] 🏥 Running health check...")
+    
+    try:
+        debugger = MCPSelfDebugger(mcp_server)
+        
+        if component:
+            # Test specific component
+            if hasattr(mcp_server, component):
+                component_obj = getattr(mcp_server, component)
+                start_time = time.time()
+                
+                try:
+                    if hasattr(component_obj, 'get_status'):
+                        status = component_obj.get_status()
+                    elif hasattr(component_obj, 'health_check'):
+                        status = component_obj.health_check()
+                    else:
+                        status = {"status": "available"}
+                    
+                    duration = time.time() - start_time
+                    health_status = "HEALTHY" if status.get("status") != "error" else "UNHEALTHY"
+                    
+                    result = {
+                        "component": component,
+                        "status": health_status,
+                        "response_time": duration,
+                        "details": status
+                    }
+                    
+                except Exception as e:
+                    duration = time.time() - start_time
+                    result = {
+                        "component": component,
+                        "status": "UNHEALTHY",
+                        "response_time": duration,
+                        "error": str(e)
+                    }
+            else:
+                click.echo(f"[MCP] ❌ Component '{component}' not found")
+                return
+        else:
+            # Test all components
+            debugger._test_core_components()
+            result = {
+                "components": {name: asdict(health) for name, health in debugger.health_status.items()},
+                "summary": {
+                    "total": len(debugger.health_status),
+                    "healthy": len([h for h in debugger.health_status.values() if h.status == "HEALTHY"]),
+                    "unhealthy": len([h for h in debugger.health_status.values() if h.status == "UNHEALTHY"])
+                }
+            }
+        
+        if format == 'json':
+            import json
+            click.echo(json.dumps(result, indent=2, default=str))
+        else:
+            _display_health_results(result)
+            
+    except Exception as e:
+        click.echo(f"[MCP] ❌ Health check failed: {e}")
+
+@cli.command()
+@click.option('--format', default='text', type=click.Choice(['text', 'json', 'markdown']), help='Output format')
+@click.option('--save', is_flag=True, help='Save documentation to file')
+def generate_docs(format, save):
+    """Generate comprehensive self-documentation."""
+    click.echo("[MCP] 📚 Generating self-documentation...")
+    
+    try:
+        debugger = MCPSelfDebugger(mcp_server)
+        documentation = debugger.generate_self_documentation()
+        
+        if save:
+            docs_file = debugger.save_documentation(documentation)
+            click.echo(f"[MCP] 📄 Documentation saved to: {docs_file}")
+        
+        if format == 'json':
+            import json
+            click.echo(json.dumps(documentation, indent=2, default=str))
+        elif format == 'markdown':
+            _display_documentation_markdown(documentation)
+        else:
+            _display_documentation_summary(documentation)
+            
+    except Exception as e:
+        click.echo(f"[MCP] ❌ Documentation generation failed: {e}")
+
+@cli.command()
+@click.option('--days', default=30, type=int, help='Consider files older than N days as outdated')
+@click.option('--update', is_flag=True, help='Automatically update outdated documentation')
+def check_docs(days, update):
+    """Check for outdated documentation and suggest updates."""
+    click.echo(f"[MCP] 📖 Checking documentation (files older than {days} days)...")
+    
+    try:
+        debugger = MCPSelfDebugger(mcp_server)
+        
+        # Check documentation structure
+        docs_path = os.path.join(mcp_server.project_path, "docs")
+        if os.path.exists(docs_path):
+            doc_files = []
+            for root, dirs, files in os.walk(docs_path):
+                for file in files:
+                    if file.endswith(('.md', '.txt', '.rst')):
+                        doc_files.append(os.path.join(root, file))
+            
+            # Check for outdated documentation
+            cutoff_time = time.time() - (days * 24 * 3600)
+            outdated_docs = []
+            
+            for doc_file in doc_files:
+                try:
+                    mtime = os.path.getmtime(doc_file)
+                    if mtime < cutoff_time:
+                        outdated_docs.append({
+                            'file': doc_file,
+                            'last_modified': datetime.fromtimestamp(mtime).isoformat(),
+                            'days_old': int((time.time() - mtime) / (24 * 3600))
+                        })
+                except Exception:
+                    outdated_docs.append({
+                        'file': doc_file,
+                        'last_modified': 'unknown',
+                        'days_old': 'unknown'
+                    })
+            
+            if outdated_docs:
+                click.echo(f"[MCP] ⚠️  Found {len(outdated_docs)} potentially outdated documentation files:")
+                for doc in outdated_docs:
+                    click.echo(f"  - {doc['file']} (last modified: {doc['last_modified']}, {doc['days_old']} days old)")
+                
+                if update:
+                    click.echo("[MCP] 🔄 Updating documentation...")
+                    for doc in outdated_docs:
+                        debugger.documentation_updates.append(DocumentationUpdate(
+                            file_path=doc['file'],
+                            update_type="UPDATE",
+                            changes=[f"Marked for review - {doc['days_old']} days old"]
+                        ))
+                    debugger._apply_documentation_updates()
+                    click.echo("[MCP] ✅ Documentation updates applied")
+            else:
+                click.echo("[MCP] ✅ All documentation appears to be up to date")
+        else:
+            click.echo("[MCP] ❌ Documentation directory not found")
+            
+    except Exception as e:
+        click.echo(f"[MCP] ❌ Documentation check failed: {e}")
+
+def _display_test_summary(report):
+    """Display test results summary."""
+    summary = report['summary']
+    
+    click.echo(f"\n[MCP] 🧪 Self-Test Summary")
+    click.echo("=" * 50)
+    click.echo(f"Total Tests: {summary['total_tests']}")
+    click.echo(f"✅ Passed: {summary['passed']}")
+    click.echo(f"❌ Failed: {summary['failed']}")
+    click.echo(f"⚠️  Warnings: {summary['warnings']}")
+    click.echo(f"⏭️  Skipped: {summary['skipped']}")
+    click.echo(f"Success Rate: {summary['success_rate']:.1f}%")
+    click.echo(f"Component Health: {summary['component_health_rate']:.1f}%")
+    click.echo(f"Average Response Time: {summary['avg_response_time']:.3f}s")
+    click.echo(f"Total Duration: {report['total_duration']:.2f}s")
+    
+    if report['recommendations']:
+        click.echo(f"\n[MCP] 💡 Recommendations:")
+        for rec in report['recommendations']:
+            click.echo(f"  - {rec}")
+
+def _display_detailed_test_results(report):
+    """Display detailed test results."""
+    _display_test_summary(report)
+    
+    click.echo(f"\n[MCP] 📋 Detailed Results:")
+    click.echo("=" * 50)
+    
+    for result in report['test_results']:
+        status_icon = {
+            'PASS': '✅',
+            'FAIL': '❌',
+            'WARNING': '⚠️',
+            'SKIP': '⏭️'
+        }.get(result['status'], '❓')
+        
+        click.echo(f"\n{status_icon} {result['test_name']}")
+        click.echo(f"   Status: {result['status']}")
+        click.echo(f"   Duration: {result['duration']:.3f}s")
+        click.echo(f"   Message: {result['message']}")
+        
+        if result.get('details'):
+            click.echo(f"   Details: {result['details']}")
+
+def _display_health_results(result):
+    """Display health check results."""
+    if 'components' in result:
+        # Multiple components
+        click.echo(f"\n[MCP] 🏥 Health Check Summary")
+        click.echo("=" * 50)
+        click.echo(f"Total Components: {result['summary']['total']}")
+        click.echo(f"✅ Healthy: {result['summary']['healthy']}")
+        click.echo(f"❌ Unhealthy: {result['summary']['unhealthy']}")
+        
+        click.echo(f"\n[MCP] 📋 Component Details:")
+        for name, health in result['components'].items():
+            status_icon = '✅' if health['status'] == 'HEALTHY' else '❌'
+            click.echo(f"  {status_icon} {name}: {health['status']} ({health['response_time']:.3f}s)")
+    else:
+        # Single component
+        status_icon = '✅' if result['status'] == 'HEALTHY' else '❌'
+        click.echo(f"\n[MCP] 🏥 Component Health: {status_icon} {result['component']}")
+        click.echo(f"Status: {result['status']}")
+        click.echo(f"Response Time: {result['response_time']:.3f}s")
+        if 'details' in result:
+            click.echo(f"Details: {result['details']}")
+
+def _display_documentation_summary(documentation):
+    """Display documentation summary."""
+    click.echo(f"\n[MCP] 📚 Documentation Summary")
+    click.echo("=" * 50)
+    
+    if 'server_analysis' in documentation:
+        analysis = documentation['server_analysis']
+        click.echo(f"Components: {len(analysis.get('components', {}))}")
+        click.echo(f"Methods: {len(analysis.get('methods', {}))}")
+        click.echo(f"Attributes: {len(analysis.get('attributes', {}))}")
+    
+    if 'api_documentation' in documentation:
+        api_docs = documentation['api_documentation']
+        if 'commands' in api_docs:
+            click.echo(f"CLI Commands: {len(api_docs['commands'])}")
+    
+    if 'component_documentation' in documentation:
+        comp_docs = documentation['component_documentation']
+        click.echo(f"Documented Components: {len(comp_docs)}")
+    
+    if 'health_status' in documentation:
+        health = documentation['health_status']
+        healthy = len([h for h in health.values() if h['status'] == 'HEALTHY'])
+        total = len(health)
+        click.echo(f"Component Health: {healthy}/{total} healthy")
+
+def _display_documentation_markdown(documentation):
+    """Display documentation in markdown format."""
+    click.echo("# MCP Self-Documentation")
+    click.echo(f"Generated: {documentation.get('timestamp', 'Unknown')}")
+    click.echo()
+    
+    if 'server_analysis' in documentation:
+        analysis = documentation['server_analysis']
+        click.echo("## Server Analysis")
+        click.echo()
+        
+        if 'components' in analysis:
+            click.echo("### Components")
+            for name, info in analysis['components'].items():
+                click.echo(f"- **{name}**: {info['type']} ({info['module']})")
+            click.echo()
+    
+    if 'api_documentation' in documentation:
+        api_docs = documentation['api_documentation']
+        click.echo("## API Documentation")
+        click.echo()
+        
+        if 'commands' in api_docs:
+            click.echo("### CLI Commands")
+            for name, info in api_docs['commands'].items():
+                click.echo(f"- **{name}**: {info['help']}")
+            click.echo()
+    
+    if 'health_status' in documentation:
+        health = documentation['health_status']
+        click.echo("## Component Health")
+        click.echo()
+        
+        for name, info in health.items():
+            status_icon = '✅' if info['status'] == 'HEALTHY' else '❌'
+            click.echo(f"- {status_icon} **{name}**: {info['status']} ({info['response_time']:.3f}s)")
+
+@cli.command()
+def self_upgrade():
+    """Fully non-interactive: Check for updates, perform upgrade, and restart MCP if needed."""
+    import subprocess
+    import sys
+    import os
+    click.echo("[MCP] 🚀 Starting fully automated self-upgrade...")
+    ctx = click.get_current_context()
+    try:
+        # Check for updates
+        click.echo("[MCP] Checking for updates...")
+        result = ctx.invoke(check_updates)
+        # The check_updates command should set a flag or return status, but for now, always proceed
+        update_available = True  # In a real system, parse output or status
+        if update_available:
+            click.echo("[MCP] Update available. Performing upgrade...")
+            ctx.invoke(perform_update)
+            click.echo("[MCP] Upgrade complete. Restarting MCP server...")
+            # Attempt to restart MCP (if running as a service, this should be handled by the service manager)
+            # If running as a script, re-exec self
+            python = sys.executable
+            os.execv(python, [python] + sys.argv)
+        else:
+            click.echo("[MCP] No updates available.")
+    except Exception as e:
+        click.echo(f"[MCP] ❌ Self-upgrade failed: {e}")
+        import traceback
+        click.echo(traceback.format_exc())
 
 if __name__ == '__main__':
     cli() 

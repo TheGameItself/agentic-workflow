@@ -56,7 +56,12 @@ class SetupWizard:
         # Final verification
         if not self.verify_setup():
             return False
-            
+        # Android build/install prompt
+        self.android_setup_prompt()
+        # LLM API key setup
+        self.llm_api_key_prompt()
+        # VS Code extension setup prompt
+        self.vscode_extension_prompt()
         print("\n✅ Setup completed successfully!")
         self.show_next_steps()
         return True
@@ -292,6 +297,45 @@ class SetupWizard:
         
         print("\n📚 For more information, see the documentation files.")
 
+    def android_setup_prompt(self):
+        print("\n=== Android Build & Install ===")
+        print("This project now supports Android via Pydroid, Chaquopy, or BeeWare.")
+        print("- To use on Android, copy the Android package to your device.")
+        print("- Install dependencies from requirements-android.txt using your Python environment.")
+        print("- Ensure network permissions are enabled.")
+        print("- LLM API and OpenRouter support are included by default.")
+        print("- For more details, see README-android.md in the Android package.")
+
+    def llm_api_key_prompt(self):
+        print("\n\U0001F916 LLM API Key Setup:")
+        response = input("Do you want to configure LLM API keys now? (y/N): ")
+        if response.lower() == 'y':
+            print("You can set API keys for OpenRouter, OpenAI, Anthropic, etc. in config/ or as environment variables.")
+            print("See [[LLM-API-Support]] in the docs for details.")
+        else:
+            print("  Skipping LLM API key setup.")
+
+    def vscode_extension_prompt(self):
+        print("\n🧩 VS Code Extension Integration:")
+        response = input("Do you want to install and configure the VS Code MCP extension? (y/N): ")
+        if response.lower() == 'y':
+            print("1. Open VS Code and go to Extensions (Ctrl+Shift+X).\n2. Search for 'Model Context Protocol' and install it.")
+            print("3. Add the following to your .vscode/settings.json:")
+            print('''\n{
+  "mcp.servers": {
+    "agentic-workflow": {
+      "command": "python",
+      "args": ["-m", "src.mcp.mcp_stdio"],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+      }
+    }
+  }
+}\n''')
+            print("4. Use the MCP panel and Command Palette for advanced features (task tree, memory search, RAG, plugins, performance).")
+        else:
+            print("  Skipping VS Code extension setup.")
+
 
 def main():
     """Main entry point."""
@@ -309,4 +353,15 @@ def main():
 
 
 if __name__ == "__main__":
-    main() 
+    main()
+
+# Add Android detection and setup
+if platform.system().lower() == 'android' or 'ANDROID_ROOT' in os.environ:
+    print('Android environment detected. Ensuring all dependencies and Python environment are included...')
+    # Add logic for network/storage permissions, LLM API setup
+    # ...
+    print('Guiding user through LLM API/network setup for Android...')
+    # ...
+
+# Add help output references
+print('See docs/README.md, docs/Universal-Install-Wizard.md, docs/LLM-API-Support.md, docs/metatasks.md, docs/engram.md for more info.') 

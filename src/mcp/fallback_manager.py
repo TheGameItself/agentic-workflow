@@ -1,1046 +1,523 @@
-#!/usr/bin/env python3
 """
-Fallback Management System for MCP
+Fallback Manager: Manages graceful degradation when neural implementations fail.
 
-This module implements a comprehensive fallback management system with error classification
-and recovery strategies to ensure the system never breaks and always provides meaningful responses.
+This module provides a centralized system for managing fallbacks when neural
+implementations fail, with circuit breaker patterns and exponential backoff.
+
+References:
+- Requirements 1.5, 1.9 from MCP System Upgrade specification
 """
 
-import logging
-import traceback
-import sys
-import time
-from pathlib import Path
-from typing import Dict, List, Any, Optional, Callable, Union, Type
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from enum import Enum
-from collections import defaultdict, deque
-import json
-import sqlite3
 import asyncio
-import inspect
+import logging
+import time
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+
+from .dual_implementation import DualImplementation, DualImplementationRegistry, ImplementationType
 
 
-class ErrorSeverity(Enum):
-    """Error severity levels."""
-    CRITICAL = "critical"
-    HIGH = "high"
-    MEDIUM = "medium"
-    LOW = "low"
-
-
-class FallbackStrategy(Enum):
-    """Available fallback strategies."""
-    RETRY = "retry"
-    ALTERNATIVE_METHOD = "alternative_method"
-    DEFAULT_VALUE = "default_value"
-    GRACEFUL_DEGRADATION = "graceful_degradation"
-    CACHE_FALLBACK = "cache_fallback"
-    SIMPLIFIED_OPERATION = "simplified_operation"
-    ERROR_SUPPRESSION = "error_suppression"
+class CircuitState(Enum):
+    """Circuit breaker states."""
+    CLOSED = "closed"  # Normal operation
+    OPEN = "open"  # Failing, not allowing neural implementation
+    HALF_OPEN = "half_open"  # Testing if neural implementation works again
 
 
 @dataclass
-class ErrorContext:
-    """Context information about an error."""
-    error: Exception
-    function_name: str
-    class_name: Optional[str]
-    module_name: str
-    args: tuple
-    kwargs: dict
-    timestamp: datetime
-    stack_trace: str
-    attempt_count: int = 1
-    previous_errors: List[str] = field(default_factory=list)
-
-
-@dataclass
-class FallbackRule:
-    """Rule for handling specific types of errors."""
-    error_types: List[Type[Exception]]
-    strategy: FallbackStrategy
-    handler: Callable
-    max_retries: int = 3
-    retry_delay: float = 1.0
-    priority: int = 100
-    conditions: Optional[Dict[str, Any]] = None
-    description: str = ""
-
-
-@dataclass
-class FallbackResult:
-    """Result of a fallback operation."""
-    success: bool
-    result: Any
-    strategy_used: FallbackStrategy
-    error_context: ErrorContext
-    execution_time: float
-    message: str
-    metadata: Dict[str, Any] = field(default_factory=dict)
-
-
-class ErrorAnalyzer:
-    """Analyzes errors to determine appropriate fallback strategies."""
+class CircuitBreaker:
+    """Circuit breaker for neural implementation fallbacks."""
+    component: str
+    failure_threshold: int = 3  # Number of failures before opening circuit
+    reset_timeout: float = 60.0  # Seconds before trying neural implementation again
+    exponential_backoff: bool = True  # Whether to use exponential backoff
+    max_backoff: float = 3600.0  # Maximum backoff time in seconds
     
-    def __init__(self):
-        self.error_patterns = self._initialize_error_patterns()
-        self.severity_rules = self._initialize_severity_rules()
+    # State
+    state: CircuitState = CircuitState.CLOSED
+    failure_count: int = 0
+    last_failure_time: float = 0.0
+    last_success_time: float = 0.0
+    current_backoff: float = 0.0
     
-    def _initialize_error_patterns(self) -> Dict[str, Dict[str, Any]]:
-        """Initialize error pattern recognition."""
-        return {
-            'database_errors': {
-                'patterns': ['sqlite3.', 'database', 'connection', 'cursor'],
-                'severity': ErrorSeverity.HIGH,
-                'suggested_strategies': [FallbackStrategy.RETRY, FallbackStrategy.CACHE_FALLBACK]
-            },
-            'network_errors': {
-                'patterns': ['connection', 'timeout', 'network', 'http', 'requests'],
-                'severity': ErrorSeverity.MEDIUM,
-                'suggested_strategies': [FallbackStrategy.RETRY, FallbackStrategy.CACHE_FALLBACK]
-            },
-            'memory_errors': {
-                'patterns': ['memory', 'allocation', 'out of memory'],
-                'severity': ErrorSeverity.CRITICAL,
-                'suggested_strategies': [FallbackStrategy.GRACEFUL_DEGRADATION, FallbackStrategy.SIMPLIFIED_OPERATION]
-            },
-            'file_errors': {
-                'patterns': ['file', 'directory', 'path', 'permission'],
-                'severity': ErrorSeverity.MEDIUM,
-                'suggested_strategies': [FallbackStrategy.ALTERNATIVE_METHOD, FallbackStrategy.DEFAULT_VALUE]
-            },
-            'import_errors': {
-                'patterns': ['import', 'module', 'package'],
-                'severity': ErrorSeverity.HIGH,
-                'suggested_strategies': [FallbackStrategy.ALTERNATIVE_METHOD, FallbackStrategy.GRACEFUL_DEGRADATION]
-            },
-            'validation_errors': {
-                'patterns': ['validation', 'invalid', 'format', 'type'],
-                'severity': ErrorSeverity.LOW,
-                'suggested_strategies': [FallbackStrategy.DEFAULT_VALUE, FallbackStrategy.ERROR_SUPPRESSION]
-            }
-        }
+    # History
+    failure_history: List[Dict[str, Any]] = field(default_factory=list)
+    state_changes: List[Dict[str, Any]] = field(default_factory=list)
     
-    def _initialize_severity_rules(self) -> Dict[Type[Exception], ErrorSeverity]:
-        """Initialize severity rules for exception types."""
-        return {
-            SystemExit: ErrorSeverity.CRITICAL,
-            KeyboardInterrupt: ErrorSeverity.CRITICAL,
-            MemoryError: ErrorSeverity.CRITICAL,
-            RecursionError: ErrorSeverity.CRITICAL,
-            ImportError: ErrorSeverity.HIGH,
-            ModuleNotFoundError: ErrorSeverity.HIGH,
-            ConnectionError: ErrorSeverity.MEDIUM,
-            TimeoutError: ErrorSeverity.MEDIUM,
-            FileNotFoundError: ErrorSeverity.MEDIUM,
-            PermissionError: ErrorSeverity.MEDIUM,
-            ValueError: ErrorSeverity.LOW,
-            TypeError: ErrorSeverity.LOW,
-            AttributeError: ErrorSeverity.LOW,
-            KeyError: ErrorSeverity.LOW,
-            IndexError: ErrorSeverity.LOW,
-            NotImplementedError: ErrorSeverity.HIGH,
-        }
-    
-    def analyze_error(self, error_context: ErrorContext) -> Dict[str, Any]:
+    def record_failure(self, error: Exception) -> None:
         """
-        Analyze an error and provide recommendations.
+        Record a failure and potentially open the circuit.
         
         Args:
-            error_context: Context information about the error
-            
-        Returns:
-            Analysis results with severity and suggested strategies
+            error: Exception that caused the failure
         """
-        error = error_context.error
-        error_str = str(error).lower()
-        error_type = type(error)
+        current_time = time.time()
+        self.failure_count += 1
+        self.last_failure_time = current_time
         
-        # Determine severity
-        severity = self.severity_rules.get(error_type, ErrorSeverity.MEDIUM)
+        # Record failure
+        self.failure_history.append({
+            "timestamp": current_time,
+            "error": str(error),
+            "state": self.state.value
+        })
         
-        # Check error patterns
-        matched_patterns = []
-        suggested_strategies = []
-        
-        for pattern_name, pattern_info in self.error_patterns.items():
-            if any(pattern in error_str for pattern in pattern_info['patterns']):
-                matched_patterns.append(pattern_name)
-                suggested_strategies.extend(pattern_info['suggested_strategies'])
-                # Update severity if pattern suggests higher severity
-                if pattern_info['severity'].value == 'critical' and severity != ErrorSeverity.CRITICAL:
-                    severity = pattern_info['severity']
-        
-        # Remove duplicates while preserving order
-        suggested_strategies = list(dict.fromkeys(suggested_strategies))
-        
-        return {
-            'severity': severity,
-            'matched_patterns': matched_patterns,
-            'suggested_strategies': suggested_strategies,
-            'error_type': error_type.__name__,
-            'error_message': str(error),
-            'is_recoverable': self._is_recoverable(error, error_context),
-            'retry_recommended': self._should_retry(error, error_context)
-        }
+        # Check if we should open the circuit
+        if self.state == CircuitState.CLOSED and self.failure_count >= self.failure_threshold:
+            self._change_state(CircuitState.OPEN)
+            
+            # Calculate backoff time
+            if self.exponential_backoff:
+                self.current_backoff = min(
+                    self.reset_timeout * (2 ** (self.failure_count - self.failure_threshold)),
+                    self.max_backoff
+                )
+            else:
+                self.current_backoff = self.reset_timeout
     
-    def _is_recoverable(self, error: Exception, context: ErrorContext) -> bool:
-        """Determine if an error is recoverable."""
-        # Critical errors are generally not recoverable
-        if type(error) in [SystemExit, KeyboardInterrupt, MemoryError]:
-            return False
+    def record_success(self) -> None:
+        """Record a successful operation and potentially close the circuit."""
+        current_time = time.time()
+        self.last_success_time = current_time
         
-        # Too many attempts suggest non-recoverable issue
-        if context.attempt_count > 5:
-            return False
-        
-        # Most other errors are potentially recoverable
-        return True
+        # If in half-open state, close the circuit
+        if self.state == CircuitState.HALF_OPEN:
+            self._change_state(CircuitState.CLOSED)
+            self.failure_count = 0
+            self.current_backoff = 0.0
     
-    def _should_retry(self, error: Exception, context: ErrorContext) -> bool:
-        """Determine if an error should be retried."""
-        # Don't retry certain error types
-        no_retry_types = [ValueError, TypeError, AttributeError, NotImplementedError]
-        if type(error) in no_retry_types:
-            return False
+    def can_use_neural(self) -> bool:
+        """
+        Check if the neural implementation can be used.
         
-        # Don't retry if we've already tried too many times
-        if context.attempt_count >= 3:
-            return False
+        Returns:
+            True if the neural implementation can be used, False otherwise
+        """
+        current_time = time.time()
         
-        # Retry for transient errors
-        retry_types = [ConnectionError, TimeoutError, sqlite3.OperationalError]
-        return type(error) in retry_types
-
-
-class FallbackRegistry:
-    """Registry of fallback rules and handlers."""
-    
-    def __init__(self):
-        self.rules: List[FallbackRule] = []
-        self.default_handlers = self._initialize_default_handlers()
-        self._register_default_rules()
-    
-    def _initialize_default_handlers(self) -> Dict[FallbackStrategy, Callable]:
-        """Initialize default fallback handlers."""
-        return {
-            FallbackStrategy.RETRY: self._retry_handler,
-            FallbackStrategy.ALTERNATIVE_METHOD: self._alternative_method_handler,
-            FallbackStrategy.DEFAULT_VALUE: self._default_value_handler,
-            FallbackStrategy.GRACEFUL_DEGRADATION: self._graceful_degradation_handler,
-            FallbackStrategy.CACHE_FALLBACK: self._cache_fallback_handler,
-            FallbackStrategy.SIMPLIFIED_OPERATION: self._simplified_operation_handler,
-            FallbackStrategy.ERROR_SUPPRESSION: self._error_suppression_handler
-        }
-    
-    def _register_default_rules(self):
-        """Register default fallback rules."""
-        # Database errors
-        self.register_rule(FallbackRule(
-            error_types=[sqlite3.Error, sqlite3.OperationalError],
-            strategy=FallbackStrategy.RETRY,
-            handler=self.default_handlers[FallbackStrategy.RETRY],
-            max_retries=3,
-            retry_delay=1.0,
-            priority=90,
-            description="Retry database operations with exponential backoff"
-        ))
-        
-        # Import errors
-        self.register_rule(FallbackRule(
-            error_types=[ImportError, ModuleNotFoundError],
-            strategy=FallbackStrategy.ALTERNATIVE_METHOD,
-            handler=self.default_handlers[FallbackStrategy.ALTERNATIVE_METHOD],
-            priority=80,
-            description="Use alternative implementation when imports fail"
-        ))
-        
-        # File errors
-        self.register_rule(FallbackRule(
-            error_types=[FileNotFoundError, PermissionError],
-            strategy=FallbackStrategy.DEFAULT_VALUE,
-            handler=self.default_handlers[FallbackStrategy.DEFAULT_VALUE],
-            priority=70,
-            description="Provide default values when file operations fail"
-        ))
-        
-        # Memory errors
-        self.register_rule(FallbackRule(
-            error_types=[MemoryError],
-            strategy=FallbackStrategy.GRACEFUL_DEGRADATION,
-            handler=self.default_handlers[FallbackStrategy.GRACEFUL_DEGRADATION],
-            priority=95,
-            description="Gracefully degrade functionality when memory is low"
-        ))
-        
-        # Network errors
-        self.register_rule(FallbackRule(
-            error_types=[ConnectionError, TimeoutError],
-            strategy=FallbackStrategy.CACHE_FALLBACK,
-            handler=self.default_handlers[FallbackStrategy.CACHE_FALLBACK],
-            max_retries=2,
-            retry_delay=2.0,
-            priority=85,
-            description="Use cached data when network operations fail"
-        ))
-        
-        # NotImplementedError
-        self.register_rule(FallbackRule(
-            error_types=[NotImplementedError],
-            strategy=FallbackStrategy.DEFAULT_VALUE,
-            handler=self.default_handlers[FallbackStrategy.DEFAULT_VALUE],
-            priority=100,
-            description="Provide meaningful defaults for unimplemented methods"
-        ))
-    
-    def register_rule(self, rule: FallbackRule):
-        """Register a new fallback rule."""
-        self.rules.append(rule)
-        # Sort by priority (higher priority first)
-        self.rules.sort(key=lambda r: r.priority, reverse=True)
-    
-    def get_applicable_rules(self, error: Exception, context: ErrorContext) -> List[FallbackRule]:
-        """Get applicable fallback rules for an error."""
-        applicable_rules = []
-        
-        for rule in self.rules:
-            if any(isinstance(error, error_type) for error_type in rule.error_types):
-                # Check additional conditions if specified
-                if rule.conditions:
-                    if not self._check_conditions(rule.conditions, context):
-                        continue
-                applicable_rules.append(rule)
-        
-        return applicable_rules
-    
-    def _check_conditions(self, conditions: Dict[str, Any], context: ErrorContext) -> bool:
-        """Check if rule conditions are met."""
-        for key, value in conditions.items():
-            if key == 'max_attempts' and context.attempt_count > value:
+        if self.state == CircuitState.CLOSED:
+            return True
+        elif self.state == CircuitState.OPEN:
+            # Check if we should try half-open state
+            if current_time - self.last_failure_time > self.current_backoff:
+                self._change_state(CircuitState.HALF_OPEN)
+                return True
+            else:
                 return False
-            elif key == 'function_name' and context.function_name != value:
-                return False
-            elif key == 'module_name' and context.module_name != value:
-                return False
-        return True
+        elif self.state == CircuitState.HALF_OPEN:
+            return True
+        
+        return False
     
-    # Default handler implementations
-    async def _retry_handler(self, context: ErrorContext, rule: FallbackRule) -> FallbackResult:
-        """Retry the original operation with exponential backoff."""
-        if context.attempt_count >= rule.max_retries:
-            return FallbackResult(
-                success=False,
-                result=None,
-                strategy_used=FallbackStrategy.RETRY,
-                error_context=context,
-                execution_time=0.0,
-                message=f"Max retries ({rule.max_retries}) exceeded"
-            )
+    def _change_state(self, new_state: CircuitState) -> None:
+        """
+        Change the circuit state.
         
-        # Wait with exponential backoff
-        delay = rule.retry_delay * (2 ** (context.attempt_count - 1))
-        await asyncio.sleep(delay)
-        
-        return FallbackResult(
-            success=True,
-            result="retry_requested",
-            strategy_used=FallbackStrategy.RETRY,
-            error_context=context,
-            execution_time=delay,
-            message=f"Retrying after {delay:.1f}s delay (attempt {context.attempt_count + 1})"
-        )
+        Args:
+            new_state: New circuit state
+        """
+        if self.state != new_state:
+            old_state = self.state
+            self.state = new_state
+            
+            # Record state change
+            self.state_changes.append({
+                "timestamp": time.time(),
+                "old_state": old_state.value,
+                "new_state": new_state.value,
+                "failure_count": self.failure_count,
+                "backoff": self.current_backoff
+            })
     
-    async def _alternative_method_handler(self, context: ErrorContext, rule: FallbackRule) -> FallbackResult:
-        """Use alternative method implementation."""
-        # Try to find alternative implementations
-        alternatives = self._find_alternative_methods(context)
+    def get_status(self) -> Dict[str, Any]:
+        """
+        Get the current status of the circuit breaker.
         
-        if alternatives:
-            return FallbackResult(
-                success=True,
-                result=alternatives[0],  # Use first alternative
-                strategy_used=FallbackStrategy.ALTERNATIVE_METHOD,
-                error_context=context,
-                execution_time=0.0,
-                message=f"Using alternative method: {alternatives[0].__name__ if hasattr(alternatives[0], '__name__') else 'unknown'}"
-            )
+        Returns:
+            Dictionary with circuit breaker status
+        """
+        current_time = time.time()
+        time_since_failure = current_time - self.last_failure_time if self.last_failure_time > 0 else None
+        time_since_success = current_time - self.last_success_time if self.last_success_time > 0 else None
         
-        return FallbackResult(
-            success=False,
-            result=None,
-            strategy_used=FallbackStrategy.ALTERNATIVE_METHOD,
-            error_context=context,
-            execution_time=0.0,
-            message="No alternative methods available"
-        )
-    
-    async def _default_value_handler(self, context: ErrorContext, rule: FallbackRule) -> FallbackResult:
-        """Provide appropriate default value."""
-        default_value = self._determine_default_value(context)
-        
-        return FallbackResult(
-            success=True,
-            result=default_value,
-            strategy_used=FallbackStrategy.DEFAULT_VALUE,
-            error_context=context,
-            execution_time=0.0,
-            message=f"Using default value: {type(default_value).__name__}"
-        )
-    
-    async def _graceful_degradation_handler(self, context: ErrorContext, rule: FallbackRule) -> FallbackResult:
-        """Gracefully degrade functionality."""
-        # Implement reduced functionality
-        degraded_result = self._create_degraded_response(context)
-        
-        return FallbackResult(
-            success=True,
-            result=degraded_result,
-            strategy_used=FallbackStrategy.GRACEFUL_DEGRADATION,
-            error_context=context,
-            execution_time=0.0,
-            message="Operating in degraded mode with reduced functionality"
-        )
-    
-    async def _cache_fallback_handler(self, context: ErrorContext, rule: FallbackRule) -> FallbackResult:
-        """Use cached data as fallback."""
-        cached_result = self._get_cached_result(context)
-        
-        if cached_result is not None:
-            return FallbackResult(
-                success=True,
-                result=cached_result,
-                strategy_used=FallbackStrategy.CACHE_FALLBACK,
-                error_context=context,
-                execution_time=0.0,
-                message="Using cached result"
-            )
-        
-        return FallbackResult(
-            success=False,
-            result=None,
-            strategy_used=FallbackStrategy.CACHE_FALLBACK,
-            error_context=context,
-            execution_time=0.0,
-            message="No cached result available"
-        )
-    
-    async def _simplified_operation_handler(self, context: ErrorContext, rule: FallbackRule) -> FallbackResult:
-        """Perform simplified version of the operation."""
-        simplified_result = self._create_simplified_result(context)
-        
-        return FallbackResult(
-            success=True,
-            result=simplified_result,
-            strategy_used=FallbackStrategy.SIMPLIFIED_OPERATION,
-            error_context=context,
-            execution_time=0.0,
-            message="Using simplified operation"
-        )
-    
-    async def _error_suppression_handler(self, context: ErrorContext, rule: FallbackRule) -> FallbackResult:
-        """Suppress error and continue with minimal impact."""
-        return FallbackResult(
-            success=True,
-            result=None,
-            strategy_used=FallbackStrategy.ERROR_SUPPRESSION,
-            error_context=context,
-            execution_time=0.0,
-            message="Error suppressed, continuing with null result"
-        )
-    
-    def _find_alternative_methods(self, context: ErrorContext) -> List[Callable]:
-        """Find alternative method implementations."""
-        alternatives = []
-        
-        # Look for common alternative patterns
-        function_name = context.function_name
-        
-        # Try _fallback_ prefixed methods
-        fallback_name = f"_fallback_{function_name}"
-        if hasattr(context, 'instance'):
-            if hasattr(context.instance, fallback_name):
-                alternatives.append(getattr(context.instance, fallback_name))
-        
-        # Try _simple_ prefixed methods
-        simple_name = f"_simple_{function_name}"
-        if hasattr(context, 'instance'):
-            if hasattr(context.instance, simple_name):
-                alternatives.append(getattr(context.instance, simple_name))
-        
-        return alternatives
-    
-    def _determine_default_value(self, context: ErrorContext) -> Any:
-        """Determine appropriate default value based on context."""
-        function_name = context.function_name.lower()
-        
-        # Return type hints from function signature
-        if hasattr(context, 'function'):
-            try:
-                sig = inspect.signature(context.function)
-                if sig.return_annotation != inspect.Signature.empty:
-                    if sig.return_annotation == dict:
-                        return {}
-                    elif sig.return_annotation == list:
-                        return []
-                    elif sig.return_annotation == str:
-                        return ""
-                    elif sig.return_annotation == bool:
-                        return False
-                    elif sig.return_annotation == int:
-                        return 0
-                    elif sig.return_annotation == float:
-                        return 0.0
-            except Exception:
-                pass
-        
-        # Heuristic-based defaults
-        if 'get_' in function_name or 'find_' in function_name:
-            return {}
-        elif 'list_' in function_name or 'search_' in function_name:
-            return []
-        elif 'is_' in function_name or 'has_' in function_name or 'can_' in function_name:
-            return False
-        elif 'count_' in function_name:
-            return 0
-        elif 'calculate_' in function_name or 'compute_' in function_name:
-            return 0.0
-        else:
-            return None
-    
-    def _create_degraded_response(self, context: ErrorContext) -> Dict[str, Any]:
-        """Create a degraded response with limited functionality."""
         return {
-            "status": "degraded",
-            "message": f"Operating in degraded mode due to error in {context.function_name}",
-            "error": str(context.error),
-            "timestamp": context.timestamp.isoformat(),
-            "limited_functionality": True
-        }
-    
-    def _get_cached_result(self, context: ErrorContext) -> Any:
-        """Get cached result if available."""
-        # This would integrate with a caching system
-        # For now, return None to indicate no cache available
-        return None
-    
-    def _create_simplified_result(self, context: ErrorContext) -> Any:
-        """Create a simplified result."""
-        return {
-            "simplified": True,
-            "function": context.function_name,
-            "message": "Simplified operation completed",
-            "timestamp": datetime.now().isoformat()
+            "component": self.component,
+            "state": self.state.value,
+            "failure_count": self.failure_count,
+            "last_failure_time": self.last_failure_time,
+            "last_success_time": self.last_success_time,
+            "time_since_failure": time_since_failure,
+            "time_since_success": time_since_success,
+            "current_backoff": self.current_backoff,
+            "can_use_neural": self.can_use_neural(),
+            "failure_threshold": self.failure_threshold,
+            "reset_timeout": self.reset_timeout,
+            "exponential_backoff": self.exponential_backoff,
+            "max_backoff": self.max_backoff
         }
 
 
 class FallbackManager:
     """
-    Comprehensive fallback management system.
+    Manages fallbacks when neural implementations fail.
     
-    This manager coordinates error handling, recovery strategies, and ensures
-    the system never breaks by providing appropriate fallbacks for all error conditions.
+    This class provides a centralized system for managing fallbacks when neural
+    implementations fail, with circuit breaker patterns and exponential backoff.
     """
     
-    def __init__(self, project_root: Optional[str] = None):
-        """Initialize the fallback manager."""
-        self.project_root = Path(project_root) if project_root else Path(__file__).parent.parent.parent
-        self.logger = self._setup_logging()
-        self.error_analyzer = ErrorAnalyzer()
-        self.fallback_registry = FallbackRegistry()
-        self.error_history: deque = deque(maxlen=1000)  # Keep last 1000 errors
-        self.recovery_stats = defaultdict(int)
-        self.cache = {}
-        self.circuit_breakers = {}  # For preventing cascading failures
-        
-    def _setup_logging(self) -> logging.Logger:
-        """Setup logging for the fallback manager."""
-        logger = logging.getLogger("fallback_manager")
-        logger.setLevel(logging.INFO)
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-        return logger
+    _instance = None
     
-    async def handle_error(self, error: Exception, context: Dict[str, Any]) -> Any:
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(FallbackManager, cls).__new__(cls)
+            cls._instance._initialized = False
+        return cls._instance
+    
+    def __init__(self):
+        """Initialize the fallback manager."""
+        if self._initialized:
+            return
+            
+        self.logger = logging.getLogger("FallbackManager")
+        self.registry = DualImplementationRegistry()
+        
+        # Circuit breakers for each component
+        self.circuit_breakers: Dict[str, CircuitBreaker] = {}
+        
+        # Default circuit breaker configuration
+        self.default_failure_threshold = 3
+        self.default_reset_timeout = 60.0
+        self.default_exponential_backoff = True
+        self.default_max_backoff = 3600.0
+        
+        # Initialize circuit breakers for all registered implementations
+        self._initialize_circuit_breakers()
+        
+        self.logger.info("Fallback manager initialized")
+        self._initialized = True
+    
+    def _initialize_circuit_breakers(self) -> None:
+        """Initialize circuit breakers for all registered implementations."""
+        for name in self.registry.get_all().keys():
+            self._get_or_create_circuit_breaker(name)
+    
+    def _get_or_create_circuit_breaker(self, component: str) -> CircuitBreaker:
         """
-        Handle an error with appropriate fallback strategy.
+        Get or create a circuit breaker for a component.
         
         Args:
-            error: The exception that occurred
-            context: Context information about where the error occurred
+            component: Component name
             
         Returns:
-            Result from fallback strategy or raises if no fallback available
+            Circuit breaker for the component
         """
-        # Create error context
-        error_context = self._create_error_context(error, context)
+        if component not in self.circuit_breakers:
+            self.circuit_breakers[component] = CircuitBreaker(
+                component=component,
+                failure_threshold=self.default_failure_threshold,
+                reset_timeout=self.default_reset_timeout,
+                exponential_backoff=self.default_exponential_backoff,
+                max_backoff=self.default_max_backoff
+            )
         
-        # Log the error
-        self.logger.warning(f"Handling error in {error_context.function_name}: {error}")
-        
-        # Add to error history
-        self.error_history.append(error_context)
-        
-        # Check circuit breaker
-        if self._is_circuit_breaker_open(error_context):
-            return await self._handle_circuit_breaker_open(error_context)
-        
-        # Analyze the error
-        analysis = self.error_analyzer.analyze_error(error_context)
-        
-        # Get applicable fallback rules
-        applicable_rules = self.fallback_registry.get_applicable_rules(error, error_context)
-        
-        if not applicable_rules:
-            self.logger.error(f"No fallback rules found for error: {error}")
-            return await self._handle_no_fallback_available(error_context)
-        
-        # Try fallback strategies in order of priority
-        for rule in applicable_rules:
-            try:
-                result = await self._execute_fallback(rule, error_context)
-                if result.success:
-                    self.recovery_stats[rule.strategy.value] += 1
-                    self.logger.info(f"Successfully recovered using {rule.strategy.value}: {result.message}")
-                    
-                    # Cache successful result if appropriate
-                    if rule.strategy in [FallbackStrategy.CACHE_FALLBACK, FallbackStrategy.DEFAULT_VALUE]:
-                        self._cache_result(error_context, result.result)
-                    
-                    return result.result
-                else:
-                    self.logger.warning(f"Fallback strategy {rule.strategy.value} failed: {result.message}")
-                    
-            except Exception as fallback_error:
-                self.logger.error(f"Fallback strategy {rule.strategy.value} raised error: {fallback_error}")
-                continue
-        
-        # If all fallback strategies failed
-        self.logger.error(f"All fallback strategies failed for error: {error}")
-        return await self._handle_all_fallbacks_failed(error_context)
+        return self.circuit_breakers[component]
     
-    def _create_error_context(self, error: Exception, context: Dict[str, Any]) -> ErrorContext:
-        """Create error context from exception and context information."""
-        # Extract information from the current stack frame
-        frame = sys._getframe(2)  # Go back 2 frames to get the original caller
+    def record_failure(self, component: str, error: Exception) -> None:
+        """
+        Record a failure for a component.
         
-        function_name = context.get('function_name', frame.f_code.co_name)
-        class_name = context.get('class_name')
-        module_name = context.get('module_name', frame.f_globals.get('__name__', 'unknown'))
+        Args:
+            component: Component name
+            error: Exception that caused the failure
+        """
+        circuit_breaker = self._get_or_create_circuit_breaker(component)
+        circuit_breaker.record_failure(error)
         
-        # Get previous errors for this context
-        previous_errors = [
-            str(ec.error) for ec in self.error_history 
-            if ec.function_name == function_name and ec.module_name == module_name
-        ][-5:]  # Last 5 errors
-        
-        return ErrorContext(
-            error=error,
-            function_name=function_name,
-            class_name=class_name,
-            module_name=module_name,
-            args=context.get('args', ()),
-            kwargs=context.get('kwargs', {}),
-            timestamp=datetime.now(),
-            stack_trace=traceback.format_exc(),
-            attempt_count=context.get('attempt_count', 1),
-            previous_errors=previous_errors
+        self.logger.warning(
+            f"Neural implementation failure for {component}: {error}. "
+            f"Circuit breaker state: {circuit_breaker.state.value}, "
+            f"Failure count: {circuit_breaker.failure_count}"
         )
     
-    def _is_circuit_breaker_open(self, error_context: ErrorContext) -> bool:
-        """Check if circuit breaker is open for this function."""
-        key = f"{error_context.module_name}.{error_context.function_name}"
+    def record_success(self, component: str) -> None:
+        """
+        Record a success for a component.
         
-        if key not in self.circuit_breakers:
-            self.circuit_breakers[key] = {
-                'failure_count': 0,
-                'last_failure': None,
-                'state': 'closed'  # closed, open, half-open
-            }
+        Args:
+            component: Component name
+        """
+        circuit_breaker = self._get_or_create_circuit_breaker(component)
         
-        breaker = self.circuit_breakers[key]
-        
-        # Check if we should open the circuit breaker
-        if breaker['failure_count'] >= 5:  # 5 failures threshold
-            if breaker['state'] == 'closed':
-                breaker['state'] = 'open'
-                breaker['last_failure'] = datetime.now()
-                self.logger.warning(f"Circuit breaker opened for {key}")
+        # Only log if state changes
+        if circuit_breaker.state != CircuitState.CLOSED:
+            old_state = circuit_breaker.state
+            circuit_breaker.record_success()
             
-            # Check if we should try half-open
-            elif breaker['state'] == 'open':
-                if datetime.now() - breaker['last_failure'] > timedelta(minutes=5):
-                    breaker['state'] = 'half-open'
-                    self.logger.info(f"Circuit breaker half-open for {key}")
-        
-        return breaker['state'] == 'open'
+            if circuit_breaker.state != old_state:
+                self.logger.info(
+                    f"Neural implementation success for {component}. "
+                    f"Circuit breaker state changed from {old_state.value} to {circuit_breaker.state.value}"
+                )
+        else:
+            circuit_breaker.record_success()
     
-    async def _handle_circuit_breaker_open(self, error_context: ErrorContext) -> Any:
-        """Handle case when circuit breaker is open."""
-        self.logger.warning(f"Circuit breaker open for {error_context.function_name}, using cached result")
+    def can_use_neural(self, component: str) -> bool:
+        """
+        Check if the neural implementation can be used for a component.
         
-        # Try to get cached result
-        cached_result = self._get_cached_result(error_context)
-        if cached_result is not None:
-            return cached_result
-        
-        # Return appropriate default
-        return self.fallback_registry._determine_default_value(error_context)
+        Args:
+            component: Component name
+            
+        Returns:
+            True if the neural implementation can be used, False otherwise
+        """
+        circuit_breaker = self._get_or_create_circuit_breaker(component)
+        return circuit_breaker.can_use_neural()
     
-    async def _execute_fallback(self, rule: FallbackRule, error_context: ErrorContext) -> FallbackResult:
-        """Execute a specific fallback rule."""
-        start_time = time.time()
+    def get_circuit_breaker_status(self, component: str) -> Optional[Dict[str, Any]]:
+        """
+        Get the status of a circuit breaker.
         
-        try:
-            # Special handling for retry strategy
-            if rule.strategy == FallbackStrategy.RETRY:
-                if error_context.attempt_count >= rule.max_retries:
-                    return FallbackResult(
-                        success=False,
-                        result=None,
-                        strategy_used=rule.strategy,
-                        error_context=error_context,
-                        execution_time=0.0,
-                        message=f"Max retries ({rule.max_retries}) exceeded"
-                    )
+        Args:
+            component: Component name
+            
+        Returns:
+            Dictionary with circuit breaker status, or None if not found
+        """
+        if component in self.circuit_breakers:
+            return self.circuit_breakers[component].get_status()
+        else:
+            return None
+    
+    def get_all_circuit_breaker_statuses(self) -> Dict[str, Dict[str, Any]]:
+        """
+        Get the status of all circuit breakers.
+        
+        Returns:
+            Dictionary mapping component names to circuit breaker statuses
+        """
+        return {name: breaker.get_status() for name, breaker in self.circuit_breakers.items()}
+    
+    def configure_circuit_breaker(self, 
+                                component: str, 
+                                failure_threshold: Optional[int] = None,
+                                reset_timeout: Optional[float] = None,
+                                exponential_backoff: Optional[bool] = None,
+                                max_backoff: Optional[float] = None) -> None:
+        """
+        Configure a circuit breaker.
+        
+        Args:
+            component: Component name
+            failure_threshold: Number of failures before opening circuit
+            reset_timeout: Seconds before trying neural implementation again
+            exponential_backoff: Whether to use exponential backoff
+            max_backoff: Maximum backoff time in seconds
+        """
+        circuit_breaker = self._get_or_create_circuit_breaker(component)
+        
+        if failure_threshold is not None:
+            circuit_breaker.failure_threshold = failure_threshold
+        
+        if reset_timeout is not None:
+            circuit_breaker.reset_timeout = reset_timeout
+        
+        if exponential_backoff is not None:
+            circuit_breaker.exponential_backoff = exponential_backoff
+        
+        if max_backoff is not None:
+            circuit_breaker.max_backoff = max_backoff
+        
+        self.logger.info(f"Configured circuit breaker for {component}")
+    
+    def reset_circuit_breaker(self, component: str) -> None:
+        """
+        Reset a circuit breaker to closed state.
+        
+        Args:
+            component: Component name
+        """
+        if component in self.circuit_breakers:
+            circuit_breaker = self.circuit_breakers[component]
+            old_state = circuit_breaker.state
+            
+            circuit_breaker.state = CircuitState.CLOSED
+            circuit_breaker.failure_count = 0
+            circuit_breaker.current_backoff = 0.0
+            
+            circuit_breaker.state_changes.append({
+                "timestamp": time.time(),
+                "old_state": old_state.value,
+                "new_state": CircuitState.CLOSED.value,
+                "failure_count": 0,
+                "backoff": 0.0,
+                "reason": "manual_reset"
+            })
+            
+            self.logger.info(
+                f"Manually reset circuit breaker for {component} from {old_state.value} to CLOSED"
+            )
+    
+    def reset_all_circuit_breakers(self) -> None:
+        """Reset all circuit breakers to closed state."""
+        for component in self.circuit_breakers.keys():
+            self.reset_circuit_breaker(component)
+    
+    def get_failure_history(self, component: str) -> List[Dict[str, Any]]:
+        """
+        Get the failure history for a component.
+        
+        Args:
+            component: Component name
+            
+        Returns:
+            List of failure events, or empty list if not found
+        """
+        if component in self.circuit_breakers:
+            return self.circuit_breakers[component].failure_history.copy()
+        else:
+            return []
+    
+    def get_state_change_history(self, component: str) -> List[Dict[str, Any]]:
+        """
+        Get the state change history for a component.
+        
+        Args:
+            component: Component name
+            
+        Returns:
+            List of state change events, or empty list if not found
+        """
+        if component in self.circuit_breakers:
+            return self.circuit_breakers[component].state_changes.copy()
+        else:
+            return []
+    
+    def get_open_circuits(self) -> List[str]:
+        """
+        Get a list of components with open circuits.
+        
+        Returns:
+            List of component names with open circuits
+        """
+        return [name for name, breaker in self.circuit_breakers.items() 
+                if breaker.state == CircuitState.OPEN]
+    
+    def get_half_open_circuits(self) -> List[str]:
+        """
+        Get a list of components with half-open circuits.
+        
+        Returns:
+            List of component names with half-open circuits
+        """
+        return [name for name, breaker in self.circuit_breakers.items() 
+                if breaker.state == CircuitState.HALF_OPEN]
+    
+    async def monitor_loop(self, interval: float = 60.0) -> None:
+        """
+        Run a monitoring loop that periodically checks circuit breakers.
+        
+        Args:
+            interval: Check interval in seconds
+        """
+        self.logger.info(f"Starting circuit breaker monitoring loop with interval {interval}s")
+        
+        while True:
+            try:
+                # Check for circuit breakers that can be half-opened
+                current_time = time.time()
                 
-                # For retry, we need to re-execute the original function
-                return await self._handle_retry(rule, error_context)
+                for component, breaker in self.circuit_breakers.items():
+                    if breaker.state == CircuitState.OPEN:
+                        if current_time - breaker.last_failure_time > breaker.current_backoff:
+                            self.logger.info(
+                                f"Circuit breaker for {component} can be half-opened "
+                                f"(backoff expired: {breaker.current_backoff:.1f}s)"
+                            )
+                
+                await asyncio.sleep(interval)
+            except Exception as e:
+                self.logger.error(f"Error in circuit breaker monitoring loop: {e}")
+                await asyncio.sleep(interval)
+
+
+# Example usage
+async def test_fallback_manager():
+    """Test the fallback manager."""
+    from .dual_implementation import DualImplementation
+    
+    class ExampleDualImplementation(DualImplementation[int, int]):
+        """Example dual implementation for testing."""
+        
+        async def _process_algorithmic(self, input_data: int) -> int:
+            """Algorithmic implementation: double the input."""
+            await asyncio.sleep(0.001)  # Simulate processing time
+            return input_data * 2
+        
+        async def _process_neural(self, input_data: int) -> int:
+            """Neural implementation: double the input with small variation."""
+            await asyncio.sleep(0.002)  # Simulate longer processing time
+            # Simulate failures for certain inputs
+            if input_data % 10 == 0:
+                raise ValueError(f"Simulated failure for input {input_data}")
+            return input_data * 2 + (1 if input_data % 5 == 0 else 0)
+    
+    # Create and register implementation
+    impl = ExampleDualImplementation("example_doubler")
+    registry = DualImplementationRegistry()
+    registry.register(impl)
+    
+    # Create fallback manager
+    manager = FallbackManager()
+    
+    # Configure circuit breaker
+    manager.configure_circuit_breaker(
+        component="example_doubler",
+        failure_threshold=2,
+        reset_timeout=5.0,
+        exponential_backoff=True,
+        max_backoff=30.0
+    )
+    
+    # Process some data
+    for i in range(30):
+        try:
+            # Check if we can use neural implementation
+            if manager.can_use_neural("example_doubler"):
+                try:
+                    result = await impl._process_neural(i)
+                    print(f"Neural - Input: {i}, Result: {result}")
+                    manager.record_success("example_doubler")
+                except Exception as e:
+                    print(f"Neural failed - Input: {i}, Error: {e}")
+                    manager.record_failure("example_doubler", e)
+                    result = await impl._process_algorithmic(i)
+                    print(f"Fallback to algorithmic - Input: {i}, Result: {result}")
+            else:
+                result = await impl._process_algorithmic(i)
+                print(f"Using algorithmic (circuit open) - Input: {i}, Result: {result}")
             
-            # Execute the fallback handler
-            result = await rule.handler(error_context, rule)
-            result.execution_time = time.time() - start_time
-            return result
+            # Print circuit breaker status every 5 iterations
+            if i % 5 == 0:
+                status = manager.get_circuit_breaker_status("example_doubler")
+                print(f"Circuit breaker status: {status['state']}, "
+                      f"Failures: {status['failure_count']}, "
+                      f"Backoff: {status['current_backoff']:.1f}s")
+            
+            # Add delay to see circuit breaker in action
+            await asyncio.sleep(1.0)
             
         except Exception as e:
-            return FallbackResult(
-                success=False,
-                result=None,
-                strategy_used=rule.strategy,
-                error_context=error_context,
-                execution_time=time.time() - start_time,
-                message=f"Fallback handler failed: {e}"
-            )
+            print(f"Unexpected error: {e}")
     
-    async def _handle_retry(self, rule: FallbackRule, error_context: ErrorContext) -> FallbackResult:
-        """Handle retry strategy."""
-        # Calculate delay with exponential backoff
-        delay = rule.retry_delay * (2 ** (error_context.attempt_count - 1))
-        
-        self.logger.info(f"Retrying {error_context.function_name} after {delay:.1f}s (attempt {error_context.attempt_count + 1})")
-        
-        await asyncio.sleep(delay)
-        
-        return FallbackResult(
-            success=True,
-            result="retry_requested",
-            strategy_used=FallbackStrategy.RETRY,
-            error_context=error_context,
-            execution_time=delay,
-            message=f"Retry scheduled after {delay:.1f}s delay"
-        )
-    
-    async def _handle_no_fallback_available(self, error_context: ErrorContext) -> Any:
-        """Handle case when no fallback rules are available."""
-        self.logger.error(f"No fallback available for {error_context.function_name}")
-        
-        # Try to provide a sensible default based on function name
-        default_value = self.fallback_registry._determine_default_value(error_context)
-        
-        if default_value is not None:
-            self.logger.info(f"Using heuristic default value for {error_context.function_name}")
-            return default_value
-        
-        # Last resort: return error information
-        return {
-            "error": True,
-            "message": f"Function {error_context.function_name} failed with no fallback available",
-            "error_type": type(error_context.error).__name__,
-            "timestamp": error_context.timestamp.isoformat()
-        }
-    
-    async def _handle_all_fallbacks_failed(self, error_context: ErrorContext) -> Any:
-        """Handle case when all fallback strategies have failed."""
-        self.logger.critical(f"All fallbacks failed for {error_context.function_name}")
-        
-        # Update circuit breaker
-        key = f"{error_context.module_name}.{error_context.function_name}"
-        if key in self.circuit_breakers:
-            self.circuit_breakers[key]['failure_count'] += 1
-        
-        # Return error response that won't break the system
-        return {
-            "error": True,
-            "message": f"All fallback strategies failed for {error_context.function_name}",
-            "error_type": type(error_context.error).__name__,
-            "fallback_attempts": len(self.fallback_registry.get_applicable_rules(error_context.error, error_context)),
-            "timestamp": error_context.timestamp.isoformat(),
-            "degraded_mode": True
-        }
-    
-    def _cache_result(self, error_context: ErrorContext, result: Any):
-        """Cache a successful result for future fallback use."""
-        key = f"{error_context.module_name}.{error_context.function_name}"
-        self.cache[key] = {
-            'result': result,
-            'timestamp': datetime.now(),
-            'args_hash': hash(str(error_context.args) + str(error_context.kwargs))
-        }
-        
-        # Limit cache size
-        if len(self.cache) > 100:
-            # Remove oldest entries
-            oldest_key = min(self.cache.keys(), key=lambda k: self.cache[k]['timestamp'])
-            del self.cache[oldest_key]
-    
-    def _get_cached_result(self, error_context: ErrorContext) -> Any:
-        """Get cached result if available."""
-        key = f"{error_context.module_name}.{error_context.function_name}"
-        
-        if key in self.cache:
-            cached = self.cache[key]
-            # Check if cache is still valid (within 1 hour)
-            if datetime.now() - cached['timestamp'] < timedelta(hours=1):
-                return cached['result']
-            else:
-                # Remove expired cache
-                del self.cache[key]
-        
-        return None
-    
-    def register_custom_fallback(self, error_types: List[Type[Exception]], 
-                                strategy: FallbackStrategy, 
-                                handler: Callable,
-                                **kwargs):
-        """Register a custom fallback rule."""
-        rule = FallbackRule(
-            error_types=error_types,
-            strategy=strategy,
-            handler=handler,
-            **kwargs
-        )
-        self.fallback_registry.register_rule(rule)
-        self.logger.info(f"Registered custom fallback rule for {[t.__name__ for t in error_types]}")
-    
-    def get_error_statistics(self) -> Dict[str, Any]:
-        """Get error and recovery statistics."""
-        if not self.error_history:
-            return {"message": "No error history available"}
-        
-        # Count errors by type
-        error_types = defaultdict(int)
-        error_functions = defaultdict(int)
-        error_modules = defaultdict(int)
-        
-        for error_context in self.error_history:
-            error_types[type(error_context.error).__name__] += 1
-            error_functions[error_context.function_name] += 1
-            error_modules[error_context.module_name] += 1
-        
-        return {
-            "total_errors": len(self.error_history),
-            "error_types": dict(error_types),
-            "error_functions": dict(error_functions),
-            "error_modules": dict(error_modules),
-            "recovery_stats": dict(self.recovery_stats),
-            "circuit_breakers": {
-                k: v for k, v in self.circuit_breakers.items() 
-                if v['failure_count'] > 0
-            },
-            "cache_size": len(self.cache)
-        }
-    
-    def reset_circuit_breaker(self, function_key: str):
-        """Reset a circuit breaker manually."""
-        if function_key in self.circuit_breakers:
-            self.circuit_breakers[function_key] = {
-                'failure_count': 0,
-                'last_failure': None,
-                'state': 'closed'
-            }
-            self.logger.info(f"Reset circuit breaker for {function_key}")
-    
-    def clear_error_history(self):
-        """Clear error history."""
-        self.error_history.clear()
-        self.logger.info("Cleared error history")
-    
-    def export_error_report(self, format: str = "json") -> Union[Dict[str, Any], str]:
-        """Export comprehensive error report."""
-        stats = self.get_error_statistics()
-        
-        report_data = {
-            "report_timestamp": datetime.now().isoformat(),
-            "statistics": stats,
-            "recent_errors": [
-                {
-                    "timestamp": ec.timestamp.isoformat(),
-                    "function": ec.function_name,
-                    "module": ec.module_name,
-                    "error_type": type(ec.error).__name__,
-                    "error_message": str(ec.error),
-                    "attempt_count": ec.attempt_count
-                }
-                for ec in list(self.error_history)[-20:]  # Last 20 errors
-            ],
-            "fallback_rules": len(self.fallback_registry.rules),
-            "system_health": self._assess_system_health()
-        }
-        
-        if format == "json":
-            return report_data
-        elif format == "text":
-            return self._format_text_report(report_data)
-        else:
-            raise ValueError(f"Unsupported format: {format}")
-    
-    def _assess_system_health(self) -> Dict[str, Any]:
-        """Assess overall system health based on error patterns."""
-        if not self.error_history:
-            return {"status": "healthy", "score": 100}
-        
-        recent_errors = [ec for ec in self.error_history if datetime.now() - ec.timestamp < timedelta(hours=1)]
-        
-        if len(recent_errors) == 0:
-            health_score = 100
-            status = "healthy"
-        elif len(recent_errors) < 5:
-            health_score = 90
-            status = "good"
-        elif len(recent_errors) < 20:
-            health_score = 70
-            status = "warning"
-        else:
-            health_score = 30
-            status = "critical"
-        
-        # Adjust score based on circuit breakers
-        open_breakers = sum(1 for cb in self.circuit_breakers.values() if cb['state'] == 'open')
-        health_score -= open_breakers * 10
-        
-        return {
-            "status": status,
-            "score": max(0, health_score),
-            "recent_errors": len(recent_errors),
-            "open_circuit_breakers": open_breakers,
-            "recovery_rate": sum(self.recovery_stats.values()) / max(len(self.error_history), 1) * 100
-        }
-    
-    def _format_text_report(self, report_data: Dict[str, Any]) -> str:
-        """Format error report as text."""
-        stats = report_data["statistics"]
-        health = report_data["system_health"]
-        
-        report = f"""
-FALLBACK MANAGER ERROR REPORT
-============================
-
-Report generated: {report_data['report_timestamp']}
-
-SYSTEM HEALTH: {health['status'].upper()} (Score: {health['score']}/100)
-- Recent errors (1h): {health['recent_errors']}
-- Open circuit breakers: {health['open_circuit_breakers']}
-- Recovery rate: {health['recovery_rate']:.1f}%
-
-ERROR STATISTICS:
-- Total errors: {stats['total_errors']}
-- Cache size: {stats['cache_size']}
-
-TOP ERROR TYPES:
-"""
-        
-        for error_type, count in sorted(stats['error_types'].items(), key=lambda x: x[1], reverse=True)[:5]:
-            report += f"- {error_type}: {count}\n"
-        
-        report += "\nTOP ERROR FUNCTIONS:\n"
-        for func, count in sorted(stats['error_functions'].items(), key=lambda x: x[1], reverse=True)[:5]:
-            report += f"- {func}: {count}\n"
-        
-        report += "\nRECOVERY STATISTICS:\n"
-        for strategy, count in stats['recovery_stats'].items():
-            report += f"- {strategy}: {count}\n"
-        
-        return report
+    # Print final status
+    status = manager.get_circuit_breaker_status("example_doubler")
+    print("\nFinal circuit breaker status:")
+    for key, value in status.items():
+        print(f"{key}: {value}")
 
 
-# Decorator for automatic fallback handling
-def with_fallback(fallback_manager: Optional[FallbackManager] = None, 
-                  context: Optional[Dict[str, Any]] = None):
-    """Decorator to automatically handle errors with fallback strategies."""
-    def decorator(func):
-        async def async_wrapper(*args, **kwargs):
-            nonlocal fallback_manager
-            if fallback_manager is None:
-                fallback_manager = FallbackManager()
-            
-            attempt_count = 1
-            max_attempts = 3
-            
-            while attempt_count <= max_attempts:
-                try:
-                    if asyncio.iscoroutinefunction(func):
-                        return await func(*args, **kwargs)
-                    else:
-                        return func(*args, **kwargs)
-                        
-                except Exception as e:
-                    error_context = context or {}
-                    error_context.update({
-                        'function_name': func.__name__,
-                        'module_name': func.__module__,
-                        'args': args,
-                        'kwargs': kwargs,
-                        'attempt_count': attempt_count
-                    })
-                    
-                    result = await fallback_manager.handle_error(e, error_context)
-                    
-                    # If result indicates retry, increment attempt count and continue
-                    if result == "retry_requested":
-                        attempt_count += 1
-                        continue
-                    else:
-                        return result
-            
-            # If we've exhausted all attempts
-            return await fallback_manager._handle_all_fallbacks_failed(
-                fallback_manager._create_error_context(e, error_context)
-            )
-        
-        def sync_wrapper(*args, **kwargs):
-            # For synchronous functions, run the async wrapper in an event loop
-            try:
-                loop = asyncio.get_event_loop()
-            except RuntimeError:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-            
-            return loop.run_until_complete(async_wrapper(*args, **kwargs))
-        
-        if asyncio.iscoroutinefunction(func):
-            return async_wrapper
-        else:
-            return sync_wrapper
-    
-    return decorator
-
-
-# Convenience functions
-def create_fallback_manager(project_root: Optional[str] = None) -> FallbackManager:
-    """Create a fallback manager instance."""
-    return FallbackManager(project_root)
-
-
-async def handle_error_with_fallback(error: Exception, context: Dict[str, Any], 
-                                   fallback_manager: Optional[FallbackManager] = None) -> Any:
-    """Convenience function to handle an error with fallback."""
-    if fallback_manager is None:
-        fallback_manager = FallbackManager()
-    
-    return await fallback_manager.handle_error(error, context)
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    asyncio.run(test_fallback_manager())

@@ -29,13 +29,25 @@ import os
 from typing import Dict, List, Any, Optional, Union, Callable, Tuple, Set
 from datetime import datetime
 import collections
-from src.mcp.lobes.shared_lobes.working_memory import WorkingMemory  # See idea.txt
-from src.mcp.lobes.experimental.lobe_event_bus import LobeEventBus
+try:
+    from .shared_lobes.working_memory import WorkingMemory  # See idea.txt
+except ImportError:
+    WorkingMemory = None
+try:
+    from .experimental.lobe_event_bus import LobeEventBus
+except ImportError:
+    LobeEventBus = None
 import logging
 import random
 import time
-from src.mcp.lobes.experimental.vesicle_pool import VesiclePool
-from src.mcp.brain_state_aggregator import BrainStateAggregator
+try:
+    from .experimental.vesicle_pool import VesiclePool
+except ImportError:
+    VesiclePool = None
+try:
+    from ..brain_state_aggregator import BrainStateAggregator
+except ImportError:
+    BrainStateAggregator = None
 
 try:
     import numpy as np

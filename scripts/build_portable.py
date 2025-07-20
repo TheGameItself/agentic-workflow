@@ -48,6 +48,15 @@ class PortableEnvironmentBuilder:
         # Create installation script
         self._create_installer()
         
+        # Bundle .vscode directory
+        self._bundle_vscode_directory()
+        
+        # Bundle portable VSCode instance
+        self._bundle_portable_vscode()
+        
+        # Create start_vscode.sh/.bat launchers
+        self._create_start_vscode_launchers()
+        
         print(f"Portable environment built in: {self.output_dir}")
         
     def _build_python_env(self):
@@ -309,6 +318,57 @@ echo "To start the MCP server, run: ./start_mcp.sh"
             tar.add(self.output_dir, arcname=self.output_dir.name)
         
         print(f"Archive created: {archive_name}")
+
+    def _bundle_vscode_directory(self):
+        """Bundle .vscode directory in all portable builds."""
+        print("Bundling .vscode directory...")
+        
+        # Copy .vscode directory
+        vscode_dir = self.output_dir / ".vscode"
+        if Path(".vscode").exists():
+            shutil.copytree(".vscode", vscode_dir, dirs_exist_ok=True)
+        
+    def _bundle_portable_vscode(self):
+        """Bundle a portable VSCode instance and preinstall extensions/settings."""
+        print("Bundling portable VSCode instance...")
+        
+        # Copy VSCode binaries
+        vscode_bin_dir = self.output_dir / "VSCode"
+        if Path("VSCode").exists():
+            shutil.copytree("VSCode", vscode_bin_dir, dirs_exist_ok=True)
+        
+    def _create_start_vscode_launchers(self):
+        """Create start_vscode.sh/.bat launchers."""
+        print("Creating start_vscode.sh/.bat launchers...")
+        
+        if self.platform == "windows":
+            start_vscode_content = '''@echo off
+echo Starting VSCode...
+cd "$(dirname "$0")"
+if [ -f ./VSCode/Code.exe ]; then
+    ./VSCode/Code.exe
+else
+    echo VSCode not found
+fi
+'''
+            start_vscode_path = self.output_dir / "start_vscode.bat"
+            with open(start_vscode_path, 'w') as f:
+                f.write(start_vscode_content)
+        else:
+            start_vscode_content = '''#!/bin/bash
+echo Starting VSCode...
+cd "$(dirname "$0")"
+if [ -f ./VSCode/Code ]; then
+    ./VSCode/Code
+else
+    echo VSCode not found
+fi
+'''
+            start_vscode_path = self.output_dir / "start_vscode.sh"
+            with open(start_vscode_path, 'w') as f:
+                f.write(start_vscode_content)
+            
+            os.chmod(start_vscode_path, 0o755)
 
 
 def main():

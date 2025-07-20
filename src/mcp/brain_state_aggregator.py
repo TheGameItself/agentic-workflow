@@ -7,7 +7,7 @@ Stub for integration with all major lobes and engines.
 import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple, Union, Set
-from src.mcp.lobes.experimental.lobe_event_bus import LobeEventBus
+from .lobes.experimental.lobe_event_bus import LobeEventBus
 
 
 class BrainStateAggregator:

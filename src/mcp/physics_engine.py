@@ -16,7 +16,10 @@ from dataclasses import dataclass
 import threading
 from concurrent.futures import ThreadPoolExecutor
 import queue
-from src.mcp.simulation.shared_state import SharedSimulationState
+try:
+    from .simulation.shared_state import SharedSimulationState
+except ImportError:
+    SharedSimulationState = None
 import logging
 
 # Optional imports for enhanced functionality

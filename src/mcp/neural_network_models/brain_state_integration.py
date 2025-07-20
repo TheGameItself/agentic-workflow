@@ -10,8 +10,8 @@ import logging
 from typing import Any, Dict, Optional, List, Tuple
 from datetime import datetime
 
-from src.mcp.brain_state_aggregator import BrainStateAggregator
-from src.mcp.neural_network_models.performance_tracker import PerformanceTracker
+from ..brain_state_aggregator import BrainStateAggregator
+from .performance_tracker import PerformanceTracker
 
 
 class NeuralPerformanceIntegration:

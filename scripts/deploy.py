@@ -496,16 +496,101 @@ if __name__ == "__main__":
             print(f"    Created: {mtime.strftime('%Y-%m-%d %H:%M:%S')}")
             print()
 
+def upload_to_pypi():
+    """Upload package to PyPI using twine."""
+    print("Building and uploading package to PyPI...")
+    # Build the package
+    subprocess.run(["python", "-m", "build"], check=True)
+    # Upload using twine
+    username = os.environ.get("TWINE_USERNAME", "__token__")
+    password = os.environ.get("TWINE_PASSWORD", "")
+    cmd = [
+        "twine", "upload", "dist/*",
+        "-u", username,
+        "-p", password
+    ]
+    subprocess.run(cmd, check=True)
+    print("PyPI upload complete.")
+
+def upload_to_flatpak():
+    """Upload package to Flatpak."""
+    # TODO: Implement Flatpak upload logic
+    pass
+
+def upload_to_snap():
+    """Upload package to Snap Store."""
+    # TODO: Implement Snap upload logic
+    pass
+
+def upload_to_google_play():
+    """Upload APK to Google Play Store."""
+    # TODO: Implement Google Play upload logic
+    pass
+
+def post_to_reddit():
+    """Post release/update to Reddit using PRAW."""
+    try:
+        import praw  # noqa: F401
+    except ImportError:
+        print("praw is not installed. Please install with: pip install praw")
+        return
+    print("Posting update to Reddit...")
+    reddit = praw.Reddit(
+        client_id=os.environ["REDDIT_CLIENT_ID"],
+        client_secret=os.environ["REDDIT_CLIENT_SECRET"],
+        user_agent="agentic-workflow-bot",
+        username=os.environ["REDDIT_USERNAME"],
+        password=os.environ["REDDIT_PASSWORD"]
+    )
+    subreddit = os.environ.get("REDDIT_SUBREDDIT", "AgenticWorkflow")
+    title = os.environ.get("REDDIT_POST_TITLE", "Agentic Workflow Release Update")
+    body = os.environ.get("REDDIT_POST_BODY", "See the latest release at https://github.com/TheGameItself/agentic-workflow/releases/tag/mcp")
+    reddit.subreddit(subreddit).submit(title, selftext=body)
+    print("Reddit post complete.")
+
+def post_to_twitter():
+    """Post release/update to Twitter."""
+    # TODO: Implement Twitter API post logic
+    pass
+
+def post_to_bluesky():
+    """Post release/update to Bluesky."""
+    # TODO: Implement Bluesky API post logic
+    pass
+
+def post_to_discord():
+    """Post release/update to Discord."""
+    # TODO: Implement Discord bot/webhook post logic
+    pass
+
+def upload_to_vscode_marketplace():
+    """Publish VS Code extension to the VS Code Marketplace using vsce."""
+    print("Publishing VS Code extension to Marketplace...")
+    # Assumes the extension is in ./vscode-extension
+    import subprocess
+    import os
+    vsce_token = os.environ.get("VSCE_PAT", "")
+    if not vsce_token:
+        print("VSCE_PAT environment variable not set. Aborting.")
+        return
+    # Package the extension
+    subprocess.run(["npx", "vsce", "package"], cwd="vscode-extension", check=True)
+    # Publish the extension
+    subprocess.run(["npx", "vsce", "publish", "--pat", vsce_token], cwd="vscode-extension", check=True)
+    print("VS Code extension published.")
 
 def main():
     """CLI interface for deployment manager."""
     import argparse
     
-    parser = argparse.ArgumentParser(description="Deployment Manager")
+    parser = argparse.ArgumentParser(description="Deploy automation for MCP")
     parser.add_argument("command", choices=["create", "list", "monitor"], help="Command to execute")
     parser.add_argument("--type", choices=["full", "minimal", "portable"], default="full", help="Package type")
     parser.add_argument("--version", help="Package version")
     parser.add_argument("--config", help="Monitoring config path")
+    parser.add_argument("--pypi", action="store_true", help="Upload to PyPI")
+    parser.add_argument("--reddit", action="store_true", help="Post to Reddit")
+    parser.add_argument("--vscode", action="store_true", help="Publish VS Code extension to Marketplace")
     
     args = parser.parse_args()
     
@@ -523,6 +608,12 @@ def main():
     elif args.command == "monitor":
         config_path = Path(args.config) if args.config else None
         manager.setup_monitoring(config_path)
+    elif args.pypi:
+        upload_to_pypi()
+    elif args.reddit:
+        post_to_reddit()
+    elif args.vscode:
+        upload_to_vscode_marketplace()
 
 
 if __name__ == "__main__":

@@ -1,0 +1,252 @@
+{
+  "main": {
+    "id": "main-workspace",
+    "type": "split",
+    "children": [
+      {
+        "id": "a3594e9d324883a5",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "cce5e6226c668f1f",
+            "type": "leaf",
+            "state": {
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "Graph view"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "15541c40cac450f7",
+    "type": "split",
+    "children": [
+      {
+        "id": "579b6f4a194004ab",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "0b66084f0a8a8a84",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          },
+          {
+            "id": "5d7fa26506499c76",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "file-explorer",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          }
+        ],
+        "currentTab": 2
+      }
+    ],
+    "direction": "horizontal",
+    "width": 200
+  },
+  "right": {
+    "id": "b424065fa801ccb8",
+    "type": "split",
+    "children": [
+      {
+        "id": "d0d78ffc1a8453c6",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "0d71a90465693643",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks"
+            }
+          },
+          {
+            "id": "eadb0ab5bcdc81bd",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "7e06726fcdea7c8d",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline"
+            }
+          },
+          {
+            "id": "21a6a883f6ff6ece",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "ENHANCED_MCP_SYSTEM.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from ENHANCED_MCP_SYSTEM"
+            }
+          },
+          {
+            "id": "e12c9708cbcd3814",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "3829c6627a19aec1",
+            "type": "leaf",
+            "state": {
+              "type": "advanced-tables-toolbar",
+              "state": {},
+              "icon": "spreadsheet",
+              "title": "Advanced Tables"
+            }
+          },
+          {
+            "id": "3a5db9d95831702c",
+            "type": "leaf",
+            "state": {
+              "type": "animated-mindmap",
+              "state": {},
+              "icon": "dot-network",
+              "title": "Animated Mind Map (WFC/Quantum Orbit)"
+            }
+          }
+        ],
+        "currentTab": 6
+      }
+    ],
+    "direction": "horizontal",
+    "width": 620.5
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "publish:Publish changes...": false,
+      "random-note:Open random note": false,
+      "zk-prefixer:Create new unique note": false,
+      "workspaces:Manage workspace layouts": false,
+      "markdown-importer:Open format converter": false,
+      "omnisearch:Omnisearch": false,
+      "obsidian-kanban:Create new board": false,
+      "table-editor-obsidian:Advanced Tables Toolbar": false,
+      "obsidian-animated-mind-map:Open Animated Mind Map+ (Sidebar)": false
+    }
+  },
+  "active": "cce5e6226c668f1f",
+  "lastOpenFiles": [
+    "canonical/Maps.canvas",
+    "canonical/MCP-Feature-Test-Suite.md",
+    "canonical/Documentation-Update-Summary.md",
+    "canonical/MCP-System-Mind-Map.canvas",
+    "canonical/MCP-System-Mind-Map-Guide.md",
+    "canonical/Map.canvas",
+    "canonical/MCP-Self-Improvement-Guide.md",
+    "canonical/MCP-System-Mind-Map.canvas.bak",
+    "ENHANCED_MCP_SYSTEM.md",
+    "SELF_IMPROVING_NEURAL_SYSTEM.md",
+    "canonical/neural-network-models/Self-Improving-Neural-System.md",
+    "canonical/neural-network-models/README.md",
+    "canonical/neural-network-models",
+    "canonical/user-guides/DOCUMENTATION_COMPLETION_SUMMARY.md",
+    "canonical/user-guides/Documentation-Map.md",
+    "canonical/user-guides/community_updates.md",
+    "canonical/user-guides/Bugtracker & Community.md",
+    "canonical/user-guides/bugtracker.md",
+    "canonical/user-guides/FAQ.md",
+    "canonical/performance-optimization/README.md",
+    "canonical/hormone-system/README.md",
+    "canonical/development/README.md",
+    "canonical/deployment/README.md",
+    "canonical/core-systems/README.md",
+    "canonical/attachments/README.md",
+    "canonical/architecture/Brain-Inspired-Patterns.md",
+    "canonical/architecture/architecture.md",
+    "canonical/api/REST-API-Reference.md",
+    "canonical/api/README.md",
+    "canonical/api/Python-API-Reference.md",
+    "testing",
+    "performance-optimization",
+    "config/reference",
+    "src/mcp/reference",
+    "config/llm",
+    "src/mcp/llm",
+    "config/android",
+    "src/mcp/android",
+    "bugtracker_screenshot.png",
+    "community_update_flow.png"
+  ]
+}

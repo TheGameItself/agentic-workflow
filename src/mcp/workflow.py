@@ -16,11 +16,17 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from src.mcp.lobes.shared_lobes.working_memory import (
-    LongTermMemory,
-    ShortTermMemory,
-    WorkingMemory,
-)
+try:
+    from .lobes.shared_lobes.working_memory import (
+        LongTermMemory,
+        ShortTermMemory,
+        WorkingMemory,
+    )
+except ImportError:
+    # Fallback for when lobes are not available
+    LongTermMemory = None
+    ShortTermMemory = None
+    WorkingMemory = None
 
 from .task_manager import TaskManager
 from .unified_memory import UnifiedMemoryManager

@@ -12,6 +12,12 @@ test_output.log
 todo_backup.log
 CLEANUP_SUMMARY.md
 TODO_BACKUP.txt
+pytest_output*.txt
+*_listing.txt
+missing_*.txt
+all_md_files.txt
+referenced_md_files.txt
+test_output.txt
 
 # Build artifacts
 *.zip
@@ -598,10 +604,6 @@ portable_mcp/python_env/lib/python3.11/site-packages/pkg_resources/_vendor/packa
 portable_mcp/python_env/lib/python3.11/site-packages/pkg_resources/_vendor/packaging/_structures.py
 portable_mcp/python_env/lib/python3.11/site-packages/pkg_resources/_vendor/packaging/markers.py
 portable_mcp/python_env/lib/python3.11/site-packages/pkg_resources/_vendor/packaging/requirements.py
-portable_mcp/python_env/lib/python3.11/site-packages/pkg_resources/_vendor/packaging/specifiers.py
-portable_mcp/python_env/lib/python3.11/site-packages/pkg_resources/_vendor/packaging/tags.py
-portable_mcp/python_env/lib/python3.11/site-packages/pkg_resources/_vendor/packaging/utils.py
-portable_mcp/python_env/lib/python3.11/site-packages/pkg_resources/_vendor/packaging/version.py
 portable_mcp/python_env/lib/python3.11/site-packages/pkg_resources/_vendor/pyparsing/__init__.py
 portable_mcp/python_env/lib/python3.11/site-packages/pkg_resources/_vendor/pyparsing/actions.py
 portable_mcp/python_env/lib/python3.11/site-packages/pkg_resources/_vendor/pyparsing/common.py
@@ -1198,10 +1200,6 @@ test_venv/lib/python3.11/site-packages/numpy/distutils/checks/extra_vsx4_mma.c
 test_venv/lib/python3.11/site-packages/numpy/distutils/checks/test_flags.c
 test_venv/lib/python3.11/site-packages/numpy/distutils/command/__init__.py
 test_venv/lib/python3.11/site-packages/numpy/distutils/command/autodist.py
-test_venv/lib/python3.11/site-packages/numpy/distutils/command/bdist_rpm.py
-test_venv/lib/python3.11/site-packages/numpy/distutils/command/build_clib.py
-test_venv/lib/python3.11/site-packages/numpy/distutils/command/build_ext.py
-test_venv/lib/python3.11/site-packages/numpy/distutils/command/build_py.py
 test_venv/lib/python3.11/site-packages/numpy/distutils/command/build_scripts.py
 test_venv/lib/python3.11/site-packages/numpy/distutils/command/build_src.py
 test_venv/lib/python3.11/site-packages/numpy/distutils/command/build.py
@@ -1398,10 +1396,6 @@ test_venv/lib/python3.11/site-packages/numpy/f2py/tests/src/quoted_character/foo
 test_venv/lib/python3.11/site-packages/numpy/f2py/tests/src/regression/AB.inc
 test_venv/lib/python3.11/site-packages/numpy/f2py/tests/src/regression/assignOnlyModule.f90
 test_venv/lib/python3.11/site-packages/numpy/f2py/tests/src/regression/datonly.f90
-test_venv/lib/python3.11/site-packages/numpy/f2py/tests/src/regression/f77comments.f
-test_venv/lib/python3.11/site-packages/numpy/f2py/tests/src/regression/f77fixedform.f95
-test_venv/lib/python3.11/site-packages/numpy/f2py/tests/src/regression/f90continuation.f90
-test_venv/lib/python3.11/site-packages/numpy/f2py/tests/src/regression/incfile.f90
 test_venv/lib/python3.11/site-packages/numpy/f2py/tests/src/regression/inout.f90
 test_venv/lib/python3.11/site-packages/numpy/f2py/tests/src/regression/lower_f2py_fortran.f90
 test_venv/lib/python3.11/site-packages/numpy/f2py/tests/src/regression/mod_derived_types.f90
@@ -1598,10 +1592,6 @@ test_venv/lib/python3.11/site-packages/numpy/polynomial/hermite_e.pyi
 test_venv/lib/python3.11/site-packages/numpy/polynomial/hermite.py
 test_venv/lib/python3.11/site-packages/numpy/polynomial/hermite.pyi
 test_venv/lib/python3.11/site-packages/numpy/polynomial/laguerre.py
-test_venv/lib/python3.11/site-packages/numpy/polynomial/laguerre.pyi
-test_venv/lib/python3.11/site-packages/numpy/polynomial/legendre.py
-test_venv/lib/python3.11/site-packages/numpy/polynomial/legendre.pyi
-test_venv/lib/python3.11/site-packages/numpy/polynomial/polynomial.py
 test_venv/lib/python3.11/site-packages/numpy/polynomial/polynomial.pyi
 test_venv/lib/python3.11/site-packages/numpy/polynomial/polyutils.py
 test_venv/lib/python3.11/site-packages/numpy/polynomial/polyutils.pyi
@@ -1798,10 +1788,6 @@ test_venv/lib/python3.11/site-packages/numpy/typing/tests/data/pass/ufunc_config
 test_venv/lib/python3.11/site-packages/numpy/typing/tests/data/pass/ufunclike.py
 test_venv/lib/python3.11/site-packages/numpy/typing/tests/data/pass/ufuncs.py
 test_venv/lib/python3.11/site-packages/numpy/typing/tests/data/pass/warnings_and_errors.py
-test_venv/lib/python3.11/site-packages/numpy/typing/tests/data/reveal/arithmetic.pyi
-test_venv/lib/python3.11/site-packages/numpy/typing/tests/data/reveal/array_api_info.pyi
-test_venv/lib/python3.11/site-packages/numpy/typing/tests/data/reveal/array_constructors.pyi
-test_venv/lib/python3.11/site-packages/numpy/typing/tests/data/reveal/arraypad.pyi
 test_venv/lib/python3.11/site-packages/numpy/typing/tests/data/reveal/arrayprint.pyi
 test_venv/lib/python3.11/site-packages/numpy/typing/tests/data/reveal/arraysetops.pyi
 test_venv/lib/python3.11/site-packages/numpy/typing/tests/data/reveal/arrayterator.pyi
@@ -1998,10 +1984,6 @@ test_venv/lib/python3.11/site-packages/pip/_internal/utils/appdirs.py
 test_venv/lib/python3.11/site-packages/pip/_internal/utils/compat.py
 test_venv/lib/python3.11/site-packages/pip/_internal/utils/compatibility_tags.py
 test_venv/lib/python3.11/site-packages/pip/_internal/utils/datetime.py
-test_venv/lib/python3.11/site-packages/pip/_internal/utils/deprecation.py
-test_venv/lib/python3.11/site-packages/pip/_internal/utils/direct_url_helpers.py
-test_venv/lib/python3.11/site-packages/pip/_internal/utils/egg_link.py
-test_venv/lib/python3.11/site-packages/pip/_internal/utils/entrypoints.py
 test_venv/lib/python3.11/site-packages/pip/_internal/utils/filesystem.py
 test_venv/lib/python3.11/site-packages/pip/_internal/utils/filetypes.py
 test_venv/lib/python3.11/site-packages/pip/_internal/utils/glibc.py
@@ -2198,11 +2180,6 @@ test_venv/lib/python3.11/site-packages/pip/_vendor/rich/ansi.py
 test_venv/lib/python3.11/site-packages/pip/_vendor/rich/bar.py
 test_venv/lib/python3.11/site-packages/pip/_vendor/rich/box.py
 test_venv/lib/python3.11/site-packages/pip/_vendor/rich/cells.py
-test_venv/lib/python3.11/site-packages/pip/_vendor/rich/color_triplet.py
-test_venv/lib/python3.11/site-packages/pip/_vendor/rich/color.py
-test_venv/lib/python3.11/site-packages/pip/_vendor/rich/columns.py
-test_venv/lib/python3.11/site-packages/pip/_vendor/rich/console.py
-test_venv/lib/python3.11/site-packages/pip/_vendor/rich/constrain.py
 test_venv/lib/python3.11/site-packages/pip/_vendor/rich/containers.py
 test_venv/lib/python3.11/site-packages/pip/_vendor/rich/control.py
 test_venv/lib/python3.11/site-packages/pip/_vendor/rich/default_styles.py
@@ -2398,10 +2375,6 @@ test_venv/lib/python3.11/site-packages/setuptools/_distutils/__init__.py
 test_venv/lib/python3.11/site-packages/setuptools/_distutils/_collections.py
 test_venv/lib/python3.11/site-packages/setuptools/_distutils/_functools.py
 test_venv/lib/python3.11/site-packages/setuptools/_distutils/_macos_compat.py
-test_venv/lib/python3.11/site-packages/setuptools/_distutils/_msvccompiler.py
-test_venv/lib/python3.11/site-packages/setuptools/_distutils/archive_util.py
-test_venv/lib/python3.11/site-packages/setuptools/_distutils/bcppcompiler.py
-test_venv/lib/python3.11/site-packages/setuptools/_distutils/ccompiler.py
 test_venv/lib/python3.11/site-packages/setuptools/_distutils/cmd.py
 test_venv/lib/python3.11/site-packages/setuptools/_distutils/config.py
 test_venv/lib/python3.11/site-packages/setuptools/_distutils/core.py
@@ -2430,9 +2403,7 @@ test_venv/lib/python3.11/site-packages/setuptools/_distutils/versionpredicate.py
 test_venv/lib/python3.11/site-packages/setuptools/_distutils/command/__init__.py
 test_venv/lib/python3.11/site-packages/setuptools/_distutils/command/_framework_compat.py
 test_venv/lib/python3.11/site-packages/setuptools/_distutils/command/bdist_dumb.py
-test_venv/lib/python3.11/site-packages/setuptools/_distutils/command/bdist_rpm.py
 test_venv/lib/python3.11/site-packages/setuptools/_distutils/command/bdist.py
-test_venv/lib/python3.11/site-packages/setuptools/_distutils/command/build_clib.py
 test_venv/lib/python3.11/site-packages/setuptools/_distutils/command/build_ext.py
 test_venv/lib/python3.11/site-packages/setuptools/_distutils/command/build_py.py
 test_venv/lib/python3.11/site-packages/setuptools/_distutils/command/build_scripts.py
@@ -2507,9 +2478,6 @@ test_venv/lib/python3.11/site-packages/setuptools/_vendor/tomli/_types.py
 test_venv/lib/python3.11/site-packages/setuptools/command/__init__.py
 test_venv/lib/python3.11/site-packages/setuptools/command/alias.py
 test_venv/lib/python3.11/site-packages/setuptools/command/bdist_egg.py
-test_venv/lib/python3.11/site-packages/setuptools/command/bdist_rpm.py
-test_venv/lib/python3.11/site-packages/setuptools/command/build_clib.py
-test_venv/lib/python3.11/site-packages/setuptools/command/build_ext.py
 test_venv/lib/python3.11/site-packages/setuptools/command/build_py.py
 test_venv/lib/python3.11/site-packages/setuptools/command/build.py
 test_venv/lib/python3.11/site-packages/setuptools/command/develop.py
@@ -2798,10 +2766,6 @@ test_venv/lib/python3.11/site-packages/cffi-1.17.1.dist-info/top_level.txt
 test_venv/lib/python3.11/site-packages/cffi-1.17.1.dist-info/WHEEL
 test_venv/lib/python3.11/site-packages/charset_normalizer/__init__.py
 test_venv/lib/python3.11/site-packages/charset_normalizer/__main__.py
-test_venv/lib/python3.11/site-packages/charset_normalizer/api.py
-test_venv/lib/python3.11/site-packages/charset_normalizer/cd.py
-test_venv/lib/python3.11/site-packages/charset_normalizer/constant.py
-test_venv/lib/python3.11/site-packages/charset_normalizer/legacy.py
 test_venv/lib/python3.11/site-packages/charset_normalizer/md__mypyc.cpython-311-x86_64-linux-gnu.so
 test_venv/lib/python3.11/site-packages/charset_normalizer/md.cpython-311-x86_64-linux-gnu.so
 test_venv/lib/python3.11/site-packages/charset_normalizer/md.py
@@ -2998,10 +2962,6 @@ test_venv/lib/python3.11/site-packages/mpmath/functions/bessel.py
 test_venv/lib/python3.11/site-packages/mpmath/functions/elliptic.py
 test_venv/lib/python3.11/site-packages/mpmath/functions/expintegrals.py
 test_venv/lib/python3.11/site-packages/mpmath/functions/factorials.py
-test_venv/lib/python3.11/site-packages/mpmath/functions/functions.py
-test_venv/lib/python3.11/site-packages/mpmath/functions/hypergeometric.py
-test_venv/lib/python3.11/site-packages/mpmath/functions/orthogonal.py
-test_venv/lib/python3.11/site-packages/mpmath/functions/qfunctions.py
 test_venv/lib/python3.11/site-packages/mpmath/functions/rszeta.py
 test_venv/lib/python3.11/site-packages/mpmath/functions/signals.py
 test_venv/lib/python3.11/site-packages/mpmath/functions/theta.py
@@ -3198,10 +3158,6 @@ test_venv/lib/python3.11/site-packages/pygments/formatters/terminal256.py
 test_venv/lib/python3.11/site-packages/pygments/lexers/__init__.py
 test_venv/lib/python3.11/site-packages/pygments/lexers/_ada_builtins.py
 test_venv/lib/python3.11/site-packages/pygments/lexers/_asy_builtins.py
-test_venv/lib/python3.11/site-packages/pygments/lexers/_cl_builtins.py
-test_venv/lib/python3.11/site-packages/pygments/lexers/_cocoa_builtins.py
-test_venv/lib/python3.11/site-packages/pygments/lexers/_csound_builtins.py
-test_venv/lib/python3.11/site-packages/pygments/lexers/_css_builtins.py
 test_venv/lib/python3.11/site-packages/pygments/lexers/_googlesql_builtins.py
 test_venv/lib/python3.11/site-packages/pygments/lexers/_julia_builtins.py
 test_venv/lib/python3.11/site-packages/pygments/lexers/_lasso_builtins.py
@@ -3398,10 +3354,6 @@ test_venv/lib/python3.11/site-packages/pygments/lexers/scdoc.py
 test_venv/lib/python3.11/site-packages/pygments/lexers/scripting.py
 test_venv/lib/python3.11/site-packages/pygments/lexers/sgf.py
 test_venv/lib/python3.11/site-packages/pygments/lexers/shell.py
-test_venv/lib/python3.11/site-packages/pygments/lexers/sieve.py
-test_venv/lib/python3.11/site-packages/pygments/lexers/slash.py
-test_venv/lib/python3.11/site-packages/pygments/lexers/smalltalk.py
-test_venv/lib/python3.11/site-packages/pygments/lexers/smithy.py
 test_venv/lib/python3.11/site-packages/pygments/lexers/smv.py
 test_venv/lib/python3.11/site-packages/pygments/lexers/snobol.py
 test_venv/lib/python3.11/site-packages/pygments/lexers/solidity.py
@@ -3598,10 +3550,6 @@ test_venv/lib/python3.11/site-packages/scipy/_lib/array_api_compat/__init__.py
 test_venv/lib/python3.11/site-packages/scipy/_lib/array_api_compat/_internal.py
 test_venv/lib/python3.11/site-packages/scipy/_lib/array_api_compat/common/__init__.py
 test_venv/lib/python3.11/site-packages/scipy/_lib/array_api_compat/common/_aliases.py
-test_venv/lib/python3.11/site-packages/scipy/_lib/array_api_compat/common/_fft.py
-test_venv/lib/python3.11/site-packages/scipy/_lib/array_api_compat/common/_helpers.py
-test_venv/lib/python3.11/site-packages/scipy/_lib/array_api_compat/common/_linalg.py
-test_venv/lib/python3.11/site-packages/scipy/_lib/array_api_compat/common/_typing.py
 test_venv/lib/python3.11/site-packages/scipy/_lib/array_api_compat/cupy/__init__.py
 test_venv/lib/python3.11/site-packages/scipy/_lib/array_api_compat/cupy/_aliases.py
 test_venv/lib/python3.11/site-packages/scipy/_lib/array_api_compat/cupy/_info.py
@@ -3998,10 +3946,6 @@ test_venv/lib/python3.11/site-packages/scipy/io/matlab/tests/data/testmatrix_7.4
 test_venv/lib/python3.11/site-packages/scipy/io/matlab/tests/data/testminus_4.2c_SOL2.mat
 test_venv/lib/python3.11/site-packages/scipy/io/matlab/tests/data/testminus_6.1_SOL2.mat
 test_venv/lib/python3.11/site-packages/scipy/io/matlab/tests/data/testminus_6.5.1_GLNX86.mat
-test_venv/lib/python3.11/site-packages/scipy/io/matlab/tests/data/testminus_7.1_GLNX86.mat
-test_venv/lib/python3.11/site-packages/scipy/io/matlab/tests/data/testminus_7.4_GLNX86.mat
-test_venv/lib/python3.11/site-packages/scipy/io/matlab/tests/data/testmulti_4.2c_SOL2.mat
-test_venv/lib/python3.11/site-packages/scipy/io/matlab/tests/data/testmulti_7.1_GLNX86.mat
 test_venv/lib/python3.11/site-packages/scipy/io/matlab/tests/data/testmulti_7.4_GLNX86.mat
 test_venv/lib/python3.11/site-packages/scipy/io/matlab/tests/data/testobject_6.1_SOL2.mat
 test_venv/lib/python3.11/site-packages/scipy/io/matlab/tests/data/testobject_6.5.1_GLNX86.mat
@@ -4198,10 +4142,6 @@ test_venv/lib/python3.11/site-packages/scipy/linalg/decomp_qr.py
 test_venv/lib/python3.11/site-packages/scipy/linalg/decomp_schur.py
 test_venv/lib/python3.11/site-packages/scipy/linalg/decomp_svd.py
 test_venv/lib/python3.11/site-packages/scipy/linalg/decomp.py
-test_venv/lib/python3.11/site-packages/scipy/linalg/interpolative.py
-test_venv/lib/python3.11/site-packages/scipy/linalg/lapack.py
-test_venv/lib/python3.11/site-packages/scipy/linalg/matfuncs.py
-test_venv/lib/python3.11/site-packages/scipy/linalg/misc.py
 test_venv/lib/python3.11/site-packages/scipy/linalg/special_matrices.py
 test_venv/lib/python3.11/site-packages/scipy/linalg/tests/__init__.py
 test_venv/lib/python3.11/site-packages/scipy/linalg/tests/test_basic.py
@@ -4398,10 +4338,6 @@ test_venv/lib/python3.11/site-packages/scipy/optimize/tests/test__numdiff.py
 test_venv/lib/python3.11/site-packages/scipy/optimize/tests/test__remove_redundancy.py
 test_venv/lib/python3.11/site-packages/scipy/optimize/tests/test__root.py
 test_venv/lib/python3.11/site-packages/scipy/optimize/tests/test__shgo.py
-test_venv/lib/python3.11/site-packages/scipy/optimize/tests/test__spectral.py
-test_venv/lib/python3.11/site-packages/scipy/optimize/tests/test_bracket.py
-test_venv/lib/python3.11/site-packages/scipy/optimize/tests/test_chandrupatla.py
-test_venv/lib/python3.11/site-packages/scipy/optimize/tests/test_cobyla.py
 test_venv/lib/python3.11/site-packages/scipy/optimize/tests/test_cobyqa.py
 test_venv/lib/python3.11/site-packages/scipy/optimize/tests/test_constraint_conversion.py
 test_venv/lib/python3.11/site-packages/scipy/optimize/tests/test_constraints.py
@@ -4598,10 +4534,6 @@ test_venv/lib/python3.11/site-packages/scipy/sparse/linalg/_isolve/lsqr.py
 test_venv/lib/python3.11/site-packages/scipy/sparse/linalg/_isolve/minres.py
 test_venv/lib/python3.11/site-packages/scipy/sparse/linalg/_isolve/tfqmr.py
 test_venv/lib/python3.11/site-packages/scipy/sparse/linalg/_isolve/utils.py
-test_venv/lib/python3.11/site-packages/scipy/sparse/linalg/_isolve/tests/__init__.py
-test_venv/lib/python3.11/site-packages/scipy/sparse/linalg/_isolve/tests/test_gcrotmk.py
-test_venv/lib/python3.11/site-packages/scipy/sparse/linalg/_isolve/tests/test_iterative.py
-test_venv/lib/python3.11/site-packages/scipy/sparse/linalg/_isolve/tests/test_lgmres.py
 test_venv/lib/python3.11/site-packages/scipy/sparse/linalg/_isolve/tests/test_lsmr.py
 test_venv/lib/python3.11/site-packages/scipy/sparse/linalg/_isolve/tests/test_lsqr.py
 test_venv/lib/python3.11/site-packages/scipy/sparse/linalg/_isolve/tests/test_minres.py
@@ -4798,10 +4730,6 @@ test_venv/lib/python3.11/site-packages/scipy/special/tests/test_mpmath.py
 test_venv/lib/python3.11/site-packages/scipy/special/tests/test_nan_inputs.py
 test_venv/lib/python3.11/site-packages/scipy/special/tests/test_ndtr.py
 test_venv/lib/python3.11/site-packages/scipy/special/tests/test_ndtri_exp.py
-test_venv/lib/python3.11/site-packages/scipy/special/tests/test_orthogonal_eval.py
-test_venv/lib/python3.11/site-packages/scipy/special/tests/test_orthogonal.py
-test_venv/lib/python3.11/site-packages/scipy/special/tests/test_owens_t.py
-test_venv/lib/python3.11/site-packages/scipy/special/tests/test_pcf.py
 test_venv/lib/python3.11/site-packages/scipy/special/tests/test_pdtr.py
 test_venv/lib/python3.11/site-packages/scipy/special/tests/test_powm1.py
 test_venv/lib/python3.11/site-packages/scipy/special/tests/test_precompute_expn_asy.py
@@ -5198,10 +5126,6 @@ test_venv/lib/python3.11/site-packages/sympy/core/tests/test_constructor_postpro
 test_venv/lib/python3.11/site-packages/sympy/core/tests/test_containers.py
 test_venv/lib/python3.11/site-packages/sympy/core/tests/test_count_ops.py
 test_venv/lib/python3.11/site-packages/sympy/core/tests/test_diff.py
-test_venv/lib/python3.11/site-packages/sympy/core/tests/test_equal.py
-test_venv/lib/python3.11/site-packages/sympy/core/tests/test_eval.py
-test_venv/lib/python3.11/site-packages/sympy/core/tests/test_evalf.py
-test_venv/lib/python3.11/site-packages/sympy/core/tests/test_expand.py
 test_venv/lib/python3.11/site-packages/sympy/core/tests/test_expr.py
 test_venv/lib/python3.11/site-packages/sympy/core/tests/test_exprtools.py
 test_venv/lib/python3.11/site-packages/sympy/core/tests/test_facts.py
@@ -5798,10 +5722,6 @@ test_venv/lib/python3.11/site-packages/sympy/physics/quantum/tests/test_fermion.
 test_venv/lib/python3.11/site-packages/sympy/physics/quantum/tests/test_gate.py
 test_venv/lib/python3.11/site-packages/sympy/physics/quantum/tests/test_grover.py
 test_venv/lib/python3.11/site-packages/sympy/physics/quantum/tests/test_hilbert.py
-test_venv/lib/python3.11/site-packages/sympy/physics/quantum/tests/test_identitysearch.py
-test_venv/lib/python3.11/site-packages/sympy/physics/quantum/tests/test_innerproduct.py
-test_venv/lib/python3.11/site-packages/sympy/physics/quantum/tests/test_kind.py
-test_venv/lib/python3.11/site-packages/sympy/physics/quantum/tests/test_matrixutils.py
 test_venv/lib/python3.11/site-packages/sympy/physics/quantum/tests/test_operator.py
 test_venv/lib/python3.11/site-packages/sympy/physics/quantum/tests/test_operatorordering.py
 test_venv/lib/python3.11/site-packages/sympy/physics/quantum/tests/test_operatorset.py
@@ -5998,10 +5918,6 @@ test_venv/lib/python3.11/site-packages/sympy/polys/domains/gmpyintegerring.py
 test_venv/lib/python3.11/site-packages/sympy/polys/domains/gmpyrationalfield.py
 test_venv/lib/python3.11/site-packages/sympy/polys/domains/groundtypes.py
 test_venv/lib/python3.11/site-packages/sympy/polys/domains/integerring.py
-test_venv/lib/python3.11/site-packages/sympy/polys/domains/modularinteger.py
-test_venv/lib/python3.11/site-packages/sympy/polys/domains/mpelements.py
-test_venv/lib/python3.11/site-packages/sympy/polys/domains/old_fractionfield.py
-test_venv/lib/python3.11/site-packages/sympy/polys/domains/old_polynomialring.py
 test_venv/lib/python3.11/site-packages/sympy/polys/domains/polynomialring.py
 test_venv/lib/python3.11/site-packages/sympy/polys/domains/pythonfinitefield.py
 test_venv/lib/python3.11/site-packages/sympy/polys/domains/pythonintegerring.py
@@ -6398,10 +6314,6 @@ test_venv/lib/python3.11/site-packages/sympy/tensor/array/array_comprehension.py
 test_venv/lib/python3.11/site-packages/sympy/tensor/array/array_derivatives.py
 test_venv/lib/python3.11/site-packages/sympy/tensor/array/arrayop.py
 test_venv/lib/python3.11/site-packages/sympy/tensor/array/dense_ndim_array.py
-test_venv/lib/python3.11/site-packages/sympy/tensor/array/mutable_ndim_array.py
-test_venv/lib/python3.11/site-packages/sympy/tensor/array/ndim_array.py
-test_venv/lib/python3.11/site-packages/sympy/tensor/array/sparse_ndim_array.py
-test_venv/lib/python3.11/site-packages/sympy/tensor/array/expressions/__init__.py
 test_venv/lib/python3.11/site-packages/sympy/tensor/array/expressions/array_expressions.py
 test_venv/lib/python3.11/site-packages/sympy/tensor/array/expressions/arrayexpr_derivatives.py
 test_venv/lib/python3.11/site-packages/sympy/tensor/array/expressions/conv_array_to_indexed.py
@@ -6676,3 +6588,65 @@ build/mcp-portable-linux.tar.xz
 build/mcp-portable-macos.tar.xz
 build/mcp-portable-windows.tar.xz
 build/mcp-usb.tar.xz
+
+# Temporary files
+
+*.tmp
+
+*.temp
+
+*.bak
+
+*.swp
+
+*.swo
+
+*~
+
+.DS_Store
+
+Thumbs.db
+
+# IDE files
+
+.idea/
+
+*.sublime-*
+
+logs/
+
+# Cache
+
+.cache/
+
+*.pyo
+
+*.pyd
+
+dist/
+
+*.egg-info/
+
+# Test artifacts
+
+.pytest_cache/
+
+.coverage
+
+htmlcov/
+
+# Documentation artifacts
+
+docs/_build/
+
+docs/.doctrees/
+
+# MCP specific
+
+mcp_cache/
+
+vector_cache/
+
+*.db-shm
+
+*.db-wal

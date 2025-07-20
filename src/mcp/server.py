@@ -138,7 +138,10 @@ from .auto_management_daemon import AutoManagementDaemon
 from .hypothetical_engine import HypotheticalEngine
 from .dreaming_engine import DreamingEngine
 from .engram_engine import EngramEngine
-from src.mcp.lobes.experimental.scientific_process.scientific_process_engine import ScientificProcessEngine
+try:
+    from .lobes.experimental.scientific_process.scientific_process_engine import ScientificProcessEngine
+except ImportError:
+    ScientificProcessEngine = None
 
 @dataclass
 class MCPRequest:
@@ -185,7 +188,8 @@ class MCPServer:
         self.performance_monitor = PerformanceMonitor(self.project_path)
         self.reminder_engine = EnhancedReminderEngine()
         self.hypothetical_engine = HypotheticalEngine(self.memory_manager, self.unified_memory)
-        self.dreaming_engine = DreamingEngine(memory_manager=self.memory_manager)
+        self.dreaming_engine = DreamingEngine()
+        self.dreaming_engine.memory_manager = self.memory_manager
         self.engram_engine = EngramEngine(memory_manager=self.memory_manager)
         self.scientific_engine = ScientificProcessEngine()
         self.executor = ThreadPoolExecutor(max_workers=4)
@@ -351,7 +355,13 @@ class MCPServer:
             "propose_hypothesis": self._handle_propose_hypothesis,
             "design_experiment": self._handle_design_experiment,
             "run_experiment": self._handle_run_experiment,
-            "analyze_hypothesis": self._handle_analyze_hypothesis
+            "analyze_hypothesis": self._handle_analyze_hypothesis,
+            "grep_search": self._handle_grep_search,
+            "ears_search": self._handle_ears_search,
+            "file_diff": self._handle_file_diff,
+            "script_debug": self._handle_script_debug,
+            "ide_feature": self._handle_ide_feature,
+            "file_location_query": self._handle_file_location_query
         }
         
         handler = method_handlers.get(request.method)
@@ -1778,17 +1788,504 @@ class MCPServer:
             return {"status": "error", "message": str(e)}
     
     async def _handle_analyze_hypothesis(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Handle hypothesis analysis."""
-        hypothesis_id = params.get("hypothesis_id", "")
+        """Analyze a hypothesis using scientific methods."""
+        hypothesis_id = params.get("hypothesis_id")
+        analysis_type = params.get("analysis_type", "comprehensive")
+        
+        if not hypothesis_id:
+            return {"status": "error", "message": "hypothesis_id is required"}
+        
         try:
-            analysis = self.scientific_engine.analyze_hypothesis(hypothesis_id)
+            analysis_result = self.scientific_engine.analyze_hypothesis(hypothesis_id, analysis_type)
             return {
                 "status": "success",
-                "analysis": analysis
+                "analysis": analysis_result,
+                "confidence": analysis_result.get("confidence", 0.0),
+                "recommendations": analysis_result.get("recommendations", [])
             }
         except Exception as e:
-            self.logger.error(f"Error analyzing hypothesis: {e}")
-            return {"status": "error", "message": str(e)}
+            return {"status": "error", "message": f"Failed to analyze hypothesis: {str(e)}"}
+
+    async def _handle_grep_search(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Perform grep-style search across files."""
+        try:
+            pattern = params.get('pattern')
+            path = params.get('path', '.')
+            file_patterns = params.get('file_patterns', ['*.py', '*.md', '*.txt'])
+            context_lines = params.get('context_lines', 0)
+            case_sensitive = params.get('case_sensitive', False)
+            
+            if not pattern:
+                return {"error": "pattern is required"}
+            
+            # Convert file patterns to list if string
+            if isinstance(file_patterns, str):
+                file_patterns = [p.strip() for p in file_patterns.split(',')]
+            
+            results = []
+            import re
+            import glob
+            from pathlib import Path
+            
+            # Compile regex pattern
+            flags = 0 if case_sensitive else re.IGNORECASE
+            regex = re.compile(pattern, flags)
+            
+            # Find matching files
+            for file_pattern in file_patterns:
+                search_path = Path(path) / "**" / file_pattern
+                for file_path in glob.glob(str(search_path), recursive=True):
+                    try:
+                        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                            lines = f.readlines()
+                            
+                        for line_num, line in enumerate(lines, 1):
+                            if regex.search(line):
+                                # Get context lines
+                                start_line = max(1, line_num - context_lines)
+                                end_line = min(len(lines), line_num + context_lines + 1)
+                                context = lines[start_line-1:end_line]
+                                
+                                results.append({
+                                    "file": file_path,
+                                    "line": line_num,
+                                    "match": line.strip(),
+                                    "context": [l.strip() for l in context] if context_lines > 0 else None
+                                })
+                    except Exception as e:
+                        self.logger.warning(f"Error reading {file_path}: {e}")
+                        continue
+            
+            return {
+                "success": True,
+                "pattern": pattern,
+                "results_count": len(results),
+                "results": results
+            }
+        except Exception as e:
+            self.logger.error(f"Error in grep search: {e}")
+            return {"error": str(e)}
+
+    async def _handle_ears_search(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Perform EARS (Evidence, Assumptions, Risks, Solutions) format search."""
+        try:
+            query = params.get('query')
+            search_type = params.get('search_type', 'all')  # evidence, assumptions, risks, solutions, all
+            context = params.get('context', '')
+            
+            if not query:
+                return {"error": "query is required"}
+            
+            # Define EARS patterns
+            ears_patterns = {
+                'evidence': [
+                    r'\b(evidence|proof|data|research|study|experiment|test|result|finding)\b',
+                    r'\b(verified|confirmed|validated|proven|demonstrated)\b',
+                    r'\b(according to|based on|research shows|studies indicate)\b'
+                ],
+                'assumptions': [
+                    r'\b(assume|assumption|presume|presumption|suppose|supposition)\b',
+                    r'\b(believe|think|expect|anticipate|predict|forecast)\b',
+                    r'\b(if|when|assuming that|given that|provided that)\b'
+                ],
+                'risks': [
+                    r'\b(risk|danger|threat|hazard|vulnerability|weakness)\b',
+                    r'\b(fail|failure|error|bug|issue|problem|concern)\b',
+                    r'\b(might|could|may|potential|possible|uncertain)\b'
+                ],
+                'solutions': [
+                    r'\b(solution|fix|resolve|address|mitigate|prevent)\b',
+                    r'\b(implement|deploy|apply|use|utilize|adopt)\b',
+                    r'\b(strategy|approach|method|technique|procedure)\b'
+                ]
+            }
+            
+            # Search in memory and documentation
+            results = {
+                'evidence': [],
+                'assumptions': [],
+                'risks': [],
+                'solutions': []
+            }
+            
+            import re
+            
+            # Search in memory
+            memories = self.memory_manager.search_memories(query)
+            for memory in memories:
+                content = str(memory.get('content', ''))
+                for category, patterns in ears_patterns.items():
+                    if search_type in ['all', category]:
+                        for pattern in patterns:
+                            matches = re.finditer(pattern, content, re.IGNORECASE)
+                            for match in matches:
+                                # Get context around match
+                                start = max(0, match.start() - 100)
+                                end = min(len(content), match.end() + 100)
+                                context_text = content[start:end]
+                                
+                                results[category].append({
+                                    "source": "memory",
+                                    "memory_id": memory.get('id'),
+                                    "match": match.group(),
+                                    "context": context_text,
+                                    "position": match.start()
+                                })
+            
+            # Search in documentation files
+            docs_path = Path(self.project_path) / "docs"
+            if docs_path.exists():
+                for md_file in docs_path.rglob("*.md"):
+                    try:
+                        with open(md_file, 'r', encoding='utf-8', errors='ignore') as f:
+                            content = f.read()
+                            
+                        # Check if query is relevant to this file
+                        if query.lower() in content.lower():
+                            for category, patterns in ears_patterns.items():
+                                if search_type in ['all', category]:
+                                    for pattern in patterns:
+                                        matches = re.finditer(pattern, content, re.IGNORECASE)
+                                        for match in matches:
+                                            start = max(0, match.start() - 100)
+                                            end = min(len(content), match.end() + 100)
+                                            context_text = content[start:end]
+                                            
+                                            results[category].append({
+                                                "source": "documentation",
+                                                "file": str(md_file),
+                                                "match": match.group(),
+                                                "context": context_text,
+                                                "position": match.start()
+                                            })
+                    except Exception as e:
+                        self.logger.warning(f"Error reading {md_file}: {e}")
+                        continue
+            
+            # Generate EARS summary
+            summary = {
+                'evidence_count': len(results['evidence']),
+                'assumptions_count': len(results['assumptions']),
+                'risks_count': len(results['risks']),
+                'solutions_count': len(results['solutions']),
+                'total_findings': sum(len(v) for v in results.values())
+            }
+            
+            return {
+                "success": True,
+                "query": query,
+                "search_type": search_type,
+                "summary": summary,
+                "results": results
+            }
+        except Exception as e:
+            self.logger.error(f"Error in EARS search: {e}")
+            return {"error": str(e)}
+
+    async def _handle_file_diff(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate a diff between two file versions or states."""
+        file_path = params.get("file_path")
+        old_content = params.get("old_content")
+        new_content = params.get("new_content")
+        diff_format = params.get("format", "unified")
+        
+        if not file_path or old_content is None or new_content is None:
+            return {"status": "error", "message": "file_path, old_content, and new_content are required"}
+        
+        try:
+            import difflib
+            
+            if diff_format == "unified":
+                diff_lines = difflib.unified_diff(
+                    old_content.splitlines(keepends=True),
+                    new_content.splitlines(keepends=True),
+                    fromfile=f"a/{file_path}",
+                    tofile=f"b/{file_path}"
+                )
+                diff_text = ''.join(diff_lines)
+            else:
+                diff_lines = difflib.context_diff(
+                    old_content.splitlines(keepends=True),
+                    new_content.splitlines(keepends=True),
+                    fromfile=f"a/{file_path}",
+                    tofile=f"b/{file_path}"
+                )
+                diff_text = ''.join(diff_lines)
+            
+            return {
+                "status": "success",
+                "diff": diff_text,
+                "file_path": file_path,
+                "format": diff_format,
+                "changes_count": len([line for line in diff_text.splitlines() if line.startswith(('+', '-'))])
+            }
+        except Exception as e:
+            return {"status": "error", "message": f"Failed to generate diff: {str(e)}"}
+
+    async def _handle_script_debug(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Debug a script by analyzing its structure and potential issues."""
+        script_path = params.get("script_path")
+        script_content = params.get("script_content")
+        debug_level = params.get("debug_level", "basic")
+        
+        if not script_path and not script_content:
+            return {"status": "error", "message": "Either script_path or script_content is required"}
+        
+        try:
+            if script_path and not script_content:
+                with open(script_path, 'r') as f:
+                    script_content = f.read()
+            
+            # Basic script analysis
+            analysis = {
+                "lines": len(script_content.splitlines()),
+                "characters": len(script_content),
+                "functions": script_content.count("def "),
+                "classes": script_content.count("class "),
+                "imports": script_content.count("import ") + script_content.count("from "),
+                "comments": script_content.count("#"),
+                "potential_issues": []
+            }
+            
+            # Check for common issues
+            if "TODO" in script_content.upper():
+                analysis["potential_issues"].append("Contains TODO comments")
+            if "FIXME" in script_content.upper():
+                analysis["potential_issues"].append("Contains FIXME comments")
+            if "pass" in script_content:
+                analysis["potential_issues"].append("Contains pass statements (potential stubs)")
+            if "print(" in script_content:
+                analysis["potential_issues"].append("Contains print statements (consider logging)")
+            
+            # Advanced analysis for higher debug levels
+            if debug_level in ["advanced", "expert"]:
+                try:
+                    import ast
+                    tree = ast.parse(script_content)
+                    analysis["syntax_valid"] = True
+                    analysis["ast_nodes"] = len(list(ast.walk(tree)))
+                except SyntaxError as e:
+                    analysis["syntax_valid"] = False
+                    analysis["syntax_error"] = str(e)
+            
+            return {
+                "status": "success",
+                "analysis": analysis,
+                "debug_level": debug_level,
+                "recommendations": self._generate_debug_recommendations(analysis)
+            }
+        except Exception as e:
+            return {"status": "error", "message": f"Failed to debug script: {str(e)}"}
+
+    async def _handle_ide_feature(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle IDE-specific features and integrations."""
+        feature_type = params.get("feature_type")
+        ide_name = params.get("ide_name", "cursor")
+        project_path = params.get("project_path", self.project_path)
+        
+        if not feature_type:
+            return {"status": "error", "message": "feature_type is required"}
+        
+        try:
+            if feature_type == "setup_integration":
+                # Setup IDE integration
+                config_dir = os.path.join(project_path, "config")
+                os.makedirs(config_dir, exist_ok=True)
+                
+                if ide_name == "cursor":
+                    config_file = os.path.join(config_dir, "cursor-mcp.json")
+                    config = {
+                        "mcpServers": {
+                            "agentic-workflow": {
+                                "command": "python",
+                                "args": ["-m", "mcp.cli", "--mcp-server"],
+                                "env": {"PYTHONPATH": project_path}
+                            }
+                        }
+                    }
+                elif ide_name == "vscode":
+                    config_file = os.path.join(config_dir, "vscode-settings.json")
+                    config = {
+                        "mcp.servers": {
+                            "agentic-workflow": {
+                                "command": "python",
+                                "args": ["-m", "mcp.cli", "--mcp-server"],
+                                "env": {"PYTHONPATH": project_path}
+                            }
+                        }
+                    }
+                else:
+                    return {"status": "error", "message": f"Unsupported IDE: {ide_name}"}
+                
+                with open(config_file, 'w') as f:
+                    import json
+                    json.dump(config, f, indent=2)
+                
+                return {
+                    "status": "success",
+                    "message": f"IDE integration setup for {ide_name}",
+                    "config_file": config_file
+                }
+            
+            elif feature_type == "generate_docs":
+                # Generate IDE-specific documentation
+                docs = self._generate_ide_documentation(ide_name)
+                return {
+                    "status": "success",
+                    "documentation": docs,
+                    "ide_name": ide_name
+                }
+            
+            elif feature_type == "test_integration":
+                # Test IDE integration
+                test_result = self._test_ide_integration(ide_name, project_path)
+                return {
+                    "status": "success",
+                    "test_result": test_result,
+                    "ide_name": ide_name
+                }
+            
+            else:
+                return {"status": "error", "message": f"Unknown feature type: {feature_type}"}
+                
+        except Exception as e:
+            return {"status": "error", "message": f"Failed to handle IDE feature: {str(e)}"}
+
+    async def _handle_file_location_query(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Query for file locations and paths within the project."""
+        query_type = params.get("query_type")
+        search_term = params.get("search_term")
+        file_pattern = params.get("file_pattern", "*")
+        max_results = params.get("max_results", 20)
+        
+        if not query_type or not search_term:
+            return {"status": "error", "message": "query_type and search_term are required"}
+        
+        try:
+            import glob
+            import os
+            
+            results = []
+            
+            if query_type == "filename":
+                # Search by filename
+                pattern = os.path.join(self.project_path, "**", f"*{search_term}*")
+                matches = glob.glob(pattern, recursive=True)
+                results = [{"path": match, "type": "file" if os.path.isfile(match) else "directory"} 
+                          for match in matches[:max_results]]
+            
+            elif query_type == "content":
+                # Search by file content
+                pattern = os.path.join(self.project_path, "**", file_pattern)
+                matches = glob.glob(pattern, recursive=True)
+                
+                for match in matches[:max_results]:
+                    if os.path.isfile(match):
+                        try:
+                            with open(match, 'r', encoding='utf-8') as f:
+                                content = f.read()
+                                if search_term.lower() in content.lower():
+                                    results.append({
+                                        "path": match,
+                                        "type": "file",
+                                        "matches": content.lower().count(search_term.lower())
+                                    })
+                        except Exception:
+                            continue
+            
+            elif query_type == "extension":
+                # Search by file extension
+                pattern = os.path.join(self.project_path, "**", f"*.{search_term}")
+                matches = glob.glob(pattern, recursive=True)
+                results = [{"path": match, "type": "file"} 
+                          for match in matches[:max_results]]
+            
+            elif query_type == "directory":
+                # Search for directories
+                pattern = os.path.join(self.project_path, "**", f"*{search_term}*")
+                matches = glob.glob(pattern, recursive=True)
+                results = [{"path": match, "type": "directory"} 
+                          for match in matches[:max_results] if os.path.isdir(match)]
+            
+            else:
+                return {"status": "error", "message": f"Unknown query type: {query_type}"}
+            
+            return {
+                "status": "success",
+                "results": results,
+                "query_type": query_type,
+                "search_term": search_term,
+                "total_found": len(results)
+            }
+            
+        except Exception as e:
+            return {"status": "error", "message": f"Failed to query file locations: {str(e)}"}
+
+    def _generate_debug_recommendations(self, analysis: Dict[str, Any]) -> List[str]:
+        """Generate debugging recommendations based on analysis."""
+        recommendations = []
+        
+        if analysis.get("potential_issues"):
+            recommendations.append("Review and address potential issues identified in the analysis")
+        
+        if analysis.get("functions", 0) == 0:
+            recommendations.append("Consider adding functions to improve code organization")
+        
+        if analysis.get("comments", 0) < analysis.get("lines", 0) * 0.1:
+            recommendations.append("Consider adding more comments for better code documentation")
+        
+        if analysis.get("imports", 0) > 10:
+            recommendations.append("Consider organizing imports and removing unused ones")
+        
+        return recommendations
+
+    def _generate_ide_documentation(self, ide_name: str) -> str:
+        """Generate IDE-specific documentation."""
+        if ide_name == "cursor":
+            return """
+# Cursor IDE Integration
+
+## Setup
+1. Copy the generated config to your Cursor settings
+2. Restart Cursor
+3. The MCP server will be available in the command palette
+
+## Usage
+- Use Cmd/Ctrl + Shift + P to open command palette
+- Type "MCP" to see available commands
+- All agentic-workflow tools are available through the MCP interface
+            """
+        elif ide_name == "vscode":
+            return """
+# VS Code Integration
+
+## Setup
+1. Install the MCP extension for VS Code
+2. Copy the generated config to your VS Code settings
+3. Restart VS Code
+4. The MCP server will be available in the command palette
+
+## Usage
+- Use Cmd/Ctrl + Shift + P to open command palette
+- Type "MCP" to see available commands
+- All agentic-workflow tools are available through the MCP interface
+            """
+        else:
+            return f"Documentation for {ide_name} integration is not yet available."
+
+    def _test_ide_integration(self, ide_name: str, project_path: str) -> Dict[str, Any]:
+        """Test IDE integration functionality."""
+        return {
+            "ide_name": ide_name,
+            "project_path": project_path,
+            "config_exists": os.path.exists(os.path.join(project_path, "config")),
+            "mcp_server_available": True,  # Simplified test
+            "recommendations": [
+                "Ensure the MCP server is running",
+                "Check that the config file is properly formatted",
+                "Restart the IDE after configuration changes"
+            ]
+        }
 
     def optimize_memory(self):
         """

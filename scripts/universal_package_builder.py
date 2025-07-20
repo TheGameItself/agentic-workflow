@@ -136,6 +136,16 @@ class UniversalPackageBuilder:
                 print(f"❌ macOS portable failed: {e}")
                 results["portable"] = f"Failed: {e}"
         
+        elif self.platform == "android":
+            print(f"\n📦 Building Android package...")
+            try:
+                android_path = self._build_android()
+                results["android"] = android_path
+                print(f"✅ Android package created: {android_path}")
+            except Exception as e:
+                print(f"❌ Android package failed: {e}")
+                results["android"] = f"Failed: {e}"
+        
         # Create USB templates
         print(f"\n📦 Creating USB installation templates...")
         try:
@@ -159,6 +169,19 @@ class UniversalPackageBuilder:
         # Generate documentation
         print(f"\n📖 Generating documentation...")
         self._generate_package_documentation(results)
+        
+        # After all builds, automate distribution and social/community posting
+        try:
+            distribution_config = {
+                "builds": list(results.values()),
+                "release_message": f"MCP {self.app_metadata['version']} build complete! See https://github.com/TheGameItself/agentic-workflow/releases/tag/mcp"
+            }
+            with open("distribution_config.json", "w") as f:
+                json.dump(distribution_config, f)
+            subprocess.run([sys.executable, "scripts/automated_distribution.py", "distribution_config.json"])
+            print("Automated distribution and social/community posting complete.")
+        except Exception as e:
+            print(f"[WARN] Automated distribution failed: {e}")
         
         return results
     
@@ -969,6 +992,14 @@ This document describes all available packages for the MCP Agentic Workflow Acce
 1. Extract the tar.gz file
 2. Run: `./start_mcp.sh`
 
+### Android
+
+#### Android Package
+1. Download the .zip file
+2. Extract to your Android device
+3. Install dependencies using Pydroid or Chaquopy
+4. Run `python3 mcp_cli.py` or use the provided launcher
+
 ### USB Installation
 
 #### Using USB Template
@@ -989,6 +1020,7 @@ This document describes all available packages for the MCP Agentic Workflow Acce
 - **Portable**: Extract and run without installation
 - **Universal**: Works on any platform with Python
 - **USB Template**: Template for USB drive installation
+- **Android**: Android-compatible package
 
 ## System Requirements
 
@@ -1032,7 +1064,8 @@ For issues and documentation, see the main project repository.
             "installer": "System installer",
             "app": "macOS application bundle",
             "universal": "Cross-platform Python package",
-            "usb_template": "USB drive installation template"
+            "usb_template": "USB drive installation template",
+            "android": "Android-compatible package"
         }
         return descriptions.get(package_type, "Unknown package type")
     
@@ -1062,6 +1095,51 @@ For issues and documentation, see the main project repository.
         self.build_dir.mkdir(exist_ok=True)
         self.dist_dir.mkdir(exist_ok=True)
         self.packages_dir.mkdir(exist_ok=True)
+    
+    def _build_android(self) -> str:
+        """Build Android-compatible package (Pydroid, Chaquopy, or BeeWare)."""
+        print("  Building Android-compatible package...")
+        android_dir = self.build_dir / "android"
+        if android_dir.exists():
+            shutil.rmtree(android_dir)
+        android_dir.mkdir(parents=True)
+        # Copy application files
+        self._copy_application_files(android_dir)
+        # Add Android-specific requirements (network, LLM API, OpenRouter)
+        requirements = [
+            "requests", "flask", "openai", "httpx", "websockets", "pydantic", "uvicorn"
+        ]
+        with open(android_dir / "requirements-android.txt", 'w') as f:
+            f.write("\n".join(requirements))
+        # Add Android README
+        android_readme = f'''# MCP Agentic Workflow Accelerator - Android Edition
+
+This package is compatible with Pydroid, Chaquopy, and BeeWare for Android.
+
+## Features
+- Full network support
+- LLM API and OpenRouter integration
+- Portable Python codebase
+
+## Installation
+1. Copy this directory to your Android device
+2. Install dependencies using Pydroid or Chaquopy
+3. Run `python3 mcp_cli.py` or use the provided launcher
+
+## Requirements
+- Python 3.8+ (via Pydroid, Chaquopy, or BeeWare)
+- Internet connection
+'''
+        with open(android_dir / "README-android.md", 'w') as f:
+            f.write(android_readme)
+        # Create zip archive for Android
+        android_zip = self.packages_dir / f"mcp-agentic-workflow-{self.app_metadata['version']}-android.zip"
+        with zipfile.ZipFile(android_zip, 'w') as zipf:
+            for root, _, files in os.walk(android_dir):
+                for file in files:
+                    file_path = Path(root) / file
+                    zipf.write(file_path, file_path.relative_to(android_dir))
+        return str(android_zip)
 
 def main():
     """Main function to build universal packages."""
@@ -1070,7 +1148,7 @@ def main():
     parser = argparse.ArgumentParser(description="Build universal MCP Agentic Workflow Accelerator packages")
     parser.add_argument("--clean", action="store_true", help="Clean build directories before building")
     parser.add_argument("--project-root", help="Project root directory")
-    parser.add_argument("--platform", choices=["linux", "windows", "macos", "all"], 
+    parser.add_argument("--platform", choices=["linux", "windows", "macos", "android", "all"], 
                        help="Build for specific platform only")
     
     args = parser.parse_args()

@@ -224,5 +224,13 @@ def main():
     for pkg in packages:
         print(f"  - {pkg}")
 
+# Android build logic stub
+# TODO: Implement Android build (APK or package) with all compatibility, network, and LLM API support
+# Reference: see idea.txt, docs/Universal-Install-Wizard.md, docs/LLM-API-Support.md
+
+# Ensure all builds expose LLM inference APIs and services (OpenRouter, OpenAI, Anthropic, etc.)
+# Reference: docs/LLM-API-Support.md
+# TODO: Add logic to verify and expose APIs in all builds
+
 if __name__ == "__main__":
     main()

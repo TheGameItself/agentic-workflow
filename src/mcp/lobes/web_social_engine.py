@@ -14,6 +14,10 @@ class WebSocialEngine:
     - handle_captcha_challenges
     - generate_secure_credentials
     - assess_source_credibility
+    - post_to_discord
+    - post_to_twitter
+    - post_to_bluesky
+    - post_to_reddit
     """
     def __init__(self):
         pass
@@ -46,4 +50,28 @@ class WebSocialEngine:
     def assess_source_credibility(self, source: str) -> float:
         """Assess the credibility of an information source."""
         # TODO: Implement credibility assessment
-        return 0.0 
+        return 0.0
+
+    def post_to_discord(self, message: str, config: dict = None) -> dict:
+        """Post a message to Discord (via bot/webhook)."""
+        print(f"[STUB] Posting to Discord: {message}")
+        # TODO: Implement Discord bot/webhook posting
+        return {"status": "stub", "message": message}
+
+    def post_to_twitter(self, message: str, config: dict = None) -> dict:
+        """Post a message to Twitter/X (via API)."""
+        print(f"[STUB] Posting to Twitter: {message}")
+        # TODO: Implement Twitter/X API posting
+        return {"status": "stub", "message": message}
+
+    def post_to_bluesky(self, message: str, config: dict = None) -> dict:
+        """Post a message to Bluesky (via API)."""
+        print(f"[STUB] Posting to Bluesky: {message}")
+        # TODO: Implement Bluesky API posting
+        return {"status": "stub", "message": message}
+
+    def post_to_reddit(self, message: str, config: dict = None) -> dict:
+        """Post a message to Reddit (via API, subreddit/rules compliance)."""
+        print(f"[STUB] Posting to Reddit: {message}")
+        # TODO: Implement Reddit API posting, subreddit/rules compliance
+        return {"status": "stub", "message": message}

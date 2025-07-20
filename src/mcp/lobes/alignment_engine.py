@@ -28,8 +28,14 @@ import sqlite3
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional
 
-from src.mcp.lobes.experimental.vesicle_pool import VesiclePool
-from src.mcp.lobes.shared_lobes.working_memory import WorkingMemory  # See idea.txt
+try:
+    from .experimental.vesicle_pool import VesiclePool
+except ImportError:
+    VesiclePool = None
+try:
+    from .shared_lobes.working_memory import WorkingMemory  # See idea.txt
+except ImportError:
+    WorkingMemory = None
 
 
 class PreferenceBuffer:

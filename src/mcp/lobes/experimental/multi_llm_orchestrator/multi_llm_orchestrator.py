@@ -226,6 +226,52 @@ class MultiLLMOrchestrator:
         self.logger.info("MultiLLMOrchestrator demo method called - using fallback implementation")
         return {"status": "demo_completed", "message": "Fallback demo implementation"}
 
+    def set_inference_sources(self, category: str, sources: list):
+        """Set available inference sources for a given task category."""
+        if not hasattr(self, 'inference_sources'):
+            self.inference_sources = {}
+        self.inference_sources[category] = sources
+
+    def set_source_metadata(self, source: str, metadata: dict):
+        """Set price/credit/quality metadata for a given source."""
+        if not hasattr(self, 'source_metadata'):
+            self.source_metadata = {}
+        self.source_metadata[source] = metadata
+
+    def analyze_and_rank_sources(self, category: str, user_prefs: dict = None):
+        """Analyze and rank sources for a category based on price, quality, and user preferences."""
+        user_prefs = user_prefs or {}
+        sources = self.inference_sources.get(category, [])
+        ranked = sorted(sources, key=lambda s: self._score_source(s, user_prefs), reverse=True)
+        return ranked
+
+    def _score_source(self, source: str, user_prefs: dict):
+        meta = self.source_metadata.get(source, {})
+        # Example scoring: lower price, higher quality, user weights
+        price = meta.get('price', 1.0)
+        quality = meta.get('quality', 1.0)
+        speed = meta.get('speed', 1.0)
+        specialty = meta.get('specialty', 1.0)
+        # User can provide weights for each factor
+        w_price = user_prefs.get('w_price', 1.0)
+        w_quality = user_prefs.get('w_quality', 1.0)
+        w_speed = user_prefs.get('w_speed', 1.0)
+        w_specialty = user_prefs.get('w_specialty', 1.0)
+        # Lower price is better, higher others are better
+        score = (w_quality * quality + w_speed * speed + w_specialty * specialty) / (w_price * price + 1e-6)
+        return score
+
+    def route_task_dynamic(self, task: dict, user_prefs: dict = None):
+        """Route task to the optimal source for its category, based on dynamic analysis."""
+        category = task.get('category', 'general')
+        ranked = self.analyze_and_rank_sources(category, user_prefs)
+        if ranked:
+            best_source = ranked[0]
+            self.logger.info(f"[MultiLLMOrchestrator] Routed task to {best_source} for category {category}")
+            return best_source
+        self.logger.warning(f"[MultiLLMOrchestrator] No sources available for category {category}")
+        return None
+
     # TODO: Add demo/test methods for plugging in custom orchestration, aggregation, and feedback analytics.
     # TODO: Document extension points and provide usage examples in README.md.
     # TODO: Integrate with other lobes for cross-engine research and feedback.
