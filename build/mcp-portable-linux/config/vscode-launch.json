@@ -1,0 +1,92 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "MCP Server",
+      "type": "python",
+      "request": "launch",
+      "module": "src.mcp.server",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "MCP_PROJECT_PATH": "${workspaceFolder}",
+        "MCP_LOG_LEVEL": "DEBUG",
+        "MCP_DEBUG_MODE": "true",
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "args": [],
+      "justMyCode": false,
+      "stopOnEntry": false,
+      "showReturnValue": true
+    },
+    {
+      "name": "MCP CLI",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/mcp_cli.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "MCP_PROJECT_PATH": "${workspaceFolder}",
+        "MCP_LOG_LEVEL": "DEBUG",
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "args": ["--help"],
+      "justMyCode": false,
+      "stopOnEntry": false,
+      "showReturnValue": true
+    },
+    {
+      "name": "MCP Tests",
+      "type": "python",
+      "request": "launch",
+      "module": "pytest",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "MCP_PROJECT_PATH": "${workspaceFolder}",
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "args": [
+        "tests/",
+        "-v",
+        "--cov=src",
+        "--cov-report=html"
+      ],
+      "justMyCode": false,
+      "stopOnEntry": false
+    },
+    {
+      "name": "MCP Performance Test",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/mcp_cli.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "MCP_PROJECT_PATH": "${workspaceFolder}",
+        "MCP_LOG_LEVEL": "INFO",
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "args": ["performance-report", "--detailed"],
+      "justMyCode": false,
+      "stopOnEntry": false
+    },
+    {
+      "name": "MCP Memory Integration Test",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/test_memory_integration.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "MCP_PROJECT_PATH": "${workspaceFolder}",
+        "MCP_LOG_LEVEL": "DEBUG",
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "args": [],
+      "justMyCode": false,
+      "stopOnEntry": false
+    }
+  ]
+}

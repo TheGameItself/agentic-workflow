@@ -1,0 +1,56 @@
+{
+  "_colorLogic": "Colors generated using OKLab color space, modulated by group traits for zen, appealing, and subtly contrasting colors. Traits: importance, connectivity, orphan status, thematic distinctiveness. Orphan nodes are highlighted with a gentle accent.",
+  "filters": {
+    "doShowOrphans": true,
+    "doShowAttachments": true
+  },
+  "groups": {
+    "groups": [
+      { "query": "path:canonical/getting-started", "color": "#A3D9C9" },
+      { "query": "path:canonical/api", "color": "#B2E6B2" },
+      { "query": "path:canonical/architecture", "color": "#B2B2E6" },
+      { "query": "path:canonical/core-systems", "color": "#B7B5E4" },
+      { "query": "path:canonical/development", "color": "#E6C7B2" },
+      { "query": "path:canonical/testing", "color": "#F6B2B2" },
+      { "query": "path:canonical/genetic-system", "color": "#E6B2F6" },
+      { "query": "path:canonical/hormone-system", "color": "#F6E6B2" },
+      { "query": "path:canonical/pattern-recognition", "color": "#F6B2E6" },
+      { "query": "path:canonical/p2p-network", "color": "#B2C7F6" },
+      { "query": "path:canonical/performance-optimization", "color": "#E6F6B2" },
+      { "query": "path:canonical/security", "color": "#D9B2F6" },
+      { "query": "path:canonical/deployment", "color": "#F6D9B2" },
+      { "query": "path:canonical/troubleshooting", "color": "#F6B2B2" },
+      { "query": "path:canonical/workflow", "color": "#F6E7B2" },
+      { "query": "path:canonical/configuration", "color": "#B2D7E6" },
+      { "query": "path:canonical/guides", "color": "#F6E7B2" },
+      { "query": "path:canonical/user-guides", "color": "#B2E6F6" },
+      { "query": "path:canonical/attachments", "color": "#D9D9D9" },
+      { "query": "tag:documentation", "color": "#B2E6F6" },
+      { "query": "tag:api", "color": "#B2E6B2" },
+      { "query": "tag:development", "color": "#E6C7B2" },
+      { "query": "tag:architecture", "color": "#B2B2E6" },
+      { "query": "tag:security", "color": "#D9B2F6" },
+      { "query": "tag:performance", "color": "#E6F6B2" },
+      { "query": "tag:ears", "color": "#B2F6D9" },
+      { "query": "path:canonical/neural-network-models", "color": "#A020F0" },
+      { "query": "path:canonical/Maps.canvas", "color": "#B8860B" },
+      { "query": "path:canonical/MCP-System-Mind-Map-Guide.md", "color": "#B8860B" },
+      { "query": "path:canonical/MCP-System-Mind-Map.canvas.bak", "color": "#B8860B" },
+      { "query": "path:canonical/MCP-Self-Improvement-Guide.md", "color": "#B8860B" },
+      { "query": "path:canonical/Documentation-Index.md", "color": "#B8860B" },
+      { "query": "path:canonical/Documentation-Update-Summary.md", "color": "#B8860B" },
+      { "query": "path:canonical/Documentation-Status-Report.md", "color": "#B8860B" },
+      { "query": "path:canonical/MCP-Feature-Test-Suite.md", "color": "#B8860B" },
+      { "query": "path:canonical/README.md", "color": "#B8860B" },
+      { "query": "tag:orphan", "color": "#F6E6E6" },
+      { "query": "path:canonical/user-guides/Documentation-Map.md", "color": "#B8860B" },
+      { "query": "path:canonical/user-guides/obsidian-graph-setup.md", "color": "#B8860B" }
+    ]
+  },
+  "display": {
+    "nodeSize": 1,
+    "linkThickness": 1,
+    "particleSize": 1,
+    "particleCount": 18
+  }
+} 

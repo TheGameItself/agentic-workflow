@@ -1,0 +1,156 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agentic-workflow"
+version = "1.0.0"
+description = "Agentic Workflow MCP System with Brain-Inspired Architecture"
+authors = [
+    {name = "Agentic Workflow Team", email = "team@agentic-workflow.com"}
+]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=2.0.0",
+    "psutil>=7.0.0",
+    "pytest>=8.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-xdist>=3.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-xdist>=3.0.0",
+    "flake8>=6.0.0",
+    "black>=23.0.0",
+    "mypy>=1.0.0",
+]
+
+[tool.pytest.ini_options]
+# Use importlib mode for better test discovery
+addopts = [
+    "--import-mode=importlib",
+    "--tb=short",
+    "--strict-markers",
+    "--disable-warnings",
+    "--color=yes",
+    "--durations=10",
+    "--cov=src",
+    "--cov-report=term-missing",
+    "--cov-report=html:tests/logs/coverage_html",
+    "--cov-fail-under=70",
+]
+
+# Test discovery
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+# Python path for src layout
+pythonpath = ["src"]
+
+# Markers
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests", 
+    "performance: Performance tests",
+    "slow: Slow running tests",
+    "fast: Fast running tests",
+    "genetic: Genetic system tests",
+    "hormone: Hormone system tests",
+    "memory: Memory system tests",
+    "p2p: P2P network tests",
+    "async: Async processing tests",
+    "brain: Brain-inspired architecture tests",
+    "mcp: MCP system tests",
+]
+
+# Logging
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s [%(levelname)8s] %(name)s: %(message)s"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+
+# Test organization
+norecursedirs = [
+    ".git",
+    ".tox", 
+    "dist",
+    "build",
+    "*.egg",
+    "venv",
+    "test_venv",
+    "__pycache__",
+    ".pytest_cache",
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/test_venv/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.mypy]
+python_version = "1.0.0"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = [
+    "tests.*",
+    "test_*",
+]
+disallow_untyped_defs = false
+disallow_incomplete_defs = false 

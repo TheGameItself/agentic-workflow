@@ -1,0 +1,374 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "MCP: Start Server",
+      "type": "shell",
+      "command": "python",
+      "args": ["-m", "src.mcp.server"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "MCP_PROJECT_PATH": "${workspaceFolder}",
+          "MCP_LOG_LEVEL": "INFO",
+          "PYTHONPATH": "${workspaceFolder}"
+        }
+      },
+      "problemMatcher": [],
+      "runOptions": {
+        "runOn": "folderOpen"
+      }
+    },
+    {
+      "label": "MCP: Export Context",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "mcp_cli.py",
+        "export-context",
+        "--types", "tasks,memories,progress",
+        "--max-tokens", "2000"
+      ],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "new"
+      },
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "MCP: Search Memories",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "mcp_cli.py",
+        "search-memories",
+        "${input:searchQuery}",
+        "--limit", "10"
+      ],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "new"
+      },
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "MCP: Create Task",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "mcp_cli.py",
+        "create-task",
+        "${input:taskTitle}",
+        "${input:taskDescription}",
+        "--priority", "${input:taskPriority}"
+      ],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "new"
+      },
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "MCP: Performance Report",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "mcp_cli.py",
+        "performance-report",
+        "--detailed"
+      ],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "new"
+      },
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "MCP: List Tasks",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "mcp_cli.py",
+        "list-tasks",
+        "--status", "all"
+      ],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "new"
+      },
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "MCP: Add Memory",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "mcp_cli.py",
+        "add-memory",
+        "${input:memoryText}",
+        "--type", "${input:memoryType}",
+        "--priority", "${input:memoryPriority}"
+      ],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "new"
+      },
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "MCP: Initialize Project",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "mcp_cli.py",
+        "init-project",
+        "${input:projectName}",
+        "${input:projectPath}"
+      ],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "new"
+      },
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "MCP: Start Research",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "mcp_cli.py",
+        "start-research",
+        "${input:researchTopic}"
+      ],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "new"
+      },
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "MCP: Check Updates",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "-m", "src.mcp.automatic_update_system",
+        "--check"
+      ],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "new"
+      },
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "MCP: Run Tests",
+      "type": "shell",
+      "command": "python",
+      "args": ["-m", "pytest", "tests/", "-v", "--cov=src"],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "new"
+      },
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "MCP: Format Code",
+      "type": "shell",
+      "command": "black",
+      "args": ["src/", "--line-length", "88"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared"
+      },
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "MCP: Lint Code",
+      "type": "shell",
+      "command": "flake8",
+      "args": ["src/", "--max-line-length", "88"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "new"
+      },
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "searchQuery",
+      "description": "Enter search query for memories",
+      "default": "",
+      "type": "promptString"
+    },
+    {
+      "id": "taskTitle",
+      "description": "Enter task title",
+      "default": "",
+      "type": "promptString"
+    },
+    {
+      "id": "taskDescription",
+      "description": "Enter task description",
+      "default": "",
+      "type": "promptString"
+    },
+    {
+      "id": "taskPriority",
+      "description": "Select task priority",
+      "default": "5",
+      "type": "pickString",
+      "options": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10"
+      ]
+    },
+    {
+      "id": "memoryText",
+      "description": "Enter memory text",
+      "default": "",
+      "type": "promptString"
+    },
+    {
+      "id": "memoryType",
+      "description": "Select memory type",
+      "default": "general",
+      "type": "pickString",
+      "options": [
+        "general",
+        "requirement",
+        "research",
+        "task_context",
+        "finding",
+        "knowledge",
+        "pattern",
+        "insight"
+      ]
+    },
+    {
+      "id": "memoryPriority",
+      "description": "Select memory priority",
+      "default": "5",
+      "type": "pickString",
+      "options": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10"
+      ]
+    },
+    {
+      "id": "projectName",
+      "description": "Enter project name",
+      "default": "",
+      "type": "promptString"
+    },
+    {
+      "id": "projectPath",
+      "description": "Enter project path",
+      "default": "${workspaceFolder}",
+      "type": "promptString"
+    },
+    {
+      "id": "researchTopic",
+      "description": "Enter research topic",
+      "default": "",
+      "type": "promptString"
+    }
+  ]
+}

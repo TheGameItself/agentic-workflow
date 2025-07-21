@@ -1,0 +1,28 @@
+name: example_plugin
+version: "1.0.0"
+description: "An example plugin demonstrating MCP plugin capabilities"
+author: "MCP Team"
+license: "MIT"
+homepage: "https://github.com/example/mcp-example-plugin"
+repository: "https://github.com/example/mcp-example-plugin"
+dependencies: []
+tags: ["example", "demo", "tutorial"]
+api_version: "2.0"
+python_version: "3.8+"
+entry_point: "main"
+config_schema:
+  greeting:
+    type: str
+    required: false
+    default: "Hello from Example Plugin"
+    max_length: 100
+  enabled_features:
+    type: list
+    required: false
+    default: ["feature1", "feature2"]
+    max_items: 10
+  log_level:
+    type: str
+    required: false
+    default: "INFO"
+    allowed_values: ["DEBUG", "INFO", "WARNING", "ERROR"] 

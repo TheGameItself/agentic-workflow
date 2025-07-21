@@ -1,0 +1,8 @@
+{
+  "id": "obsidian-animated-mind-map",
+  "name": "Animated Mind Map+",
+  "version": "0.2.0",
+  "description": "Animated, live-configurable mind map with WFC/force-directed layouts, speculative grouping/linking, Semantic Kanban Graph view, and in-editor controls.",
+  "isDesktopOnly": false,
+  "js": "main.js"
+} 

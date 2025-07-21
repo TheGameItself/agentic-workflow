@@ -1,0 +1,12 @@
+version: '3.8'
+services:
+  mcp-server:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+      - ./config:/app/config
+    environment:
+      - MCP_LOG_LEVEL=INFO
+    restart: unless-stopped

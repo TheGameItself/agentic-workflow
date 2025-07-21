@@ -1,0 +1,45 @@
+{
+  "tag_name": "v1.0.0",
+  "name": "MCP Agentic Workflow Accelerator v1.0.0",
+  "body_file": "releases/RELEASE_NOTES_v1.0.0.md",
+  "draft": false,
+  "prerelease": false,
+  "generate_release_notes": false,
+  "assets": [
+    {
+      "name": "mcp-portable-linux-v1.0.0.tar.gz",
+      "path": "releases/mcp-portable-linux-v1.0.0.tar.gz",
+      "content_type": "application/octet-stream"
+    },
+    {
+      "name": "mcp-usb-v1.0.0.zip",
+      "path": "releases/mcp-usb-v1.0.0.zip",
+      "content_type": "application/zip"
+    },
+    {
+      "name": "RELEASE_NOTES_v1.0.0.md",
+      "path": "releases/RELEASE_NOTES_v1.0.0.md",
+      "content_type": "text/markdown"
+    },
+    {
+      "name": "mcp-portable-macos-v1.0.0.tar.gz",
+      "path": "releases/mcp-portable-macos-v1.0.0.tar.gz",
+      "content_type": "application/octet-stream"
+    },
+    {
+      "name": "mcp-docker-v1.0.0.tar.gz",
+      "path": "releases/mcp-docker-v1.0.0.tar.gz",
+      "content_type": "application/octet-stream"
+    },
+    {
+      "name": "SHA256SUMS_v1.0.0.txt",
+      "path": "releases/SHA256SUMS_v1.0.0.txt",
+      "content_type": "text/plain"
+    },
+    {
+      "name": "mcp-portable-windows-v1.0.0.zip",
+      "path": "releases/mcp-portable-windows-v1.0.0.zip",
+      "content_type": "application/zip"
+    }
+  ]
+}
