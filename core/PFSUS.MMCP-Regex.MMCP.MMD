@@ -1,0 +1,55 @@
+[ ] #".root"# %% ============ Project File Structure Universal Standard (PFSUS) Monolithic Regex ============
+# MerMaidContextProtocol (PFSUS) - Monolithic Regex
+
+This document contains a single, monolithic regular expression designed to validate the entire structure of a `.mmcp.mmd` file in one pass. This regex was built and validated through a systematic, multi-stage proof.
+
+To use this, you must apply the regex against the entire file content with the **MULTILINE flag enabled** in your regex engine of choice (e.g., `re.MULTILINE` in Python, the `/m` flag in Perl/PCRE).
+
+[[MerMaidContextProtocol.version-1.0.0.0.mmcp.mmd]] — The canonical protocol definition that this regex validates.
+
+#group/ears #group/regex #group/pfsus #group/monolithic #color/red
+
+---
+
+## The Monolithic Regex
+
+```regex
+^(?:(\[ \] #"\.root"#.*)|(#+\s.*)|(---)|(\[\[[^\]]+\]\].*)|((\s*#\w+(\/\w+)*\s*)+)|(>.*)|(\s*[-*+]\s.*)|(\[[ x-]\]\s.*)|(```)|(\s*\S.*)|\s*)(\r?\n(?:(\[ \] #"\.root"#.*)|(#+\s.*)|(---)|(\[\[[^\]]+\]\].*)|((\s*#\w+(\/\w+)*\s*)+)|(>.*)|(\s*[-*+]\s.*)|(\[[ x-]\]\s.*)|(```)|(\s*\S.*)|\s*))*$
+```
+
+## How It Works
+
+This regex is composed of a repeating group that validates the file line by line from start (`^`) to finish (`$`).
+
+1.  **`^(...)*$`**: Asserts that the entire string is made of the patterns contained within. The `MULTILINE` flag is **critical** for `^` and `$` to match the start and end of each line.
+2.  **`line_or_blank`**: The core pattern `(?:...|\s*)` matches either a valid content line OR a blank line (`\s*`).
+3.  **`any_valid_line_pattern`**: A large `OR` group (`|`) containing all the individual, proven patterns for valid lines:
+    *   `(\[ \] #"\.root"#.*)`: The mandatory root indicator.
+    *   `(#+\s.*)`: Markdown headings.
+    *   `(---)`: Horizontal rules.
+    *   `(\[\[[^\]]+\]\].*)`: Lines starting with a wikilink.
+    *   `((\s*#\w+(\/\w+)*\s*)+)`: Lines containing only tags.
+    *   `(>.*)`: Blockquotes.
+    *   `(\s*[-*+]\s.*)`: List items.
+    *   `(\[[ x-]\]\s.*)`: Actionable EARS tasks.
+    *   `(```)`: The start or end of a code/mermaid block.
+    *   `(\s*\S.*)`: A generic text line, which must contain at least one non-whitespace character, allowing for indentation. This must come last as it is a broad catch-all.
+4.  **`(\r?\n...)*`**: Allows the `line_or_blank` pattern to repeat for every subsequent line in the file.
+
+### Warning
+This approach is extremely powerful but also very brittle. Any deviation from the defined line structures will cause the entire file to fail validation. It is best used for automated compliance checks rather than for parsing or data extraction.
+
+### Proof
+The monolithic regex was constructed through a systematic, multi-stage proof.
+
+1.  **Component Definition**: Individual regex patterns for each valid line type (headings, lists, tags, etc.) were defined.
+2.  **Incremental Combination**: Patterns were combined in logical groups (e.g., "Core Structure," "Content Elements").
+3.  **Staged Validation**: After each combination, the resulting regex was tested against a sample document containing valid examples of the corresponding structures.
+4.  **Success Condition**: The proof was deemed successful when the final, fully-combined regex correctly validated the entire sample document.
+
+### Counterproof
+A counterproof was conducted to test the monolithic regex's specificity against intentionally invalid documents.
+
+1.  **Initial Failure**: The monolithic regex **failed** the counterproof, incorrectly validating documents with syntax errors and those missing the mandatory `[ ] #".root"#` indicator.
+2.  **Root Cause**: The failure was traced to the overly-permissive nature of a single regex, which cannot enforce structural rules (like mandatory elements) or contextual rules (like unclosed blocks) across an entire document.
+3.  **Conclusion**: This counterproof demonstrated that while a monolithic regex can validate line-by-line syntax, it is not a robust solution for ensuring overall document integrity. A stateful, programmatic validator that checks for mandatory elements and multi-line block integrity is the correct and proven approach for true validation. The regex in this document should therefore be used for line-level linting, not for holistic file validation.
