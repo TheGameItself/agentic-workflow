@@ -1,0 +1,481 @@
+%% Copyright 2025 Kalxi. All rights reserved. See header for terms. %%
+[ ] #".root"# {protocol:"MCP", version:"1.3.0", standard:"PFSUS+EARS+LambdaJSON"}
+# MMCP Format Wrapping Standard v1.3.0
+## {type:Meta, author:"Kalxi", license:"MIT", last_modified:"2025-07-21T12:00:00Z", id:"PFSUS.MMCP-FormatWrapping.Standard.v1.3.0"}
+## {type:Schema, $schema:"https://json-schema.org/draft/2020-12/schema", required:["type","id","version"], properties:{type:{type:"string"},id:{type:"string"},version:{type:"string"},last_modified:{type:"string",format:"date-time"},author:{type:"string"}}}
+## {type:Changelog, entries:[
+  {"2025-07-21":"Initial version of the Format Wrapping Standard."},
+  {"2025-07-21":"Updated file naming convention to include address in format of <MMCP-Name-Standard>.<MMCP-address>.mmcp.<wrapper>"},
+  {"2025-07-21":"Added calculus notation wrappers (lambda, alef, delta, beta, omega, imaginary, turing) and base64 wrapping"},
+  {"2025-07-21":"Added order-agnostic nested calculus notation support with automatic precedence resolution"},
+  {"2025-07-21":"Enhanced shorthand notation system for addresses and references"},
+  {"2025-07-21":"Added EARS schema integration and STRATEGY guide templates"}
+]}
+
+## {type:FormatWrappingStandard, id:"PFSUS-Format-Wrapping-1.3", desc:"Comprehensive standard for embedding PFSUS content in various file formats with order-agnostic nested calculus notation wrappers."}
+
+## 1. Order-Agnostic Calculus Notation Wrappers
+
+### 1.1 Nested Wrapper Syntax
+
+Calculus notation wrappers can now be nested in any order with automatic precedence resolution:
+
+```
+λ(ℵ(Δ(β(Ω(i(τ(content))))))) // Explicit nesting
+λ∘ℵ∘Δ∘β∘Ω∘i∘τ(content)        // Composition notation
+{λ,ℵ,Δ,β,Ω,i,τ}(content)      // Set notation (order-agnostic)
+```
+
+### 1.2 Precedence Rules
+
+When order is not specified, the following precedence applies (highest to lowest):
+1. **τ (Turing)** - Computational complexity and state machines
+2. **Ω (Omega)** - Terminal operations and fixed points
+3. **β (Beta)** - Reduction operations and substitutions
+4. **Δ (Delta)** - Meta-operations and change tracking
+5. **ℵ (Alef)** - Set-theoretic operations and infinite collections
+6. **λ (Lambda)** - Functional transformations and pure functions
+7. **i (Imaginary)** - Complex or speculative states
+
+### 1.3 Automatic Wrapper Detection
+
+The system automatically detects and applies appropriate wrappers based on content analysis:
+
+```python
+# Auto-detected as λ (functional)
+def process_data(x): return x * 2
+
+# Auto-detected as ℵ (set-theoretic)
+users = {user.id: user for user in user_list}
+
+# Auto-detected as Δ (meta-operation)
+@decorator
+def tracked_function(): pass
+
+# Auto-detected as τ (state machine)
+class StateMachine:
+    def __init__(self): self.state = "initial"
+```
+
+## 2. Enhanced Shorthand Notation System
+
+### 2.1 Address Shorthand
+
+```
+<PFSUS-FW-001>     // Full address
+<PF-FW-1>          // Shortened address
+<PF.FW.1>          // Dot notation
+@PF.FW.1           // Reference notation
+#PF.FW.1           // Tag notation
+```
+
+### 2.2 Multi-Address Shorthand
+
+```
+// Single line multiple addresses
+@{PF.FW.1, AG.SP.1, SY.CR.1} // Reference set
+#{PF.FW.1|AG.SP.1|SY.CR.1}   // Tag chain
+<PF.FW.1+AG.SP.1+SY.CR.1>    // Address composition
+```
+
+### 2.3 Hierarchical Address Notation
+
+```
+<CORE>                    // Root level
+<CORE.PFSUS>             // Second level
+<CORE.PFSUS.FW>          // Third level
+<CORE.PFSUS.FW.001>      // Full path
+<C.P.F.1>                // Ultra-short notation
+```
+
+## 3. EARS Schema Integration
+
+### 3.1 EARS Template Structure
+
+```
+## {type:EARS, 
+    entity:"System", 
+    action:"shall", 
+    response:"process data", 
+    condition:"when input is valid",
+    id:"EARS-001",
+    priority:"high",
+    verification:"unit_test"}
+```
+
+### 3.2 EARS Shorthand
+
+```
+E:System A:shall R:process_data C:input_valid #EARS-001 !high @unit_test
+```
+
+### 3.3 EARS Schema Definition
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "entity": {"type": "string", "description": "The system entity"},
+    "action": {"type": "string", "enum": ["shall", "should", "may", "will"]},
+    "response": {"type": "string", "description": "The required response"},
+    "condition": {"type": "string", "description": "Triggering condition"},
+    "id": {"type": "string", "pattern": "^EARS-[0-9]{3}$"},
+    "priority": {"type": "string", "enum": ["low", "medium", "high", "critical"]},
+    "verification": {"type": "string", "description": "Verification method"}
+  },
+  "required": ["entity", "action", "response", "id"]
+}
+```
+
+## 4. STRATEGY Guide Templates
+
+### 4.1 Code Practices Template
+
+```
+## {type:STRATEGY, category:"code_practices", id:"STRAT-CP-001"}
+
+### Best Practices
+- Use descriptive variable names
+- Follow single responsibility principle
+- Implement proper error handling
+- Write comprehensive tests
+
+### Code Format Practices
+- Use consistent indentation (4 spaces)
+- Maximum line length: 88 characters
+- Use type hints for function parameters
+- Document complex algorithms
+
+### Optimization Notes
+- Profile before optimizing
+- Use appropriate data structures
+- Minimize I/O operations
+- Cache expensive computations
+```
+
+### 4.2 Architecture Strategy Template
+
+```
+## {type:STRATEGY, category:"architecture", id:"STRAT-ARCH-001"}
+
+### Design Principles
+- Separation of concerns
+- Dependency inversion
+- Interface segregation
+- Open/closed principle
+
+### Patterns
+- Repository pattern for data access
+- Factory pattern for object creation
+- Observer pattern for event handling
+- Strategy pattern for algorithms
+```
+
+## 5. Central Bus Queue System
+
+### 5.1 Spinal Column Queue (Primary Bus)
+
+```python
+class SpinalColumnQueue:
+    def __init__(self, buffer_size=10000):
+        self.buffer = asyncio.Queue(maxsize=buffer_size)
+        self.priority_buffer = asyncio.PriorityQueue(maxsize=buffer_size//10)
+        self.io_points = {}
+        self.bus_lines = {}
+    
+    async def enqueue(self, message, priority=Priority.NORMAL):
+        if priority == Priority.HIGH or priority == Priority.CRITICAL:
+            await self.priority_buffer.put((priority.value, message))
+        else:
+            await self.buffer.put(message)
+    
+    async def dequeue(self):
+        # Check priority buffer first
+        if not self.priority_buffer.empty():
+            _, message = await self.priority_buffer.get()
+            return message
+        return await self.buffer.get()
+```
+
+### 5.2 Bus Line Visualization
+
+```
+[INPUT] ──┬── λ-BUS ──┬── [PROCESSING]
+          ├── ℵ-BUS ──┤
+          ├── Δ-BUS ──┤
+          ├── β-BUS ──┤
+          ├── Ω-BUS ──┤
+          ├── i-BUS ──┤
+          └── τ-BUS ──┘
+                      │
+                      ├── [MEMORY]
+                      ├── [STORAGE]
+                      └── [OUTPUT]
+```
+
+### 5.3 I/O Point Mapping
+
+```python
+IO_POINTS = {
+    "λ": {"input": "functional_input", "output": "functional_output"},
+    "ℵ": {"input": "set_input", "output": "set_output"},
+    "Δ": {"input": "meta_input", "output": "meta_output"},
+    "β": {"input": "reduction_input", "output": "reduction_output"},
+    "Ω": {"input": "terminal_input", "output": "terminal_output"},
+    "i": {"input": "complex_input", "output": "complex_output"},
+    "τ": {"input": "state_input", "output": "state_output"}
+}
+```
+
+## 6. Enhanced Agent Schema
+
+### 6.1 Agent Template Structure
+
+```
+## {type:Agent, 
+    id:"AGENT-001", 
+    name:"DataProcessor", 
+    version:"1.0.0",
+    capabilities:["data_processing", "validation", "transformation"],
+    interfaces:["REST", "GraphQL", "gRPC"],
+    dependencies:["database", "cache", "queue"],
+    resources:{cpu:"2", memory:"4GB", storage:"10GB"},
+    monitoring:{health_check:"/health", metrics:"/metrics"},
+    security:{auth:"JWT", encryption:"AES-256"},
+    deployment:{strategy:"blue_green", replicas:3}}
+```
+
+### 6.2 Agent Shorthand Notation
+
+```
+A:DataProcessor v1.0.0 C:[proc,val,trans] I:[REST,GQL,gRPC] 
+D:[db,cache,queue] R:{cpu:2,mem:4GB,stor:10GB} 
+M:{hc:/health,met:/metrics} S:{auth:JWT,enc:AES256} 
+Deploy:{bg,rep:3} #AGENT-001
+```
+
+## 7. Dedicated Sub-addresses
+
+### 7.1 Core File Types
+
+```
+<CORE>                    // Root core system
+<CORE.SRC>               // Source code
+<CORE.SRC.MCP>           // MCP components
+<CORE.SRC.MCP.LOBES>     // Brain lobes
+<CORE.SRC.MCP.NEURAL>    // Neural networks
+<CORE.SRC.MCP.P2P>       // P2P components
+<CORE.TESTS>             // Test files
+<CORE.DOCS>              // Documentation
+<CORE.CONFIG>            // Configuration
+```
+
+### 7.2 PFSUS File Types
+
+```
+<PFSUS>                  // PFSUS root
+<PFSUS.STD>             // Standards
+<PFSUS.SPEC>            // Specifications
+<PFSUS.TMPL>            // Templates
+<PFSUS.SCHEMA>          // Schemas
+<PFSUS.CLI>             // CLI tools
+<PFSUS.VIZ>             // Visualization
+```
+
+### 7.3 Agent File Types
+
+```
+<AGENT>                  // Agent root
+<AGENT.SPEC>            // Agent specifications
+<AGENT.IMPL>            // Agent implementations
+<AGENT.CONFIG>          // Agent configurations
+<AGENT.DEPLOY>          // Deployment configs
+<AGENT.MONITOR>         // Monitoring configs
+```
+
+## 8. Standardized Inline Comments and Headers
+
+### 8.1 Header Format
+
+```python
+#!/usr/bin/env python3
+"""
+<CORE.SRC.MCP.COMPONENT> Component Implementation
+@{CORE.SRC.MCP.001} Main implementation file for MCP component system.
+#{component,mcp,core} Tags for categorization.
+λ(ℵ(Δ(implementation))) Calculus notation wrapper indication.
+"""
+
+# Standard imports
+import asyncio
+import logging
+from typing import Dict, Any, List, Optional
+
+# Project imports  
+from .base import BaseComponent  # @{CORE.SRC.BASE.001}
+from .utils import helper_func   # @{CORE.UTILS.001}
+
+# Constants
+COMPONENT_VERSION = "1.0.0"      # Version tracking
+MAX_BUFFER_SIZE = 10000          # Configuration constant
+```
+
+### 8.2 Inline Comment Standards
+
+```python
+def process_data(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Process input data and return transformed result.
+    
+    @{CORE.SRC.MCP.PROC.001} Data processing function.
+    #{processing,transformation,data} Functional tags.
+    
+    Args:
+        data: Input data dictionary @{DATA.INPUT.001}
+        
+    Returns:
+        Transformed data dictionary @{DATA.OUTPUT.001}
+        
+    Raises:
+        ValueError: When input data is invalid @{ERROR.VALIDATION.001}
+    """
+    # Validate input data structure @{VALIDATION.001}
+    if not isinstance(data, dict):
+        raise ValueError("Input must be dictionary")  # @{ERROR.TYPE.001}
+    
+    # Transform data using lambda function @{TRANSFORM.LAMBDA.001}
+    result = {k: v * 2 for k, v in data.items()}  # λ(x → x*2)
+    
+    # Log processing completion @{LOG.COMPLETION.001}
+    logging.info(f"Processed {len(data)} items")  # #{logging,metrics}
+    
+    return result  # @{RETURN.SUCCESS.001}
+```
+
+### 8.3 Footer Standards
+
+```python
+# @{CORE.SRC.MCP.COMPONENT.001} End of component implementation
+# #{component,mcp,core,implementation} Final tags
+# λ(ℵ(Δ(complete))) Processing complete
+# Version: 1.0.0 | Last Modified: 2025-07-21T12:00:00Z
+# Dependencies: @{CORE.SRC.BASE.001, CORE.UTILS.001}
+# Related: @{CORE.TESTS.COMPONENT.001, CORE.DOCS.COMPONENT.001}
+```
+
+## 9. SQL Wrapping and Feature Carryover
+
+### 9.1 SQL Wrapper Format
+
+```sql
+/*
+ * MMCP-START
+ * λ:sql_wrapper(
+ *   [ ] #".root"# {protocol:"MCP", version:"1.3.0", standard:"PFSUS+EARS+SQL"}
+ *   ## {type:Database, schema:"user_management", version:"1.0.0", id:"DB-USER-001"}
+ *   @{CORE.DB.USER.001} User management database schema
+ *   #{database,user,schema,sql}
+ * )
+ * MMCP-END
+ */
+
+-- User table definition @{DB.TABLE.USER.001}
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,                    -- @{DB.FIELD.ID.001}
+    username VARCHAR(50) UNIQUE NOT NULL,    -- @{DB.FIELD.USERNAME.001}
+    email VARCHAR(100) UNIQUE NOT NULL,      -- @{DB.FIELD.EMAIL.001}
+    password_hash VARCHAR(255) NOT NULL,     -- @{DB.FIELD.PASSWORD.001}
+    created_at TIMESTAMP DEFAULT NOW(),      -- @{DB.FIELD.CREATED.001}
+    updated_at TIMESTAMP DEFAULT NOW()       -- @{DB.FIELD.UPDATED.001}
+);
+
+-- Indexes for performance @{DB.INDEX.USER.001}
+CREATE INDEX idx_users_username ON users(username);  -- λ(username → fast_lookup)
+CREATE INDEX idx_users_email ON users(email);        -- λ(email → fast_lookup)
+
+-- User roles table @{DB.TABLE.ROLES.001}
+CREATE TABLE user_roles (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,  -- @{DB.FK.USER.001}
+    role_name VARCHAR(50) NOT NULL,                          -- @{DB.FIELD.ROLE.001}
+    granted_at TIMESTAMP DEFAULT NOW()                       -- @{DB.FIELD.GRANTED.001}
+);
+
+/*
+ * MMCP-FOOTER
+ * @{CORE.DB.USER.001} User management schema complete
+ * #{database,user,schema,sql,complete}
+ * Version: 1.0.0 | Checksum: sha256:abc123...
+ * Dependencies: @{CORE.CONFIG.DB.001}
+ * Related: @{CORE.SRC.USER.001, CORE.TESTS.DB.001}
+ */
+```
+
+### 9.2 SQL Feature Carryover
+
+```sql
+-- Feature carryover from previous versions
+-- @{LEGACY.DB.USER.v0_9} Migrated from version 0.9
+ALTER TABLE users ADD COLUMN IF NOT EXISTS legacy_id INTEGER;  -- Backward compatibility
+
+-- Feature enhancement with MMCP integration
+-- λ(old_schema → new_schema) Functional transformation
+CREATE OR REPLACE FUNCTION migrate_user_data() 
+RETURNS VOID AS $$
+BEGIN
+    -- @{MIGRATION.USER.001} Data migration logic
+    UPDATE users SET updated_at = NOW() WHERE updated_at IS NULL;
+    -- #{migration,data,update}
+END;
+$$ LANGUAGE plpgsql;
+```
+
+## 10. Implementation Examples
+
+### 10.1 Order-Agnostic Wrapper Example
+
+```python
+# These are equivalent and will be normalized to the same precedence
+content1 = λ(ℵ(Δ("data processing")))
+content2 = Δ(λ(ℵ("data processing")))
+content3 = {λ,ℵ,Δ}("data processing")
+
+# All resolve to: τ(Ω(β(Δ(ℵ(λ(i("data processing")))))))
+# Based on automatic precedence rules
+```
+
+### 10.2 Multi-Line Address Example
+
+```python
+"""
+Multi-component system with cross-references.
+
+@{CORE.SRC.MCP.001, CORE.SRC.P2P.001, CORE.SRC.NEURAL.001}
+#{mcp,p2p,neural,integration,system}
+λ(ℵ(Δ(β(system_integration))))
+
+Dependencies:
+- @{CORE.CONFIG.001} System configuration
+- @{CORE.UTILS.001} Utility functions  
+- @{CORE.TESTS.001} Test suite
+
+Related Components:
+- @{CORE.SRC.MEMORY.001} Memory management
+- @{CORE.SRC.WORKFLOW.001} Workflow engine
+- @{CORE.SRC.COGNITIVE.001} Cognitive architecture
+"""
+```
+
+## {type:SelfReference, file:"PFSUS.MMCP-FormatWrapping.Standard.v1.3.0.mmcp.mmd", version:"1.3.0", checksum:"sha256:f85936a3e401fdffcf075ad8cde825fc9a874f7f705b3b09f4808b9139003800", canonical_address:"format-wrapping-v1.3", self_repair:{desc:"If checksum fails, fetch canonical version from CoreManifest.", source:"CoreManifest"}, project_agnostic:true}
+
+@{visual-meta-start}
+author = {Kalxi},
+title = {PFSUS.MMCP-FormatWrapping.Standard.v1.3.0},
+version = {1.3.0},
+structure = { order_agnostic_wrappers, shorthand_notation, ears_schema, strategy_templates, central_bus_queue, enhanced_agent_schema, dedicated_subaddresses, standardized_comments, sql_wrapping, implementation_examples },
+@{visual-meta-end}
+
+%% MMCP-FOOTER: version=1.3.0; timestamp=2025-07-21T12:00:00Z; checksum=sha256:f85936a3e401fdffcf075ad8cde825fc9a874f7f705b3b09f4808b9139003800; author=Kalxi; license=MIT
+</content>
+</invoke>

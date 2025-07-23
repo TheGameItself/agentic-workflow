@@ -1,0 +1,204 @@
+%% Copyright 2025 Kalxi. All rights reserved. See header for terms. %%
+[ ] #".root"# {protocol:"MCP", version:"1.2.0", standard:"PFSUS+EARS+LambdaJSON"}
+# MMCP Strategy Guide v1.2.0
+## {type:Meta, author:"Kalxi", license:"MIT", last_modified:"2025-07-21T00:00:00Z", id:"PFSUS.MMCP-Strategy.Guide.v1.2.0"}
+## {type:Schema, $schema:"https://json-schema.org/draft/2020-12/schema", required:["type","id","version"], properties:{type:{type:"string"},id:{type:"string"},version:{type:"string"},last_modified:{type:"string",format:"date-time"},author:{type:"string"}}}
+## {type:Changelog, entries:[{"2025-07-21":"Initial version of the Strategy Guide."}]}
+
+## {type:Guide, id:"PFSUS-Strategy-1.0", desc:"Best practices for code, formatting, and optimization in MMCP documents."}
+
+## 1. Introduction
+
+This guide provides best practices for working with MMCP documents, including code formatting, optimization techniques, and integration strategies. Following these guidelines will ensure consistency, maintainability, and performance across your MMCP-based projects.
+
+## 2. Code Formatting Practices
+
+### 2.1 General Formatting
+
+1. **Consistent Indentation**: Use 2 spaces for indentation in MMCP documents.
+2. **Line Length**: Limit lines to 100 characters for improved readability.
+3. **Block Structure**: Use clear visual separation between major blocks with empty lines.
+4. **Comments**: Use `%%` for inline comments and `%% COMMENT-START` / `%% COMMENT-END` for block comments.
+5. **Metadata Comments**: Use `%% @key: value` format for metadata comments.
+
+### 2.2 LambdaJSON Formatting
+
+1. **Field Order**: Follow the canonical order: type, id/name/label, core fields, arrays/children, meta/optional fields, comments.
+2. **Nesting**: Limit nesting depth to 3 levels for readability.
+3. **Quotes**: Use double quotes for all string values.
+4. **Commas**: Avoid trailing commas in arrays and objects.
+5. **Whitespace**: Use consistent spacing around operators and after commas.
+
+### 2.3 Mermaid Diagram Formatting
+
+1. **Node IDs**: Use descriptive, camelCase IDs for nodes.
+2. **Edge Labels**: Keep edge labels concise and descriptive.
+3. **Subgraphs**: Use subgraphs to group related nodes.
+4. **Styling**: Define styles using classDef and apply consistently.
+5. **Direction**: Use TD (top-down) or LR (left-right) based on diagram complexity.
+
+## 3. Code Organization
+
+### 3.1 File Structure
+
+1. **Header**: Begin each file with copyright notice and root indicator.
+2. **Meta Block**: Include a meta block with author, license, last modified date, and ID.
+3. **Schema Block**: Include a schema block defining the document structure.
+4. **Content Blocks**: Organize content into logical blocks with clear headings.
+5. **Footer**: End with a self-reference block and visual-meta appendix.
+
+### 3.2 Modularization
+
+1. **Single Responsibility**: Each MMCP document should have a single, well-defined purpose.
+2. **References**: Use references (`[[file:path]]`) instead of duplicating content.
+3. **Nested Content**: Use nested content blocks for code, data, and other non-MMCP content.
+4. **Dependencies**: Explicitly declare dependencies between documents.
+5. **Versioning**: Use semantic versioning for all documents.
+
+### 3.3 Naming Conventions
+
+1. **File Names**: Use the format `<MMCP-Name-Standard>.<MMCP-address>.mmcp.<wrapper>`.
+2. **IDs**: Use uppercase with hyphens for document IDs (e.g., `PFSUS-CORE-001`).
+3. **Types**: Use PascalCase for type names (e.g., `FormatWrappingStandard`).
+4. **Fields**: Use camelCase for field names (e.g., `lastModified`).
+5. **Constants**: Use UPPER_SNAKE_CASE for constants (e.g., `MAX_DEPTH`).
+
+## 4. Optimization Techniques
+
+### 4.1 Performance Optimization
+
+1. **Lazy Loading**: Use references to load content only when needed.
+2. **Caching**: Cache parsed content and validation results.
+3. **Incremental Processing**: Process large documents incrementally.
+4. **Parallel Processing**: Use parallel processing for independent operations.
+5. **Memory Management**: Minimize memory usage by streaming large content.
+
+### 4.2 Space Optimization
+
+1. **Compression**: Use semantic compression through well-defined schemas.
+2. **References**: Use references instead of duplicating content.
+3. **Shorthand Notation**: Use shorthand notation where appropriate (e.g., λ for lambda functions).
+4. **Selective Content**: Include only necessary content in documents.
+5. **Binary Formats**: Use binary formats for large data sets.
+
+### 4.3 Processing Optimization
+
+1. **Efficient Parsing**: Use optimized parsing algorithms.
+2. **Validation Caching**: Cache validation results.
+3. **Incremental Updates**: Support incremental updates to documents.
+4. **Partial Processing**: Process only changed parts of documents.
+5. **Batch Processing**: Process multiple documents in batches.
+
+## 5. Integration Strategies
+
+### 5.1 IDE Integration
+
+1. **Syntax Highlighting**: Provide syntax highlighting for MMCP documents.
+2. **Code Completion**: Support code completion for MMCP fields and types.
+3. **Validation**: Integrate validation into the IDE.
+4. **Navigation**: Support navigation between references.
+5. **Visualization**: Provide visualization tools for MMCP documents.
+
+### 5.2 Build System Integration
+
+1. **Validation**: Validate MMCP documents during build.
+2. **Generation**: Generate code from MMCP documents.
+3. **Documentation**: Generate documentation from MMCP documents.
+4. **Testing**: Generate tests from MMCP documents.
+5. **Deployment**: Include MMCP documents in deployment packages.
+
+### 5.3 Runtime Integration
+
+1. **Dynamic Loading**: Load MMCP documents at runtime.
+2. **Configuration**: Use MMCP documents for configuration.
+3. **Serialization**: Serialize objects to MMCP format.
+4. **Deserialization**: Deserialize MMCP documents to objects.
+5. **Validation**: Validate MMCP documents at runtime.
+
+## 6. Best Practices for Specific Use Cases
+
+### 6.1 Documentation
+
+1. **Structure**: Use clear headings and sections.
+2. **Examples**: Include examples for all concepts.
+3. **References**: Link to related documents.
+4. **Versioning**: Clearly indicate document version.
+5. **Changelog**: Maintain a changelog for all changes.
+
+### 6.2 Configuration
+
+1. **Validation**: Define a schema for all configuration.
+2. **Defaults**: Provide default values for all settings.
+3. **Documentation**: Document all configuration options.
+4. **Validation**: Validate configuration at runtime.
+5. **Overrides**: Support environment-specific overrides.
+
+### 6.3 Data Exchange
+
+1. **Schema**: Define a schema for all data.
+2. **Validation**: Validate data against the schema.
+3. **Versioning**: Support versioning of data formats.
+4. **Compatibility**: Ensure backward compatibility.
+5. **Security**: Validate and sanitize all data.
+
+## 7. Testing and Validation
+
+### 7.1 Document Validation
+
+1. **Schema Validation**: Validate documents against their schema.
+2. **Megalithic Regex**: Use megalithic regex for structural validation.
+3. **Reference Validation**: Validate all references.
+4. **Consistency Checks**: Check for internal consistency.
+5. **Completeness Checks**: Check for required fields and content.
+
+### 7.2 Integration Testing
+
+1. **Reference Resolution**: Test resolution of all references.
+2. **Format Conversion**: Test conversion between formats.
+3. **Tool Integration**: Test integration with all tools.
+4. **Performance Testing**: Test performance with large documents.
+5. **Compatibility Testing**: Test compatibility with different versions.
+
+### 7.3 Automated Testing
+
+1. **Unit Tests**: Write unit tests for all components.
+2. **Integration Tests**: Write integration tests for all integrations.
+3. **Performance Tests**: Write performance tests for critical operations.
+4. **Regression Tests**: Write regression tests for all fixed issues.
+5. **Continuous Integration**: Run tests on all changes.
+
+## 8. Security Considerations
+
+### 8.1 Input Validation
+
+1. **Schema Validation**: Validate all input against a schema.
+2. **Sanitization**: Sanitize all input to prevent injection attacks.
+3. **Type Checking**: Check types of all input values.
+4. **Range Checking**: Check ranges of all numeric values.
+5. **Format Checking**: Check formats of all string values.
+
+### 8.2 Access Control
+
+1. **Authentication**: Authenticate all users.
+2. **Authorization**: Authorize all operations.
+3. **Least Privilege**: Grant minimal necessary privileges.
+4. **Audit Logging**: Log all security-relevant operations.
+5. **Session Management**: Manage sessions securely.
+
+### 8.3 Data Protection
+
+1. **Encryption**: Encrypt sensitive data.
+2. **Hashing**: Hash passwords and other sensitive values.
+3. **Anonymization**: Anonymize personal data.
+4. **Minimization**: Collect and store minimal necessary data.
+5. **Retention**: Define and enforce data retention policies.
+
+## {type:SelfReference, file:"PFSUS.MMCP-Strategy.Guide.v1.2.0.mmcp.mmd", version:"1.2.0", checksum:"sha256:f74825a2d300fdffcf075ad8cde825fc9a874f7f705b3b09f4808b9139003799", canonical_address:"strategy-guide", self_repair:{desc:"If checksum fails, fetch canonical version from CoreManifest.", source:"CoreManifest"}, project_agnostic:true}
+
+@{visual-meta-start}
+author = {Kalxi},
+title = {PFSUS.MMCP-Strategy.Guide.v1.2.0},
+version = {1.2.0},
+structure = { introduction, code_formatting, code_organization, optimization, integration, use_cases, testing, security },
+@{visual-meta-end}
+%% MMCP-FOOTER: version=1.2.0; timestamp=2025-07-21T00:00:00Z; checksum=sha256:f74825a2d300fdffcf075ad8cde825fc9a874f7f705b3b09f4808b9139003799; author=Kalxi; license=MIT

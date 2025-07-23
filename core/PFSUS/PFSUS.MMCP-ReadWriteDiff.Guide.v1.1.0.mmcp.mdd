@@ -1,0 +1,72 @@
+[ ] #".root"# {protocol:"MCP", version:"1.1.0", standard:"PFSUS+EARS+LambdaJSON"}
+# How-to: Read, Write, and Diff PFSUS Messages v1.1.0
+## {type:Meta, id:"PFSUS.MMCP-ReadWriteDiff.Guide.v1.1.0", author:"Kalxi", license:"MIT", last_modified:"2025-07-22T00:00:00Z"}
+## {type:HowToGuide, id:"PFSUS-RW-Guide-1.1", desc:"A practical guide to programmatically interacting with .mmcp.mmd files."}
+## {type:Links, links:[{"type":"MermaidLink","target":"PFSUS.MerMaidContextProtocol.Standard.v1.1.0.mmcp.mmd","label":"Core Protocol","format":"obsidian","desc":"Main protocol standard"}]}
+## {type:SelfReference, file:"PFSUS.MMCP-ReadWriteDiff.Guide.v1.1.0.mmcp.mdd", version:"1.1.0", checksum:"sha256:03546e240f57afbc05e73d3708d428097fdefb00a9a97fb75d89dda956a650f0", canonical_address:"self", self_repair:{ref:"[[PFSUS.MerMaidContextProtocol.Standard.v1.1.0.mmcp.mmd#SelfReference]]"}, project_agnostic:true}
+## {type:FractalPropagation, id:"PFSUS-Fractal-1.0", desc:"Inherits fractal propagation logic from the core protocol.", ref:"[[PFSUS.MerMaidContextProtocol.Standard.v1.1.0.mmcp.mmd#FractalPropagation]]"}
+## {type:CLITools, id:"PFSUS-CLI-1.0", desc:"Inherits CLI tool definitions from the core protocol.", ref:"[[PFSUS.MerMaidContextProtocol.Standard.v1.1.0.mmcp.mmd#CLITools]]"}
+## Visualization
+```mermaid
+graph TD
+    subgraph "Read & Parse"
+        A[Read .mmcp.mmd] --> B{Parse to Data Structure}
+    end
+    subgraph "Modify"
+        B --> C[Modify Data in Memory]
+    end
+    subgraph "Write & Diff"
+        C --> D[Serialize to LambdaJSON]
+        D --> E[Write to new .mmcp.mmd]
+        A --> F[git diff]
+        E --> F
+    end
+```
+## Code Examples
+### Step 1: Reading and Parsing
+```python
+import re
+def parse_pfsus(file_path):
+    data = {"headers": [], "objects": []}
+    ljson_pattern = re.compile(r'\{(?P<content>[^}]+)\}')
+    with open(file_path, 'r') as f:
+        for line in f:
+            if line.startswith(('[ ] #".root"#', '#')):
+                data["headers"].append(line.strip())
+            if match := ljson_pattern.search(line):
+                # Simplified parser
+                pairs = re.findall(r'([a-zA-Z0-9_]+):(?:([\'"])(.*?)\2|([^,}\s]+))', match.group('content'))
+                data["objects"].append({key: (v_quoted or v_unquoted) for key, _, v_quoted, v_unquoted in pairs})
+    return data
+```
+### Step 2: Modifying Data
+```python
+parsed_data = parse_pfsus("PFSUS.MerMaidContextProtocol.Standard.v1.1.0.mmcp.mmd")
+if parsed_data["objects"]:
+    parsed_data["objects"][0]["custom_field"] = "'new_value'"
+```
+### Step 3: Writing and Diffing
+```python
+def write_pfsus(file_path, data):
+    with open(file_path, 'w') as f:
+        for header in data["headers"]:
+            f.write(f"{header}\n")
+        for obj in data["objects"]:
+            f.write(f"{{ {', '.join([f'{k}:{v}' for k, v in obj.items()])} }}\n")
+write_pfsus("PFSUS.MODIFIED.v1.1.0.mmcp.mmd", parsed_data)
+```
+```bash
+git diff --no-index PFSUS.MerMaidContextProtocol.Standard.v1.1.0.mmcp.mmd PFSUS.MODIFIED.v1.1.0.mmcp.mmd
+```
+---
+> [[PFSUS.MerMaidContextProtocol.Standard.v1.1.0.mmcp.mmd]]
+@{visual-meta-start}
+author = {Kalxi},
+title = {PFSUS.MMCP-ReadWriteDiff.Guide.v1.1.0},
+version = {1.1.0},
+structure = { header, meta, how_to_guide, links, self_reference, fractal_propagation, cli_tools, visualization, code_examples, references },
+glossary = { header: "Root and title", meta: "Meta block", how_to_guide: "HowToGuide block", links: "Linked standards", self_reference: "Self-reference block", fractal_propagation: "Fractal propagation block", cli_tools: "CLI tools block", visualization: "Mermaid diagram", code_examples: "Python and bash code", references: "Linked standards" },
+graph_data = { ... },
+ai_entities = { ... },
+notes = {"This standard is part of the universal, self-referential, self-repairing, project-agnostic PFSUS protocol suite."},
+@{visual-meta-end}

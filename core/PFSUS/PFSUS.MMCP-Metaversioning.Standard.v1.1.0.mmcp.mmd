@@ -1,0 +1,24 @@
+[ ] #".root"# {protocol:"MCP", version:"1.1.0", standard:"PFSUS+EARS+LambdaJSON"}
+# PFSUS Metaversioning Standard v1.1.0
+## {type:Meta, id:"PFSUS.MMCP-Metaversioning.Standard.v1.1.0", author:"Kalxi", license:"MIT", last_modified:"2025-07-22T00:00:00Z"}
+## {type:MetaversioningStandard, id:"PFSUS-MetaVer-1.1", desc:"Defines Protocol Epochs and Compatibility Matrices for the PFSUS suite."}
+## {type:ProtocolEpoch, id:"Epoch-Helios-v1", version:"1.0", release_date:"2025-07-22", status:"active", desc:"The first stable epoch, codenamed Helios. Establishes the v1.1.0 baseline for all core standards, including self-reference, fractal propagation, and CLI tool integration."}
+## {type:CompatibilityMatrix, epoch:"Epoch-Helios-v1", matrix:[
+  {component:"PFSUS.Core", version:"1.1.0", compatible_with:[{component:"AGENT.Spec", version:"1.1.0"}, {component:"CLI.Tools", version:"1.0.0"}]},
+  {component:"AGENT.Spec", version:"1.1.0", compatible_with:[{component:"PFSUS.Core", version:"1.1.0"}, {component:"CLI.Tools", version:"1.0.0"}]},
+  {component:"CLI.Tools", version:"1.0.0", compatible_with:[{component:"PFSUS.Core", version:"1.1.0"}, {component:"AGENT.Spec", version:"1.1.0"}]}
+]}
+## {type:Links, links:[{"type":"MermaidLink","target":"PFSUS.MerMaidContextProtocol.Standard.v1.1.0.mmcp.mmd","label":"Core Protocol","format":"obsidian","desc":"Main protocol standard"}]}
+## {type:SelfReference, file:"PFSUS.MMCP-Metaversioning.Standard.v1.1.0.mmcp.mmd", version:"1.1.0", checksum:"sha256:5dd846d75e2c5c95e2fc5814acbe928808aef77abd7d28455457d9868b611cb6", canonical_address:"self", self_repair:{ref:"[[PFSUS.MerMaidContextProtocol.Standard.v1.1.0.mmcp.mmd#SelfReference]]"}, project_agnostic:true}
+## {type:FractalPropagation, id:"PFSUS-Fractal-1.0", desc:"Inherits fractal propagation logic from the core protocol.", ref:"[[PFSUS.MerMaidContextProtocol.Standard.v1.1.0.mmcp.mmd#FractalPropagation]]"}
+## {type:CLITools, id:"PFSUS-CLI-1.0", desc:"Inherits CLI tool definitions from the core protocol.", ref:"[[PFSUS.MerMaidContextProtocol.Standard.v1.1.0.mmcp.mmd#CLITools]]"}
+@{visual-meta-start}
+author = {Kalxi},
+title = {PFSUS.MMCP-Metaversioning.Standard.v1.1.0},
+version = {1.1.0},
+structure = { header, meta, metaversioning_standard, protocol_epoch, compatibility_matrix, links, self_reference },
+glossary = { header: "Root and title", meta: "Meta block", metaversioning_standard: "MetaversioningStandard block", protocol_epoch: "Protocol Epoch definition", compatibility_matrix: "Compatibility Matrix", links: "Linked standards", self_reference: "Self-reference block" },
+notes = {"This standard governs the versioning relationship between all PFSUS components."},
+@{visual-meta-end}
+---
+> [[PFSUS.MerMaidContextProtocol.Standard.v1.1.0.mmcp.mmd]] 

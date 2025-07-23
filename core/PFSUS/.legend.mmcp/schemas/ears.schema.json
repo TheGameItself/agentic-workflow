@@ -1,0 +1,298 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pfsus.org/schemas/ears.schema.json",
+  "title": "EARS (Easy Approach to Requirements Syntax) Schema",
+  "description": "Schema for EARS-compliant requirements specifications following PFSUS standards",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "const": "EARS",
+      "description": "Must be 'EARS' for EARS requirements"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^EARS-[0-9]{4}$",
+      "description": "Unique identifier in format EARS-XXXX"
+    },
+    "entity": {
+      "type": "string",
+      "description": "The system entity that performs the action",
+      "minLength": 1
+    },
+    "action": {
+      "type": "string",
+      "enum": ["shall", "should", "will", "must"],
+      "description": "The modal verb indicating requirement strength"
+    },
+    "response": {
+      "type": "string",
+      "description": "The required response or behavior",
+      "minLength": 1
+    },
+    "condition": {
+      "type": "object",
+        "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["when", "if", "while", "where", "unless"],
+          "description": "Type of condition"
+        },
+        "statement": {
+      "type": "string",
+          "description": "The condition statement",
+          "minLength": 1
+        }
+    },
+      "required": ["type", "statement"],
+      "description": "Structured triggering condition"
+      },
+    "priority": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "critical"],
+          "description": "Requirement priority level"
+  },
+        "rationale": {
+          "type": "string",
+          "description": "Justification for the priority level"
+        }
+      },
+      "required": ["level"],
+      "description": "Priority information"
+    },
+    "verification": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": ["unit_test", "integration_test", "system_test", "manual_test", "inspection", "analysis", "demonstration"],
+          "description": "Method for verifying the requirement"
+        },
+        "criteria": {
+          "type": "string",
+          "description": "Specific criteria for successful verification"
+        },
+        "procedure_ref": {
+          "type": "string",
+          "description": "Reference to verification procedure document"
+        }
+      },
+      "required": ["method"],
+      "description": "Verification information"
+    },
+    "rationale": {
+      "type": "string",
+      "description": "Explanation of why this requirement exists"
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "stakeholder": {
+          "type": "string",
+          "description": "Stakeholder who requested this requirement"
+        },
+        "document": {
+          "type": "string",
+          "description": "Source document reference"
+        },
+        "date": {
+          "type": "string",
+          "format": "date",
+          "description": "Date when requirement was identified"
+        }
+      },
+      "description": "Source information for the requirement"
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^EARS-[0-9]{4}$"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["parent", "child", "related", "conflicts"]
+          }
+        },
+        "required": ["id", "type"]
+      },
+      "description": "Other EARS requirements this depends on with relationship type"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags for categorization and filtering"
+    },
+    "acceptance_criteria": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for this criterion"
+          },
+          "given": {"type": "string"},
+          "when": {"type": "string"},
+          "then": {"type": "string"},
+          "automated": {
+            "type": "boolean",
+            "description": "Whether this criterion is automatically tested"
+          }
+        },
+        "required": ["id", "given", "when", "then"]
+      },
+      "description": "Gherkin-style acceptance criteria"
+    },
+    "risk": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "critical"],
+          "description": "Risk level if requirement is not met"
+        },
+        "impact": {
+          "type": "string",
+          "description": "Description of impact if requirement is not met"
+        },
+        "mitigation": {
+          "type": "string",
+          "description": "Risk mitigation strategy"
+        }
+      },
+      "required": ["level"],
+      "description": "Risk assessment information"
+    },
+    "compliance": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "standard": {
+            "type": "string",
+            "description": "Compliance standard identifier"
+          },
+          "section": {
+            "type": "string",
+            "description": "Specific section of the standard"
+          }
+        },
+        "required": ["standard"]
+      },
+      "description": "Compliance standards this requirement addresses"
+    },
+    "version": {
+      "type": "string",
+      "description": "Version of this requirement",
+      "default": "1.0"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "proposed", "approved", "implemented", "verified", "deprecated"],
+      "description": "Current status of this requirement",
+      "default": "draft"
+    },
+    "history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "author": {
+            "type": "string"
+          },
+          "change": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": ["date", "author", "change", "version"]
+      },
+      "description": "Change history of this requirement"
+    }
+  },
+  "required": ["type", "id", "entity", "action", "response", "version", "status"],
+  "additionalProperties": false,
+  "examples": [
+        {
+      "type": "EARS",
+      "id": "EARS-0001",
+      "entity": "System",
+      "action": "shall",
+      "response": "authenticate user credentials",
+      "condition": {
+        "type": "when",
+        "statement": "a user attempts to log in"
+      },
+      "priority": {
+        "level": "high",
+        "rationale": "Core security feature"
+      },
+      "verification": {
+        "method": "unit_test",
+        "criteria": "All authentication paths must be tested",
+        "procedure_ref": "TEST-AUTH-001"
+      },
+      "rationale": "Security requirement to prevent unauthorized access",
+      "source": {
+        "stakeholder": "Security Team",
+        "document": "SEC-REQ-2023",
+        "date": "2023-01-15"
+      },
+      "tags": ["security", "authentication", "login"],
+      "acceptance_criteria": [
+        {
+          "id": "AC-001",
+          "given": "a valid user credential",
+          "when": "user attempts to log in",
+          "then": "system grants access",
+          "automated": true
+}      ],
+      "risk": {
+        "level": "high",
+        "impact": "Unauthorized system access",
+        "mitigation": "Implement multi-factor authentication"
+      },
+      "compliance": [
+        {
+          "standard": "ISO-27001",
+          "section": "A.9.4.2"
+        },
+        {
+          "standard": "GDPR",
+          "section": "Article 32"
+        }
+      ],
+      "version": "1.0",
+      "status": "approved",
+      "history": [
+        {
+          "date": "2023-01-15",
+          "author": "J. Smith",
+          "change": "Initial creation",
+          "version": "0.1"
+        },
+        {
+          "date": "2023-02-01",
+          "author": "A. Johnson",
+          "change": "Approved after security review",
+          "version": "1.0"
+        }
+      ]
+    }
+  ]
+}

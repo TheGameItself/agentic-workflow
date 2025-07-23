@@ -1,0 +1,3 @@
+#!/bin/bash
+# Wrapper script for MMCP-PFSUS-CLI
+python3 "$(dirname "$0")/MMCP-PFSUS-CLI.MMCP-CLI-001.mmcp.py" "$@"

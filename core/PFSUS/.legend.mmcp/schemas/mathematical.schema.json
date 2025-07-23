@@ -1,0 +1,603 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pfsus.org/schemas/mathematical.schema.json",
+  "title": "Mathematical Operators Schema",
+  "description": "Schema for LambdaJSON mathematical operators in MMCP format",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "const": "Mathematical",
+      "description": "Must be 'Mathematical' for mathematical expressions"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^MATH-[A-Z0-9]{3,6}$",
+      "description": "Unique identifier in format MATH-XXX to MATH-XXXXXX"
+    },
+    "expression": {
+      "type": "string",
+      "description": "The mathematical expression in standard notation"
+    },
+    "latex": {
+      "type": "string",
+      "description": "LaTeX representation of the expression"
+    },
+    "ascii_representation": {
+      "type": "string",
+      "description": "ASCII-compatible representation for plain text environments"
+    },
+              "operators": {
+                "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "enum": [
+              "ADD", "SUB", "MUL", "DIV", "DOT", "PERCNT", "POW", "FACT",
+              "EQL", "NEQL", "LESS", "GREAT", "LEQ", "GEQ", "APPRX", "IDEN",
+              "ELM", "NELM", "EMSET", "INTSC", "UNION", "PSUB", "SBEQ", "NSUB", "SDIFF",
+              "FALL", "EXIST", "LAND", "LOR", "LNOT", "XOR", "NAND", "NOR", "IMPL", "IFF",
+              "SUM", "PROD", "GRAD", "PARD", "DERIV", "PRIME", "INTRG", "DINT", "TINT",
+              "BIGO", "OMEGA", "THETA", "PROP",
+              "NATS", "INTS", "RATS", "REALS", "CPLX", "ALEPH",
+              "TURN", "MODEL", "TOP", "BOT", "GODEL", "LOB",
+              "COMP", "MTO", "SQRT", "CBRT", "QRT",
+              "RECUR", "LOOP", "INF", "RCLOOP", "IINF",
+              "SUMPRD", "DCOMP", "DMAP", "FEXS", "SALL", "PRSEM",
+              "LIMS", "LIMINF", "LIMSUP", "TENSOR", "WEDGE", "OPLUS", "OTIMES",
+              "FORALL", "NABLA", "PARTIAL", "HBAR", "FOURIER", "LAPLACE", "MELLIN",
+              "HILBERT", "LEGENDRE", "ZETA", "GAMMA", "BETA", "DELTA", "EPSILON"
+            ]
+        },
+          "symbol": {
+            "type": "string",
+            "description": "Unicode symbol representation"
+          },
+          "unicode": {
+            "type": "string",
+            "pattern": "^U\\+[0-9A-F]{4,6}$",
+            "description": "Unicode code point"
+          },
+          "latex": {
+          "type": "string",
+            "description": "LaTeX command for the operator"
+        },
+          "precedence": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 12,
+            "description": "Operator precedence (1=lowest, 12=highest)"
+        },
+          "associativity": {
+            "type": "string",
+            "enum": ["left", "right", "none"],
+            "default": "left"
+          },
+          "arity": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3,
+            "description": "Number of operands (0=nullary, 1=unary, 2=binary, 3=ternary)"
+      },
+          "category": {
+            "type": "string",
+            "enum": ["arithmetic", "logical", "set", "calculus", "algebraic", "relational", "functional", "special"],
+            "description": "Operator category for semantic grouping"
+  },
+          "description": {
+            "type": "string",
+            "description": "Human-readable description of the operator"
+          }
+        },
+        "required": ["token", "symbol", "unicode", "latex", "precedence", "category"]
+      },
+      "description": "List of mathematical operators used in the expression"
+        },
+      "wrapper_assignment": {
+      "type": "object",
+      "properties": {
+        "primary": {
+          "type": "string",
+          "enum": ["λ", "ℵ", "Δ", "β", "Ω", "i", "τ", "γ", "ψ", "φ", "θ", "ξ", "π", "σ"],
+          "description": "Primary calculus notation wrapper"
+      },
+        "secondary": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["λ", "ℵ", "Δ", "β", "Ω", "i", "τ", "γ", "ψ", "φ", "θ", "ξ", "π", "σ"]
+          },
+          "description": "Additional wrapper layers"
+        },
+        "auto_detected": {
+          "type": "boolean",
+          "description": "Whether wrapper was automatically detected"
+        },
+        "context": {
+          "type": "string",
+          "enum": ["analysis", "algebra", "geometry", "logic", "set_theory", "number_theory", "topology", "probability"],
+          "description": "Mathematical context for wrapper interpretation"
+    }
+      },
+      "required": ["primary"]
+    },
+    "complexity": {
+      "type": "object",
+      "properties": {
+        "time": {
+          "type": "object",
+          "properties": {
+            "best": {"type": "string", "description": "Best case time complexity"},
+            "average": {"type": "string", "description": "Average case time complexity"},
+            "worst": {"type": "string", "description": "Worst case time complexity"},
+            "amortized": {"type": "string", "description": "Amortized time complexity"}
+}        },
+        "space": {
+          "type": "object",
+          "properties": {
+            "auxiliary": {"type": "string", "description": "Auxiliary space complexity"},
+            "total": {"type": "string", "description": "Total space complexity"}
+          }
+        },
+        "notation": {
+          "type": "string",
+          "enum": ["BIGO", "OMEGA", "THETA", "SMALLO", "SMALLO"],
+          "description": "Asymptotic notation used"
+        },
+        "recurrence_relation": {
+          "type": "string",
+          "description": "Recurrence relation if applicable"
+        },
+        "solution_method": {
+          "type": "string",
+          "enum": ["master_theorem", "recursion_tree", "substitution", "characteristic_equation"],
+          "description": "Method used to solve recurrence relation"
+        }
+      },
+      "description": "Computational complexity analysis"
+    },
+    "domain": {
+      "type": "object",
+      "properties": {
+        "input_set": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": ["NATS", "INTS", "RATS", "REALS", "CPLX", "BOOLEAN", "CATEGORICAL", "ORDINAL", "QUATERNION", "OCTONION"]
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["NATS", "INTS", "RATS", "REALS", "CPLX", "BOOLEAN", "CATEGORICAL", "ORDINAL", "QUATERNION", "OCTONION"]
+              },
+              "description": "Multiple input domains for multivariate functions"
+            }
+          ],
+          "description": "Input domain set"
+        },
+        "output_set": {
+          "type": "string", 
+          "enum": ["NATS", "INTS", "RATS", "REALS", "CPLX", "BOOLEAN", "CATEGORICAL", "ORDINAL", "QUATERNION", "OCTONION"],
+          "description": "Output codomain set"
+        },
+        "constraints": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Domain constraints and restrictions"
+        },
+        "singularities": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Points where the function is undefined or singular"
+        },
+        "boundary_conditions": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Boundary conditions for differential equations"
+        }
+      },
+      "description": "Mathematical domain and codomain"
+    },
+    "properties": {
+      "type": "object",
+      "properties": {
+        "commutative": {"type": "boolean", "description": "Is the operation commutative"},
+        "associative": {"type": "boolean", "description": "Is the operation associative"},
+        "distributive": {"type": "boolean", "description": "Does it distribute over other operations"},
+        "identity_element": {"type": "string", "description": "Identity element if exists"},
+        "inverse_element": {"type": "string", "description": "Inverse element if exists"},
+        "idempotent": {"type": "boolean", "description": "Is the operation idempotent"},
+        "monotonic": {"type": "boolean", "description": "Is the function monotonic"},
+        "continuous": {"type": "boolean", "description": "Is the function continuous"},
+        "differentiable": {"type": "boolean", "description": "Is the function differentiable"},
+        "integrable": {"type": "boolean", "description": "Is the function integrable"},
+        "periodic": {"type": "boolean", "description": "Is the function periodic"},
+        "bounded": {"type": "boolean", "description": "Is the function bounded"},
+        "injective": {"type": "boolean", "description": "Is the function injective (one-to-one)"},
+        "surjective": {"type": "boolean", "description": "Is the function surjective (onto)"},
+        "bijective": {"type": "boolean", "description": "Is the function bijective"},
+        "group_properties": {
+          "type": "object",
+          "properties": {
+            "is_group": {"type": "boolean"},
+            "is_abelian": {"type": "boolean"},
+            "is_cyclic": {"type": "boolean"},
+            "order": {"type": "string"}
+          }
+        },
+        "ring_properties": {
+          "type": "object",
+          "properties": {
+            "is_ring": {"type": "boolean"},
+            "is_commutative": {"type": "boolean"},
+            "has_unity": {"type": "boolean"},
+            "is_integral_domain": {"type": "boolean"},
+            "is_field": {"type": "boolean"}
+          }
+        }
+      },
+      "description": "Mathematical properties of the expression"
+    },
+    "proof": {
+      "type": "object",
+      "properties": {
+        "theorem": {"type": "string", "description": "Theorem being proved"},
+        "assumptions": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Proof assumptions"
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "step": {"type": "integer"},
+              "expression": {"type": "string"},
+              "justification": {"type": "string"},
+              "operators": {
+                "type": "array",
+                "items": {"type": "string"}
+              },
+              "references": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "References to previous steps or external theorems"
+              }
+            },
+            "required": ["step", "expression", "justification"]
+          }
+        },
+        "conclusion": {"type": "string", "description": "Proof conclusion"},
+        "proof_method": {
+          "type": "string",
+          "enum": ["direct", "contradiction", "induction", "construction", "exhaustion", "contrapositive", "nonconstructive"],
+          "description": "Proof methodology used"
+        },
+        "formal_system": {
+          "type": "string",
+          "enum": ["first_order_logic", "higher_order_logic", "modal_logic", "intuitionistic_logic", "type_theory", "set_theory"],
+          "description": "Formal system in which the proof is constructed"
+        },
+        "verification_status": {
+          "type": "string",
+          "enum": ["unverified", "computer_verified", "peer_reviewed", "published"],
+          "description": "Verification status of the proof"
+        }
+      },
+      "description": "Formal proof structure"
+    },
+    "numerical_methods": {
+      "type": "object",
+      "properties": {
+        "approximation": {
+          "type": "object",
+          "properties": {
+            "method": {"type": "string", "description": "Numerical method used"},
+            "error_bound": {"type": "string", "description": "Error bound analysis"},
+            "convergence_rate": {"type": "string", "description": "Rate of convergence"},
+            "iterations_required": {"type": "integer", "description": "Typical iterations for convergence"},
+            "initial_guess": {"type": "string", "description": "Initial value for iterative methods"}
+          }
+        },
+        "stability": {
+          "type": "string",
+          "enum": ["stable", "conditionally_stable", "unstable", "asymptotically_stable"],
+          "description": "Numerical stability"
+        },
+        "precision_requirements": {
+          "type": "string",
+          "description": "Floating point precision requirements"
+        },
+        "alternative_methods": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {"type": "string"},
+              "advantages": {"type": "array", "items": {"type": "string"}},
+              "disadvantages": {"type": "array", "items": {"type": "string"}}
+            }
+          },
+          "description": "Alternative numerical approaches"
+        },
+        "implementation_notes": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Notes on efficient implementation"
+        }
+      },
+      "description": "Numerical computation aspects"
+    },
+    "visualization": {
+      "type": "object",
+      "properties": {
+        "graph_type": {
+          "type": "string",
+          "enum": ["function", "relation", "set", "proof_tree", "complexity_chart", "vector_field", "contour_plot", "surface_plot", "parametric", "polar"],
+          "description": "Type of mathematical visualization"
+        },
+        "dimensions": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4,
+          "description": "Dimensional space for visualization"
+        },
+        "interactive": {"type": "boolean", "description": "Is visualization interactive"},
+        "animation": {"type": "boolean", "description": "Does visualization include animation"},
+        "color_scheme": {
+          "type": "string",
+          "enum": ["grayscale", "rgb", "cmyk", "heatmap", "categorical", "diverging", "sequential"],
+          "description": "Color scheme for visualization"
+        },
+        "rendering_hints": {
+          "type": "object",
+          "properties": {
+            "view_angle": {"type": "array", "items": {"type": "number"}, "description": "Camera view angles"},
+            "zoom_level": {"type": "number", "description": "Initial zoom level"},
+            "axis_labels": {"type": "array", "items": {"type": "string"}, "description": "Labels for axes"},
+            "grid_lines": {"type": "boolean", "description": "Show grid lines"},
+            "legend": {"type": "boolean", "description": "Show legend"}
+          }
+        },
+        "data_points": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "x": {"type": "number"},
+              "y": {"type": "number"},
+              "z": {"type": "number"},
+              "t": {"type": "number"},
+              "label": {"type": "string"}
+            }
+          },
+          "description": "Sample data points for visualization"
+        }
+      },
+      "description": "Visualization specifications"
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["theorem", "lemma", "definition", "axiom", "corollary", "proposition", "conjecture", "identity", "formula", "algorithm", "paper", "book", "website"]
+          },
+          "name": {"type": "string"},
+          "source": {"type": "string"},
+          "address": {"type": "string", "pattern": "^@\\{[A-Z0-9.-]+\\}$"},
+          "doi": {"type": "string", "pattern": "^10\\.\\d{4,9}/[-._;()/:A-Z0-9]+$"},
+          "url": {"type": "string", "format": "uri"},
+          "authors": {"type": "array", "items": {"type": "string"}},
+          "year": {"type": "integer"},
+          "page_numbers": {"type": "string"}
+        },
+        "required": ["type", "name"]
+      },
+      "description": "Mathematical references and citations"
+    },
+    "applications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "enum": ["physics", "engineering", "computer_science", "economics", "biology", "chemistry", "medicine", "social_sciences", "cryptography", "finance", "machine_learning", "statistics", "quantum_computing", "telecommunications", "aerospace"]
+          },
+          "description": {"type": "string"},
+          "examples": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "implementation_details": {
+            "type": "object",
+            "properties": {
+              "languages": {"type": "array", "items": {"type": "string"}},
+              "libraries": {"type": "array", "items": {"type": "string"}},
+              "platforms": {"type": "array", "items": {"type": "string"}},
+              "performance_considerations": {"type": "array", "items": {"type": "string"}}
+            }
+          },
+          "case_studies": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": {"type": "string"},
+                "description": {"type": "string"},
+                "results": {"type": "string"},
+                "reference": {"type": "string"}
+              }
+            }
+          }
+        },
+        "required": ["domain", "description"]
+      },
+      "description": "Real-world applications of the mathematical concept"
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "author": {"type": "string"},
+        "contributors": {"type": "array", "items": {"type": "string"}},
+        "created": {"type": "string", "format": "date-time"},
+        "last_modified": {"type": "string", "format": "date-time"},
+        "version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+        "difficulty_level": {
+          "type": "string",
+          "enum": ["elementary", "intermediate", "advanced", "graduate", "research"]
+        },
+        "prerequisites": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "tags": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "educational_context": {
+          "type": "object",
+          "properties": {
+            "course_level": {"type": "string"},
+            "learning_objectives": {"type": "array", "items": {"type": "string"}},
+            "assessment_criteria": {"type": "array", "items": {"type": "string"}}
+          }
+        },
+        "computational_environment": {
+          "type": "object",
+          "properties": {
+            "software": {"type": "array", "items": {"type": "string"}},
+            "hardware_requirements": {"type": "string"},
+            "runtime_constraints": {"type": "string"}
+          }
+        }
+      },
+      "description": "Mathematical expression metadata"
+    },
+    "related_concepts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "concept": {"type": "string"},
+          "relationship": {"type": "string", "enum": ["prerequisite", "generalization", "specialization", "analogy", "application", "extension"]},
+          "description": {"type": "string"},
+          "reference_id": {"type": "string", "pattern": "^MATH-[A-Z0-9]{3,6}$"}
+        },
+        "required": ["concept", "relationship"]
+      },
+      "description": "Related mathematical concepts and their relationships"
+    },
+    "historical_context": {
+      "type": "object",
+      "properties": {
+        "origin": {"type": "string"},
+        "discoverer": {"type": "string"},
+        "year": {"type": "integer"},
+        "evolution": {"type": "array", "items": {"type": "string"}},
+        "significance": {"type": "string"}
+      },
+      "description": "Historical context and development of the concept"
+    }
+  },
+  "required": ["type", "id", "expression", "operators", "wrapper_assignment"],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "type": "Mathematical",
+      "id": "MATH-001",
+      "expression": "∫₀¹ x² dx = 1/3",
+      "latex": "\\int_0^1 x^2 \\, dx = \\frac{1}{3}",
+      "ascii_representation": "int_0^1 x^2 dx = 1/3",
+      "operators": [
+        {
+          "token": "INTRG",
+          "symbol": "∫",
+          "unicode": "U+222B",
+          "latex": "\\int",
+          "precedence": 2,
+          "arity": 1,
+          "category": "calculus",
+          "description": "Definite integral from 0 to 1"
+        },
+        {
+          "token": "POW",
+          "symbol": "²",
+          "unicode": "U+00B2",
+          "latex": "^2",
+          "precedence": 8,
+          "arity": 2,
+          "category": "arithmetic",
+          "description": "Square of x"
+        },
+        {
+          "token": "EQL",
+          "symbol": "=",
+          "unicode": "U+003D",
+          "latex": "=",
+          "precedence": 4,
+          "arity": 2,
+          "category": "relational",
+          "description": "Equality relation"
+        }
+      ],
+      "wrapper_assignment": {
+        "primary": "Δ",
+        "auto_detected": true,
+        "context": "analysis"
+      },
+      "complexity": {
+        "time": {
+          "best": "O(1)",
+          "average": "O(1)",
+          "worst": "O(1)"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "total": "O(1)"
+        },
+        "notation": "BIGO"
+      },
+      "domain": {
+        "input_set": "REALS",
+        "output_set": "REALS",
+        "constraints": ["x ∈ [0,1]"]
+      },
+      "properties": {
+        "monotonic": true,
+        "continuous": true,
+        "differentiable": true,
+        "integrable": true
+      },
+      "applications": [
+        {
+          "domain": "physics",
+          "description": "Calculating area under curves",
+          "examples": ["velocity-time graphs", "force-displacement work"],
+          "implementation_details": {
+            "languages": ["Python", "MATLAB"],
+            "libraries": ["NumPy", "SciPy"]
+          }
+        }
+      ],
+      "visualization": {
+        "graph_type": "function",
+        "dimensions": 2,
+        "interactive": true,
+        "color_scheme": "rgb"
+      },
+      "historical_context": {
+        "origin": "Fundamental theorem of calculus",
+        "discoverer": "Isaac Newton & Gottfried Leibniz",
+        "year": 1687
+      }
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+[ ] #".root"# {protocol:"PFSUS", version:"1.1.0", standard:"MCP+LambdaJSON"}
+# PFSUS Regex Standard v1.1.0
+## {type:Meta, id:"PFSUS.MMCP-Regex.Standard.v1.1.0", author:"Kalxi", license:"MIT", last_modified:"2025-07-22T00:00:00Z"}
+## {type:RegexStandard, id:"PFSUS-Regex-1.1", desc:"Regex definitions for parsing .mmcp.mmd files."}
+## {type:QuickRef, summary:{schema:"https://json-schema.org/draft/2020-12/schema", legend:"[[PFSUS.MMCP-Legend.Standard.v1.1.0.mmcp.mdd]]"}}
+## {type:Links, links:[{"type":"MermaidLink","target":"PFSUS.MerMaidContextProtocol.Standard.v1.1.0.mmcp.mmd","label":"Core Protocol","format":"obsidian","desc":"Main protocol standard"}]}
+## {type:SelfReference, file:"PFSUS.MMCP-Regex.Standard.v1.1.0.mmcp.mmd", version:"1.1.0", checksum:"sha256:7aa585c3640914698f3227dc5da6fc7ad821d690dbcbd55a7832966f5c35462e", canonical_address:"self", self_repair:{ref:"[[PFSUS.MerMaidContextProtocol.Standard.v1.1.0.mmcp.mmd#SelfReference]]"}, project_agnostic:true}
+## {type:FractalPropagation, id:"PFSUS-Fractal-1.0", desc:"Inherits fractal propagation logic from the core protocol.", ref:"[[PFSUS.MerMaidContextProtocol.Standard.v1.1.0.mmcp.mmd#FractalPropagation]]"}
+## {type:CLITools, id:"PFSUS-CLI-1.0", desc:"Inherits CLI tool definitions from the core protocol.", ref:"[[PFSUS.MerMaidContextProtocol.Standard.v1.1.0.mmcp.mmd#CLITools]]"}
+## Visualization
+```mermaid
+graph TD
+    subgraph "Regex Categories"
+        A["Core Structure"]:::concepts_group
+        B["Content Elements"]:::concepts_group
+        C["LambdaJSON"]:::concepts_group
+    end
+    subgraph "Core Structure Examples"
+        Root["/^\[ \] #\".root\"#.*/"]:::io_ex
+        Heading["/^#+\s.*/"]:::io_ex
+        A -- Comprises --> Root & Heading
+    end
+    subgraph "Content Elements Examples"
+        Wikilink["/^\[\[[^\]]+\]\].*/"]:::io_ex
+        Tag["/^(\s*#\w+(\/\w+)*\s*)+$/"]:::io_ex
+        B -- Comprises --> Wikilink & Tag
+    end
+    subgraph "LambdaJSON Examples"
+        FullObject["/\{(?<content>[^}]+)\}/"]:::io_ex
+        KeyValue["/(?<key>[a-zA-Z0-9_]+):(?<value>\"[^\"]*\"|\[[^\]]*\]|[^,}\s]+)/"]:::io_ex
+        C -- Comprises --> FullObject & KeyValue
+    end
+    classDef concepts_group fill:#fff9c4,stroke:#fbc02d,color:#333;
+    classDef io_ex fill:#d1c4e9,stroke:#512da8,color:#fff;
+```
+## Regex Definitions
+### Core Structure
+- **Root Indicator**: `^\[ \] #"\.root"#.*`
+- **Markdown Heading**: `^#+\s.*`
+- **Horizontal Rule**: `^---$`
+### Content Elements
+- **Line with Wikilink**: `^\[\[[^\]]+\]\].*`
+- **Line with Obsidian Tags**: `^(\s*#\w+(\/\w+)*\s*)+$`
+- **Blockquote**: `^>.*`
+- **List Item**: `^\s*[-*+]\s.*`
+### LambdaJSON
+- **Full LambdaJSON Object**: `\{(?<content>[^}]+)\}`
+- **Key-Value Pair**: `(?<key>[a-zA-Z0-9_]+):(?<value>"[^"]*"|\[[^\]]*\]|[^,}\s]+)`
+## {type:MegolithicRegex, id:"MMCP-Megolithic-1.1", desc:"Full-document regex for MMCP format.", regex:"^(\[ \] #\".root\"#.*|#+\s.*|---|\{[^}]+\}|@\{visual-meta-start\}|@\{visual-meta-end\}|%%.*|>.*|\[\[[^\]]+\]\].*|\s*#\w+(\/\w+)*\s*|^\s*[-*+]\s.*|^>.*|^\s*")$", proof:["[ ] #\".root\"# {protocol:'MCP', version:'1.1.0.0'}","## {type:Meta, author:'Kalxi'}","@{visual-meta-start}","%% comment"], antiproof:["[ ] root {protocol:'MCP'}","## type:Meta, author:'Kalxi'","@visual-meta-start","% comment"]}
+## {type:RegexProofs, id:"MMCP-Regex-Proofs-1.1", desc:"Proof and antiproof for all major regexes.", proofs:[{regex:"^\[ \] #\".root\"#.*", proof:["[ ] #\".root\"# {protocol:'MCP'}"], antiproof:["[ ] root {protocol:'MCP'}"]},{regex:"^#+\s.*", proof:["## Heading"], antiproof:["#Heading"]},{regex:"^---$", proof:["---"], antiproof:["--"]},{regex:"^\[\[[^\]]+\]\].*", proof:["[[SomeLink]]"], antiproof:["[SomeLink]"]},{regex:"\{(?<content>[^}]+)\}", proof:["{type:'Meta',author:'Kalxi'}"], antiproof:["type:'Meta',author:'Kalxi'"]}]}
+## {type:RegexProofs, id:"PFSUS-RegexProof-1.0", desc:"Proof/antiproof examples for regex validation.", proofs:[{regex_id:"LAMBDA-JSON-001", should_match:["{type:Foo,key:val}","{type:Bar,key:val,num:1.23}"], should_not_match:["{type:Foo key:val}","{:val}"]}]}
+## {type:MegolithicRegex, id:"PFSUS-MEGALITH-1.1", desc:"A monolithic regular expression for validating the entire structure of the core PFSUS protocol document.", components:[
+  {"name":"Copyright", "regex":"^%% Copyright .*? %%\\s*"},
+  {"name":"RootIndicator", "regex":"^\\[ \\] #\\\"\\.root\\\"# \\{.*?\\}\\s*"},
+  {"name":"Title", "regex":"^# MerMaidContextProtocol \\(MmCP\\) v[\\d\\.]+\\s*"},
+  {"name":"CoreBlocks", "regex":"(^(?:## \\{.*?\\}\\s*))+", "desc":"Matches the main block of single-line LambdaJSON objects."},
+  {"name":"VisualMeta", "regex":"^@\\{visual-meta-start\\}[\\s\\S]+?@\\{visual-meta-end\\}\\s*"},
+  {"name":"CommentDivider", "regex":"^%% .*? %%\\s*"},
+  {"name":"LegendDiagram", "regex":"^subgraph LEGEND.*?end\\s*(?:classDef .*?\\s*)*", "desc":"Matches the raw Mermaid legend diagram and its class definitions."},
+  {"name":"PostLegendBlocks", "regex":"(^(?:## \\{.*?\\}\\s*))+", "desc":"Matches blocks appearing after the legend diagram."},
+  {"name":"FinalDiagram", "regex":"^```mermaid\\s*[\\s\\S]+?```\\s*", "desc":"Matches the final, fenced Mermaid diagram block."}
+],
+monolith:"(?s)^%% Copyright .*? %%\\s*\\[ \\] #\\\"\\.root\\\"# \\{.*?\\}\\s*# MerMaidContextProtocol \\(MmCP\\) v[\\d\\.]+\\s*(?:## \\{.*?\\}\\s*)+@\\{visual-meta-start\\}[\\s\\S]+?@\\{visual-meta-end\\}\\s*%% .*? %%\\s*subgraph LEGEND[\\s\\S]*?end\\s*(?:classDef .*?\\s*)*(?:## \\{.*?\\}\\s*)+```mermaid\\s*[\\s\\S]+?```\\s*$",
+proofs:[
+  {"name":"Full Match (Proof)", "should_match":true, "desc":"The regex MUST match the entire canonical PFSUS.MerMaidContextProtocol.Standard.v1.1.0.mmcp.mmd file.", "data_ref":"[[PFSUS.MerMaidContextProtocol.Standard.v1.1.0.mmcp.mmd]]"},
+  {"name":"Missing Root (Disproof)", "should_match":false, "desc":"MUST NOT match if the root indicator is missing.", "data":"%% Copyright...%%\\n# MerMaidContextProtocol..."},
+  {"name":"Incorrect Order (Disproof)", "should_match":false, "desc":"MUST NOT match if visual-meta block comes before core blocks.", "data":"...\\n@{visual-meta-start}...@{visual-meta-end}\\n## {type:Meta...}"}
+]}
+---
+> [[PFSUS.MerMaidContextProtocol.Standard.v1.1.0.mmcp.mmd]]
+@{visual-meta-start}
+author = {Kalxi},
+title = {PFSUS.MMCP-Regex.Standard.v1.1.0},
+version = {1.1.0},
+structure = { header, meta, regex_standard, quick_ref, links, self_reference, fractal_propagation, cli_tools, visualization, regex_definitions, references },
+glossary = { header: "Root and title", meta: "Meta block", regex_standard: "RegexStandard block", quick_ref: "Quick reference", links: "Linked standards", self_reference: "Self-reference block", fractal_propagation: "Fractal propagation block", cli_tools: "CLI tools block", visualization: "Mermaid diagram", regex_definitions: "Regex patterns", references: "Linked standards" },
+graph_data = { ... },
+ai_entities = { ... },
+notes = {"This standard is part of the universal, self-referential, self-repairing, project-agnostic PFSUS protocol suite."},
+@{visual-meta-end}

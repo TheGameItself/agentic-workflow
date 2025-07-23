@@ -1,450 +1,275 @@
 #!/usr/bin/env python3
 """
-Simplified Test Script for P2P Research Tracking System
-
-This script demonstrates the research tracking capabilities without external dependencies.
+Simple test for P2P research data sharing.
 """
 
 import asyncio
 import logging
-import sys
-import os
-from datetime import datetime, timedelta
-from typing import List, Dict, Any
-
-# Add the src directory to the path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+import time
+import uuid
+from enum import Enum
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-class SimpleP2PResearchDemo:
-    """Simplified demonstration of P2P research tracking capabilities"""
+class MessageType(Enum):
+    """Message types for P2P network."""
+    RESEARCH_DATA = "research_data"
+    RESEARCH_QUERY = "research_query"
+    RESEARCH_RESPONSE = "research_response"
+
+class P2PNode:
+    """Simple P2P node for research data sharing."""
     
-    def __init__(self):
-        self.logger = logging.getLogger("SimpleP2PResearchDemo")
-        
-        # Sample research data
-        self.sample_research_sources = [
-            {
-                'title': 'LL0: Lifelong Learning Starting From Zero',
-                'authors': ['Chalmers University', 'AI Research Team'],
-                'source_type': 'academic_paper',
-                'domain': 'artificial_intelligence',
-                'url': 'https://arxiv.org/abs/2502.09696',
-                'doi': '10.1000/arxiv.2502.09696',
-                'abstract': 'A deep neural-network model for lifelong learning inspired by neuroplasticity.',
-                'keywords': ['lifelong learning', 'neuroplasticity', 'neural networks', 'from zero'],
-                'peer_reviewed': True,
-                'citations': 150,
-                'methodology_score': 0.9,
-                'reproducibility_score': 0.85,
-                'novelty_score': 0.95
-            },
-            {
-                'title': 'Advanced Genetic Evolution in Neural Systems',
-                'authors': ['MCP Research Team', 'Genetic AI Lab'],
-                'source_type': 'technical_report',
-                'domain': 'machine_learning',
-                'url': 'https://example.com/genetic-evolution',
-                'abstract': 'Implementation of genetic trigger systems with environmental adaptation.',
-                'keywords': ['genetic algorithms', 'neural systems', 'environmental adaptation'],
-                'peer_reviewed': False,
-                'citations': 25,
-                'methodology_score': 0.8,
-                'reproducibility_score': 0.7,
-                'novelty_score': 0.8
-            },
-            {
-                'title': 'P2P Network Intelligence and Distributed Computing',
-                'authors': ['Network Research Group', 'Distributed Systems Lab'],
-                'source_type': 'conference_paper',
-                'domain': 'computer_science',
-                'url': 'https://example.com/p2p-intelligence',
-                'abstract': 'Distributed computing with global performance optimization.',
-                'keywords': ['P2P networks', 'distributed computing', 'performance optimization'],
-                'peer_reviewed': True,
-                'citations': 75,
-                'methodology_score': 0.85,
-                'reproducibility_score': 0.8,
-                'novelty_score': 0.7
-            }
-        ]
-        
-        self.sample_researchers = [
-            {
-                'user_id': 'researcher_001',
-                'username': 'Dr. Alice Johnson',
-                'expertise_domains': ['artificial_intelligence', 'machine_learning'],
-                'capability': 'expert'
-            },
-            {
-                'user_id': 'researcher_002',
-                'username': 'Prof. Bob Smith',
-                'expertise_domains': ['computer_science', 'neuroscience'],
-                'capability': 'master'
-            },
-            {
-                'user_id': 'researcher_003',
-                'username': 'Dr. Carol Davis',
-                'expertise_domains': ['cognitive_science', 'psychology'],
-                'capability': 'advanced'
-            }
-        ]
-    
-    def run_demo(self):
-        """Run the simplified demonstration"""
-        self.logger.info("🚀 Starting Simplified P2P Research Tracking Demo")
-        
-        try:
-            # Demo 1: Research source tracking
-            self.demo_research_source_tracking()
-            
-            # Demo 2: Quality assessment
-            self.demo_quality_assessment()
-            
-            # Demo 3: Reputation system
-            self.demo_reputation_system()
-            
-            # Demo 4: Collaborative validation
-            self.demo_collaborative_validation()
-            
-            # Demo 5: Research trends
-            self.demo_research_trends()
-            
-            self.logger.info("✅ Simplified P2P Research Tracking Demo completed successfully!")
-            
-        except Exception as e:
-            self.logger.error(f"❌ Demo failed: {e}")
-            raise
-    
-    def demo_research_source_tracking(self):
-        """Demonstrate research source tracking capabilities"""
-        self.logger.info("\n📚 Demo 1: Research Source Tracking")
-        
-        # Simulate research source database
-        research_sources = {}
-        source_id_counter = 1
-        
-        for source_data in self.sample_research_sources:
-            source_id = f"source_{source_id_counter:03d}"
-            
-            # Calculate quality score
-            quality_score = self.calculate_quality_score(source_data)
-            quality_level = self.get_quality_level(quality_score)
-            
-            research_sources[source_id] = {
-                'source_id': source_id,
-                'title': source_data['title'],
-                'authors': source_data['authors'],
-                'source_type': source_data['source_type'],
-                'domain': source_data['domain'],
-                'url': source_data['url'],
-                'doi': source_data.get('doi'),
-                'abstract': source_data['abstract'],
-                'keywords': source_data['keywords'],
-                'peer_reviewed': source_data['peer_reviewed'],
-                'citations': source_data['citations'],
-                'methodology_score': source_data['methodology_score'],
-                'reproducibility_score': source_data['reproducibility_score'],
-                'novelty_score': source_data['novelty_score'],
-                'quality_score': quality_score,
-                'quality_level': quality_level,
-                'network_reputation': 0.5,
-                'validation_count': 0,
-                'dispute_count': 0,
-                'created_by': None,
-                'validated_by': [],
-                'disputed_by': [],
-                'last_updated': datetime.now().isoformat()
-            }
-            
-            source_id_counter += 1
-            self.logger.info(f"✅ Added research source: {source_data['title']}")
-        
-        # Display research sources
-        self.logger.info("\n📖 Research Sources Database:")
-        for source_id, source in research_sources.items():
-            self.logger.info(f"  - {source['title']}")
-            self.logger.info(f"    ID: {source_id}")
-            self.logger.info(f"    Quality: {source['quality_level']} ({source['quality_score']:.2f})")
-            self.logger.info(f"    Domain: {source['domain']}, Type: {source['source_type']}")
-            self.logger.info(f"    Citations: {source['citations']}, Peer Reviewed: {source['peer_reviewed']}")
-            self.logger.info(f"    Authors: {', '.join(source['authors'])}")
-        
-        return research_sources
-    
-    def demo_quality_assessment(self):
-        """Demonstrate quality assessment system"""
-        self.logger.info("\n⭐ Demo 2: Quality Assessment System")
-        
-        # Simulate quality assessment for each source
-        for source_data in self.sample_research_sources:
-            quality_score = self.calculate_quality_score(source_data)
-            quality_level = self.get_quality_level(quality_score)
-            
-            self.logger.info(f"\n📊 Quality Assessment for: {source_data['title']}")
-            self.logger.info(f"  - Source Type Weight: {self.get_source_type_weight(source_data['source_type']):.2f}")
-            self.logger.info(f"  - Citation Impact: {self.calculate_citation_score(source_data['citations']):.2f}")
-            self.logger.info(f"  - Methodology Score: {source_data['methodology_score']:.2f}")
-            self.logger.info(f"  - Reproducibility Score: {source_data['reproducibility_score']:.2f}")
-            self.logger.info(f"  - Novelty Score: {source_data['novelty_score']:.2f}")
-            self.logger.info(f"  - Peer Review Bonus: {0.2 if source_data['peer_reviewed'] else 0.0}")
-            self.logger.info(f"  - Final Quality Score: {quality_score:.2f}")
-            self.logger.info(f"  - Quality Level: {quality_level}")
-    
-    def demo_reputation_system(self):
-        """Demonstrate reputation system for researchers"""
-        self.logger.info("\n🏆 Demo 3: Researcher Reputation System")
-        
-        # Simulate researcher profiles
-        researcher_profiles = {}
-        
-        for researcher in self.sample_researchers:
-            researcher_id = researcher['user_id']
-            
-            # Simulate research activity
-            research_contributions = len([s for s in self.sample_research_sources 
-                                        if any(domain in researcher['expertise_domains'] 
-                                              for domain in [s['domain']])])
-            
-            # Calculate reputation based on contributions and expertise
-            base_reputation = 0.5
-            contribution_bonus = min(0.3, research_contributions * 0.1)
-            expertise_bonus = 0.1 if researcher['capability'] in ['expert', 'master'] else 0.0
-            
-            research_reputation = min(1.0, base_reputation + contribution_bonus + expertise_bonus)
-            
-            researcher_profiles[researcher_id] = {
-                'researcher_id': researcher_id,
-                'username': researcher['username'],
-                'user_id': researcher_id,
-                'expertise_domains': researcher['expertise_domains'],
-                'capability': researcher['capability'],
-                'research_reputation': research_reputation,
-                'research_contributions': research_contributions,
-                'total_sources': research_contributions,
-                'validated_sources': max(0, research_contributions - 1),
-                'disputed_sources': 1 if research_contributions > 0 else 0,
-                'validation_accuracy': 0.8,
-                'dispute_accuracy': 0.7,
-                'network_contributions': research_contributions * 2,
-                'activity_streak': 7,
-                'last_activity': datetime.now().isoformat()
-            }
-            
-            self.logger.info(f"✅ Created researcher profile: {researcher['username']}")
-        
-        # Display researcher profiles
-        self.logger.info("\n👥 Researcher Profiles:")
-        for researcher_id, profile in researcher_profiles.items():
-            self.logger.info(f"  - {profile['username']}")
-            self.logger.info(f"    Research Reputation: {profile['research_reputation']:.2f}")
-            self.logger.info(f"    Expertise: {', '.join(profile['expertise_domains'])}")
-            self.logger.info(f"    Capability: {profile['capability']}")
-            self.logger.info(f"    Research Contributions: {profile['research_contributions']}")
-            self.logger.info(f"    Validation Accuracy: {profile['validation_accuracy']:.2f}")
-            self.logger.info(f"    Activity Streak: {profile['activity_streak']} days")
-        
-        return researcher_profiles
-    
-    def demo_collaborative_validation(self):
-        """Demonstrate collaborative validation system"""
-        self.logger.info("\n🤝 Demo 4: Collaborative Validation System")
-        
-        # Simulate validation scenarios
-        validation_scenarios = [
-            {
-                'source_title': 'LL0: Lifelong Learning Starting From Zero',
-                'researcher': 'Dr. Alice Johnson',
-                'validation_type': 'validate',
-                'confidence': 0.9,
-                'reasoning': 'Excellent methodology and reproducible results. Peer-reviewed paper with high citation count.'
-            },
-            {
-                'source_title': 'LL0: Lifelong Learning Starting From Zero',
-                'researcher': 'Prof. Bob Smith',
-                'validation_type': 'validate',
-                'confidence': 0.85,
-                'reasoning': 'Strong theoretical foundation and practical applications. Well-documented implementation.'
-            },
-            {
-                'source_title': 'Advanced Genetic Evolution in Neural Systems',
-                'researcher': 'Dr. Carol Davis',
-                'validation_type': 'dispute',
-                'confidence': 0.7,
-                'reasoning': 'Methodology needs more rigorous validation. Limited reproducibility testing.'
-            }
-        ]
-        
-        # Track validations
-        source_validations = {}
-        
-        for scenario in validation_scenarios:
-            source_title = scenario['source_title']
-            if source_title not in source_validations:
-                source_validations[source_title] = {
-                    'validations': 0,
-                    'disputes': 0,
-                    'validators': [],
-                    'disputers': []
-                }
-            
-            if scenario['validation_type'] == 'validate':
-                source_validations[source_title]['validations'] += 1
-                source_validations[source_title]['validators'].append(scenario['researcher'])
-            else:
-                source_validations[source_title]['disputes'] += 1
-                source_validations[source_title]['disputers'].append(scenario['researcher'])
-            
-            self.logger.info(f"✅ {scenario['researcher']} {scenario['validation_type']}d: {source_title}")
-            self.logger.info(f"   Confidence: {scenario['confidence']:.2f}")
-            self.logger.info(f"   Reasoning: {scenario['reasoning']}")
-        
-        # Show validation results
-        self.logger.info("\n📊 Validation Results:")
-        for source_title, validation_data in source_validations.items():
-            total_checks = validation_data['validations'] + validation_data['disputes']
-            validation_rate = validation_data['validations'] / total_checks if total_checks > 0 else 0.0
-            
-            self.logger.info(f"  - {source_title}")
-            self.logger.info(f"    Validations: {validation_data['validations']}")
-            self.logger.info(f"    Disputes: {validation_data['disputes']}")
-            self.logger.info(f"    Validation Rate: {validation_rate:.1%}")
-            self.logger.info(f"    Validators: {', '.join(validation_data['validators'])}")
-            if validation_data['disputers']:
-                self.logger.info(f"    Disputers: {', '.join(validation_data['disputers'])}")
-    
-    def demo_research_trends(self):
-        """Demonstrate research trends analysis"""
-        self.logger.info("\n📈 Demo 5: Research Trends Analysis")
-        
-        # Analyze domain distribution
-        domain_counts = {}
-        quality_distribution = {}
-        source_type_distribution = {}
-        
-        for source in self.sample_research_sources:
-            # Domain distribution
-            domain = source['domain']
-            domain_counts[domain] = domain_counts.get(domain, 0) + 1
-            
-            # Quality distribution
-            quality_score = self.calculate_quality_score(source)
-            quality_level = self.get_quality_level(quality_score)
-            quality_distribution[quality_level] = quality_distribution.get(quality_level, 0) + 1
-            
-            # Source type distribution
-            source_type = source['source_type']
-            source_type_distribution[source_type] = source_type_distribution.get(source_type, 0) + 1
-        
-        # Calculate average quality
-        quality_scores = [self.calculate_quality_score(s) for s in self.sample_research_sources]
-        average_quality = sum(quality_scores) / len(quality_scores) if quality_scores else 0.0
-        
-        self.logger.info("\n📊 Research Trends Analysis:")
-        self.logger.info(f"  - Total Sources: {len(self.sample_research_sources)}")
-        self.logger.info(f"  - Average Quality Score: {average_quality:.2f}")
-        
-        self.logger.info("\n🌍 Domain Distribution:")
-        for domain, count in domain_counts.items():
-            self.logger.info(f"  - {domain}: {count} sources")
-        
-        self.logger.info("\n⭐ Quality Distribution:")
-        for quality, count in quality_distribution.items():
-            self.logger.info(f"  - {quality}: {count} sources")
-        
-        self.logger.info("\n📚 Source Type Distribution:")
-        for source_type, count in source_type_distribution.items():
-            self.logger.info(f"  - {source_type}: {count} sources")
-        
-        # Top authors analysis
-        author_counts = {}
-        for source in self.sample_research_sources:
-            for author in source['authors']:
-                author_counts[author] = author_counts.get(author, 0) + 1
-        
-        self.logger.info("\n👨‍🔬 Top Authors:")
-        sorted_authors = sorted(author_counts.items(), key=lambda x: x[1], reverse=True)
-        for author, count in sorted_authors[:5]:
-            self.logger.info(f"  - {author}: {count} sources")
-    
-    def calculate_quality_score(self, source_data: Dict[str, Any]) -> float:
-        """Calculate quality score for a research source"""
-        # Source type weight
-        type_weight = self.get_source_type_weight(source_data['source_type'])
-        
-        # Citation impact
-        citation_score = self.calculate_citation_score(source_data['citations'])
-        
-        # Methodology and reproducibility
-        methodology_score = source_data['methodology_score']
-        reproducibility_score = source_data['reproducibility_score']
-        novelty_score = source_data['novelty_score']
-        
-        # Peer review bonus
-        peer_review_bonus = 0.2 if source_data['peer_reviewed'] else 0.0
-        
-        # Calculate weighted average
-        scores = [type_weight, citation_score, methodology_score, reproducibility_score, novelty_score, peer_review_bonus]
-        weights = [0.2, 0.15, 0.2, 0.15, 0.1, 0.2]
-        
-        final_score = sum(s * w for s, w in zip(scores, weights))
-        return max(0.0, min(1.0, final_score))
-    
-    def get_quality_level(self, quality_score: float) -> str:
-        """Get quality level based on score"""
-        if quality_score >= 0.9:
-            return "peer_reviewed"
-        elif quality_score >= 0.8:
-            return "excellent"
-        elif quality_score >= 0.7:
-            return "high"
-        elif quality_score >= 0.5:
-            return "medium"
-        elif quality_score >= 0.3:
-            return "low"
-        else:
-            return "unverified"
-    
-    def get_source_type_weight(self, source_type: str) -> float:
-        """Get weight for source type"""
-        weights = {
-            'academic_paper': 0.9,
-            'journal_article': 0.85,
-            'conference_paper': 0.8,
-            'technical_report': 0.7,
-            'preprint': 0.6,
-            'book': 0.75,
-            'thesis': 0.7,
-            'patent': 0.6,
-            'dataset': 0.8,
-            'code_repository': 0.7,
-            'blog_post': 0.4,
-            'news_article': 0.3,
-            'website': 0.3,
-            'video': 0.5,
-            'podcast': 0.4,
-            'social_media': 0.2
+    def __init__(self, node_id=None):
+        """Initialize P2P node."""
+        self.node_id = node_id or str(uuid.uuid4())
+        self.peers = {}
+        self.research_data = {}
+        self.message_handlers = {
+            MessageType.RESEARCH_DATA: self._handle_research_data,
+            MessageType.RESEARCH_QUERY: self._handle_research_query,
+            MessageType.RESEARCH_RESPONSE: self._handle_research_response
         }
-        return weights.get(source_type, 0.5)
+        self.received_messages = []
+        self.query_responses = {}
+        
+        logger.info(f"Created P2P node: {self.node_id}")
     
-    def calculate_citation_score(self, citations: int) -> float:
-        """Calculate citation impact score"""
-        if citations <= 0:
-            return 0.0
-        # Use log scale to normalize citations
-        return min(1.0, (citations ** 0.5) / 10.0)
+    def connect_to_peer(self, peer):
+        """Connect to another P2P node."""
+        if peer.node_id != self.node_id:
+            self.peers[peer.node_id] = peer
+            peer.peers[self.node_id] = self
+            logger.info(f"Node {self.node_id} connected to peer {peer.node_id}")
+            return True
+        return False
+    
+    def disconnect_from_peer(self, peer_id):
+        """Disconnect from a peer."""
+        if peer_id in self.peers:
+            peer = self.peers[peer_id]
+            del self.peers[peer_id]
+            if self.node_id in peer.peers:
+                del peer.peers[self.node_id]
+            logger.info(f"Node {self.node_id} disconnected from peer {peer_id}")
+            return True
+        return False
+    
+    async def broadcast_research_data(self, topic, data):
+        """Broadcast research data to all peers."""
+        message = {
+            'message_id': str(uuid.uuid4()),
+            'type': MessageType.RESEARCH_DATA,
+            'sender_id': self.node_id,
+            'timestamp': time.time(),
+            'topic': topic,
+            'data': data
+        }
+        
+        # Store data locally
+        if topic not in self.research_data:
+            self.research_data[topic] = []
+        self.research_data[topic].append(data)
+        
+        # Send to all peers
+        for peer_id, peer in self.peers.items():
+            await peer._receive_message(message)
+        
+        logger.info(f"Node {self.node_id} broadcast research data on topic: {topic}")
+        return message['message_id']
+    
+    async def query_research_data(self, topic):
+        """Query research data from peers."""
+        query_id = str(uuid.uuid4())
+        message = {
+            'message_id': query_id,
+            'type': MessageType.RESEARCH_QUERY,
+            'sender_id': self.node_id,
+            'timestamp': time.time(),
+            'topic': topic
+        }
+        
+        # Create response tracker
+        self.query_responses[query_id] = {
+            'topic': topic,
+            'responses': [],
+            'completed': False
+        }
+        
+        # Send to all peers
+        for peer_id, peer in self.peers.items():
+            await peer._receive_message(message)
+        
+        logger.info(f"Node {self.node_id} queried research data on topic: {topic}")
+        return query_id
+    
+    async def _receive_message(self, message):
+        """Receive a message from a peer."""
+        self.received_messages.append(message)
+        
+        # Handle message based on type
+        message_type = message['type']
+        if message_type in self.message_handlers:
+            await self.message_handlers[message_type](message)
+        
+        logger.debug(f"Node {self.node_id} received message: {message['message_id']} ({message_type.value})")
+    
+    async def _handle_research_data(self, message):
+        """Handle research data message."""
+        topic = message['topic']
+        data = message['data']
+        
+        # Store data
+        if topic not in self.research_data:
+            self.research_data[topic] = []
+        self.research_data[topic].append(data)
+        
+        logger.info(f"Node {self.node_id} received research data on topic: {topic}")
+    
+    async def _handle_research_query(self, message):
+        """Handle research query message."""
+        topic = message['topic']
+        sender_id = message['sender_id']
+        
+        # Check if we have data for this topic
+        if topic in self.research_data and sender_id in self.peers:
+            response = {
+                'message_id': str(uuid.uuid4()),
+                'type': MessageType.RESEARCH_RESPONSE,
+                'sender_id': self.node_id,
+                'timestamp': time.time(),
+                'query_id': message['message_id'],
+                'topic': topic,
+                'data': self.research_data[topic]
+            }
+            
+            # Send response to querying peer
+            await self.peers[sender_id]._receive_message(response)
+            
+            logger.info(f"Node {self.node_id} responded to research query on topic: {topic}")
+    
+    async def _handle_research_response(self, message):
+        """Handle research response message."""
+        query_id = message['query_id']
+        topic = message['topic']
+        data = message['data']
+        
+        # Check if we're tracking this query
+        if query_id in self.query_responses:
+            self.query_responses[query_id]['responses'].append({
+                'sender_id': message['sender_id'],
+                'data': data
+            })
+            
+            logger.info(f"Node {self.node_id} received research response for query: {query_id}")
+    
+    def get_research_data(self, topic):
+        """Get research data for a topic."""
+        return self.research_data.get(topic, [])
+    
+    def get_query_results(self, query_id):
+        """Get results for a query."""
+        return self.query_responses.get(query_id, {'responses': []})['responses']
 
-
-def main():
-    """Main demo function"""
-    demo = SimpleP2PResearchDemo()
-    demo.run_demo()
-
+async def test_p2p_research_sharing():
+    """Test P2P research data sharing."""
+    print("Starting P2P research sharing test...")
+    
+    # Create P2P nodes
+    node1 = P2PNode("node1")
+    node2 = P2PNode("node2")
+    node3 = P2PNode("node3")
+    
+    print("Created 3 P2P nodes")
+    
+    # Connect nodes
+    node1.connect_to_peer(node2)
+    node2.connect_to_peer(node3)
+    node3.connect_to_peer(node1)
+    
+    print("Connected nodes in a triangle topology")
+    
+    # Node 1 shares research data
+    await node1.broadcast_research_data("neural_networks", {
+        "title": "Advances in Neural Networks",
+        "author": "Node 1",
+        "content": "Research data on neural networks"
+    })
+    
+    print("Node 1 shared research data on neural networks")
+    
+    # Node 2 shares research data
+    await node2.broadcast_research_data("genetic_algorithms", {
+        "title": "Genetic Algorithm Optimization",
+        "author": "Node 2",
+        "content": "Research data on genetic algorithms"
+    })
+    
+    print("Node 2 shared research data on genetic algorithms")
+    
+    # Node 3 shares research data on both topics
+    await node3.broadcast_research_data("neural_networks", {
+        "title": "Neural Network Applications",
+        "author": "Node 3",
+        "content": "Applications of neural networks"
+    })
+    
+    await node3.broadcast_research_data("genetic_algorithms", {
+        "title": "Advanced Genetic Programming",
+        "author": "Node 3",
+        "content": "Research on genetic programming"
+    })
+    
+    print("Node 3 shared research data on both topics")
+    
+    # Wait a moment for propagation
+    await asyncio.sleep(0.1)
+    
+    # Check if all nodes have all research data
+    for node in [node1, node2, node3]:
+        nn_data = node.get_research_data("neural_networks")
+        ga_data = node.get_research_data("genetic_algorithms")
+        
+        print(f"Node {node.node_id} has {len(nn_data)} neural network papers and {len(ga_data)} genetic algorithm papers")
+    
+    # Node 1 queries for genetic algorithms
+    query_id = await node1.query_research_data("genetic_algorithms")
+    
+    # Wait for responses
+    await asyncio.sleep(0.1)
+    
+    # Check query results
+    results = node1.get_query_results(query_id)
+    print(f"Node 1 received {len(results)} responses to its query on genetic algorithms")
+    
+    # Disconnect node 3
+    node1.disconnect_from_peer(node3.node_id)
+    node2.disconnect_from_peer(node3.node_id)
+    
+    print("Disconnected node 3 from the network")
+    
+    # Node 2 shares new research data
+    await node2.broadcast_research_data("neural_networks", {
+        "title": "Latest Neural Network Research",
+        "author": "Node 2",
+        "content": "Cutting-edge neural network research"
+    })
+    
+    print("Node 2 shared new research data after node 3 disconnected")
+    
+    # Wait a moment for propagation
+    await asyncio.sleep(0.1)
+    
+    # Check if node 1 received the new data but node 3 didn't
+    node1_nn_data = node1.get_research_data("neural_networks")
+    node3_nn_data = node3.get_research_data("neural_networks")
+    
+    print(f"Node 1 now has {len(node1_nn_data)} neural network papers")
+    print(f"Node 3 still has {len(node3_nn_data)} neural network papers")
+    
+    print("P2P research sharing test completed successfully!")
 
 if __name__ == "__main__":
-    main() 
+    asyncio.run(test_p2p_research_sharing())

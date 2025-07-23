@@ -1,0 +1,111 @@
+[ ] #".root"#
+# MCP Project TODO (GitGraph Standard)
+
+- **{desc:"Project-wide TODOs, requirements, and audit tasks visualized as a GitGraph. This is the standard format for all task tracking."}**
+- **{EARS_ID:"PTTRA-001.001"}**
+- **{status:"Active"}**
+- **{references:"[[PFSUS.MMCP-Legend.Standard.v1.0.0.mmcp.mdd]]"}**
+
+---
+
+## {type:Diagram, id:"PROJECT-TODO-GITGRAPH-001", for:"Project Task Status"}
+```mermaid
+gitGraph
+    commit id: "Project Init"
+    
+    branch "feat/audit-cleanup"
+    checkout "feat/audit-cleanup"
+    commit id: "[MCP-100.107] Evaluate files"
+    commit id: "[MCP-100.108] List junk files"
+    commit id: "[MCP-100.109] Remove junk files"
+    commit id: "[MCP-100.110] Document changes"
+    commit id: "[MCP-100.111] Add/Update .gitignore & LICENSE"
+    
+    checkout main
+    merge "feat/audit-cleanup" id: "Initial Cleanup" type: HIGHLIGHT
+
+    branch "feat/core-impl"
+    checkout "feat/core-impl"
+    commit id: "[MCP-200.114] Upgrade lobes to spinal cord" type: HIGHLIGHT tag: "v2.0"
+    commit id: "[MCP-200.115] Implement spinal_cord_translation_layer.py"
+    commit id: "[MCP-200.116] Refactor lobes"
+    commit id: "[MCP-200.117] Update neural network models"
+    commit id: "[MCP-200.118] Expand tests for spinal cord"
+    commit id: "[MCP-200.154] Refactor memory architecture"
+    commit id: "[MCP-200.157] Integrate CPU/GPU feedback"
+
+    checkout main
+    commit id: "Core Implementation Phase"
+
+    branch "feat/research-feedback"
+    checkout "feat/research-feedback"
+    commit id: "[MCP-300.158] Review research stubs"
+    commit id: "[MCP-300.159] Integrate cross-lobe feedback"
+
+    checkout main
+    merge "feat/core-impl" id: "Merge Core Features"
+
+    branch "feat/deployment"
+    checkout "feat/deployment"
+    commit id: "[MCP-400.173] Build/Test deployment packages"
+    commit id: "[MCP-400.174] Run all tests"
+    commit id: "[MCP-400.183] Update documentation"
+
+    checkout main
+    merge "feat/research-feedback"
+    merge "feat/deployment" id: "Release Candidate" tag: "v2.1-RC1" type: REVERSE
+
+```
+
+---
+## {type:RecreationSpec, id:"PROJECT-RECREATION-SPEC-001", for:"Full Project Reconstruction"}
+
+### {type:EARS, id:"RECREATE-001", version:"1.0", requirements:[
+  {id:"REQ-REC-01", story:"As a developer, I need to be able to recreate the entire project from this specification.", acceptance:["WHEN following the steps in the Recreation Plan, THEN the resulting project structure and file content SHALL match the original repository.", "WHEN the project is recreated, THEN it SHALL be fully functional and pass all verification checks."]},
+  {id:"REQ-REC-02", story:"As the system, the recreated project must be verifiable.", acceptance:["WHEN the `pytest` command is run, THEN all tests SHALL pass.", "WHEN the linter is run, THEN there SHALL be no errors.", "WHEN the build scripts are executed, THEN all deployment packages SHALL be created successfully."]}
+]}
+
+### {type:Diagram, id:"RECREATION-FLOWCHART-001", for:"Recreation Phases"}
+```mermaid
+graph TD
+    subgraph "Phase 1: Setup"
+        A[Setup Environment] --> B(Install Python 3.11+);
+        B --> C(Create & Activate Virtual Env);
+        C --> D(pip install -r requirements.txt);
+    end
+
+    subgraph "Phase 2: Core Definition"
+        D --> E["Create Core PFSUS & Agent Specs<br/>(from agentic-workflow/core)"];
+    end
+    
+    subgraph "Phase 3: Implementation"
+        E --> F[Scaffold Directory Structure];
+        F --> G["Implement Python Source Code<br/>(from agentic-workflow/src)"];
+        G --> H["Populate Documentation<br/>(from agentic-workflow/docs)"];
+        H --> I["Implement Build & Test Scripts<br/>(from agentic-workflow/scripts)"];
+    end
+
+    subgraph "Phase 4: Verification"
+        I --> J["Run Linters (pylint, mypy, flake8)"];
+        J --> K["Run Test Suite (pytest)"];
+        K --> L{All Tests Pass?};
+        L -- Yes --> M[Build Packages];
+        L -- No --> G;
+        M --> N[Recreation Complete];
+    end
+    
+    classDef setup fill:#e0f7fa,stroke:#00796b;
+    classDef core fill:#fff9c4,stroke:#fbc02d;
+    classDef impl fill:#c8e6c9,stroke:#388e3c;
+    classDef verify fill:#f8bbd0,stroke:#ad1457;
+
+    class A,B,C,D setup;
+    class E core;
+    class F,G,H,I impl;
+    class J,K,L,M,N verify;
+```
+
+---
+## Obsidian Footer
+#group/project-management #group/gitgraph #color/blue #group/specification
+[[project-todo.mmd]] 

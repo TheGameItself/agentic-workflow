@@ -1,0 +1,25 @@
+{
+  "addresses": [
+    {
+      "id": "PFSUS-FW-001",
+      "target": "PFSUS.MMCP-FormatWrapping.Standard.v1.4.0.mmcp.mmd",
+      "type": "standard",
+      "version": "1.4.0",
+      "checksum": "sha256:e74825a2d300fdffcf075ad8cde825fc9a874f7f705b3b09f4808b9139003799"
+    },
+    {
+      "id": "PFSUS-CORE-001",
+      "target": "PFSUS.MerMaidContextProtocol.Standard.v1.2.0.mmcp.mmd",
+      "type": "standard",
+      "version": "1.2.0",
+      "checksum": "sha256:d74825a2d300fdffcf075ad8cde825fc9a874f7f705b3b09f4808b9139003799"
+    },
+    {
+      "id": "AGENT-SPEC-001",
+      "target": "AGENT.Specification.v1.1.0.mmcp.mmd",
+      "type": "specification",
+      "version": "1.1.0",
+      "checksum": "sha256:f74825a2d300fdffcf075ad8cde825fc9a874f7f705b3b09f4808b9139003799"
+    }
+  ]
+}

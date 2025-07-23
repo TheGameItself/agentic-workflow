@@ -1,0 +1,34 @@
+[ ] #".root"# {protocol:"MCP", version:"1.1.0", standard:"PFSUS+EARS+LambdaJSON"}
+# PFSUS Protocol History (GitGraph) v1.1.0
+## {type:Meta, id:"PFSUS.MMCP-Minimal.Ref.v1.1.0", author:"Kalxi", license:"MIT", last_modified:"2025-07-22T00:00:00Z"}
+## {type:GitGraphStandard, id:"PFSUS-History-1.1", desc:"Canonical history of the MerMaidContextProtocol (MmCP) and related standards."}
+## {type:Links, links:[{"type":"MermaidLink","target":"PFSUS.MerMaidContextProtocol.Standard.v1.1.0.mmcp.mmd","label":"Core Protocol","format":"obsidian","desc":"Main protocol standard"}]}
+## {type:SelfReference, file:"PFSUS.MMCP-Minimal.Ref.v1.1.0.mmcp.mmd", version:"1.1.0", checksum:"sha256:4ea6ee8ef153399335c1cbe93a915b8dafdde8d568b7cbbd389b447a5f433b39", canonical_address:"self", self_repair:{ref:"[[PFSUS.MerMaidContextProtocol.Standard.v1.1.0.mmcp.mmd#SelfReference]]"}, project_agnostic:true}
+## {type:FractalPropagation, id:"PFSUS-Fractal-1.0", desc:"Inherits fractal propagation logic from the core protocol.", ref:"[[PFSUS.MerMaidContextProtocol.Standard.v1.1.0.mmcp.mmd#FractalPropagation]]"}
+## {type:CLITools, id:"PFSUS-CLI-1.0", desc:"Inherits CLI tool definitions from the core protocol.", ref:"[[PFSUS.MerMaidContextProtocol.Standard.v1.1.0.mmcp.mmd#CLITools]]"}
+## Visualization
+```mermaid
+gitGraph
+    commit id: "v1.0.0"
+    branch "feat/v1.1.0"
+    commit id: "Unicode dividers"
+    commit id: "Embed schema"
+    branch "feat/lambda-addresses"
+    commit id: "Lambda addresses"
+    checkout "feat/v1.1.0"
+    merge "feat/lambda-addresses"
+    checkout main
+    merge "feat/v1.1.0" id: "v1.1.0"
+```
+---
+> [[PFSUS.MerMaidContextProtocol.Standard.v1.1.0.mmcp.mmd]]
+@{visual-meta-start}
+author = {Kalxi},
+title = {PFSUS.MMCP-Minimal.Ref.v1.1.0},
+version = {1.1.0},
+structure = { header, meta, git_graph_standard, links, self_reference, fractal_propagation, cli_tools, visualization, references },
+glossary = { header: "Root and title", meta: "Meta block", git_graph_standard: "GitGraphStandard block", links: "Linked standards", self_reference: "Self-reference block", fractal_propagation: "Fractal propagation block", cli_tools: "CLI tools block", visualization: "Mermaid gitGraph", references: "Linked standards" },
+graph_data = { ... },
+ai_entities = { ... },
+notes = {"This standard is part of the universal, self-referential, self-repairing, project-agnostic PFSUS protocol suite."},
+@{visual-meta-end}

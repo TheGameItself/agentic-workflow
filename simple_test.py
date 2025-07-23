@@ -1,44 +1,45 @@
 #!/usr/bin/env python3
 """
-Simple test to check imports
+Simple test script to verify neural network models can be imported.
 """
 
-import sys
 import os
-sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
+import sys
+from pathlib import Path
+
+# Add core/src to path
+core_src = Path(__file__).parent / "core" / "src"
+sys.path.insert(0, str(core_src))
+
+# Create data directories
+os.makedirs("data/logs", exist_ok=True)
+os.makedirs("data/models", exist_ok=True)
+
+print("Testing neural network model imports...")
 
 try:
-    from mcp.three_tier_memory_manager import ThreeTierMemoryManager, MemoryTier
-    print("✓ ThreeTierMemoryManager imported successfully")
+    print("Importing neural_network_models package...")
+    from mcp.neural_network_models import check_dependencies
     
-    from mcp.enhanced_vector_memory import BackendType
-    print("✓ BackendType imported successfully")
+    print("Checking dependencies...")
+    dependencies = check_dependencies()
+    print(f"Dependencies: {dependencies}")
     
-    from unittest.mock import Mock
-    print("✓ Mock imported successfully")
+    print("Importing hormone_neural_integration...")
+    from mcp.neural_network_models.hormone_neural_integration import HormoneNeuralIntegration
     
-    # Test basic initialization
-    manager = ThreeTierMemoryManager(
-        working_capacity_mb=1.0,
-        short_term_capacity_gb=0.01,
-        long_term_capacity_gb=0.01,
-        vector_backend=BackendType.IN_MEMORY,
-        hormone_system=Mock(),
-        genetic_trigger_manager=Mock()
-    )
-    print("✓ ThreeTierMemoryManager initialized successfully")
+    print("Importing diffusion_model...")
+    from mcp.neural_network_models.diffusion_model import DiffusionModel
     
-    # Test basic store operation
-    success = manager.store("test", "data", "context")
-    print(f"✓ Store operation: {success}")
+    print("Importing genetic_diffusion_model...")
+    from mcp.neural_network_models.genetic_diffusion_model import GeneticDiffusionModel
     
-    # Test basic retrieve operation
-    item = manager.retrieve("test", "context")
-    print(f"✓ Retrieve operation: {item is not None}")
+    print("Importing brain_state_integration...")
+    from mcp.neural_network_models.brain_state_integration import BrainStateIntegration
     
-    print("\n🎉 Basic functionality verified!")
+    print("All imports successful!")
+    sys.exit(0)
     
 except Exception as e:
-    print(f"❌ Error: {e}")
-    import traceback
-    traceback.print_exc()
+    print(f"Error: {e}")
+    sys.exit(1)

@@ -1,0 +1,107 @@
+%% Copyright 2025 Kalxi. All rights reserved. See header for terms. %%
+[ ] #".root"# {protocol:"MCP", version:"1.2.0", standard:"PFSUS+EARS+LambdaJSON"}
+# PFSUS Address Standard v1.2.0
+
+## {type:Meta, author:"Kalxi", license:"MIT", last_modified:"2025-07-22T00:00:00Z", id:"PFSUS.MMCP-Adress.Standard.v1.2.0"}
+## {type:Schema, $schema:"https://json-schema.org/draft/2020-12/schema", required:["type","id","version"], properties:{type:{type:"string"},id:{type:"string"},version:{type:"string"},last_modified:{type:"string",format:"date-time"},author:{type:"string"}}}
+## {type:ColorMatrix, model:"oklch", colors:[{name:"primary",oklch:"0.7 0.15 240"},{name:"secondary",oklch:"0.6 0.2 280 / 75%"},{name:"accent",oklch:"0.8 0.18 60"},{name:"neutral",oklch:"0.9 0 0"},{name:"error",oklch:"0.6 0.2 30"}]}
+## {type:RegexPatterns, patterns:[{field:"type",regex:"type\\s*:\\s*['\"]?(\\w+)['\"]?"},{field:"id",regex:"id\\s*:\\s*['\"]?([\\w-]+)['\"]?"},{field:"oklch",regex:"oklch\\s*:\\s*['\"]?([0-9.]+\\s+[0-9.]+\\s+[0-9.]+(\\s*/\\s*[0-9.%]+)?)['\"]?"},{field:"score",regex:"score\\s*:\\s*([0-9.]+)"},{field:"story",regex:"story\\s*:\\s*['\"]?([^'\"]+)['\"]?"},{field:"acceptance",regex:"acceptance\\s*:\\s*\\[([^\\]]+)\\]"},{field:"array",regex:"\\[([^\\]]*)\\]"},{field:"object",regex:"\\{([^}]*)\\}"},{field:"boolean",regex:"\\b(true|false)\\b"},{field:"number",regex:"([-+]?[0-9]*\\.?[0-9]+)"},{field:"string_quoted",regex:"['\"]([^'\"]*)['\"]"},{field:"string_unquoted",regex:"\\b([a-zA-Z_][\\w-]*)\\b"},{field:"comment",regex:"#.*|//.*$"},{field:"inline_comment",regex:"//{[^{}]*(?:{[^{}]*}[^{}]*)*}"},{field:"trailing_comma",regex:",\\s*([}}\\]])"},{field:"whitespace",regex:"\\s+"},{field:"multiline",regex:"([\\r\\n]+)"}]}
+## {type:EARS, version:"1.0.0", requirements:[{id:"REQ-001", story:"As a user, I want streaming IO.", acceptance:["WHEN data is large THEN system SHALL stream in chunks","IF error occurs THEN system SHALL report error object"]},{id:"REQ-002", story:"As an agent, I want schema validation.", acceptance:["WHEN data received THEN system SHALL validate against schema"]}]}
+## {type:IO, op:"stream", format:"lambdajson", chunk:2, total:4, data:[], error:null, meta:{source:"agent", ts:"2025-07-21T12:34:56Z"}}
+## {type:Config, version:"1.0.0", name:"example", enabled:true, items:[1,2,3], meta:{author:"Kalxi", tags:["lambda","json","example"]}, $schema:"https://json-schema.org/draft/2020-12/schema"}
+## {type:ShorthandAddressRegistry, id:"main_registry", categories:[{code:"P", name:"Project"}, {code:"T", name:"Task"}, {code:"S", name:"Step"}, {code:"A", name:"Assumption"}, {code:"C", name:"Component"}, {code:"G", name:"Group"}, {code:"R", name:"Requirement"}], addresses:[
+  {id:"ALAS-ADDR-001", address:"P01.T16.S01.A01.C01.G01.R01", target_id:"TASK-ALEF-001", lambda:"λ:task_resolve(λ:alef_resolve(λ:click_resolve('P01.T16.S01.A01.C01.G01.R01')))", meta:{task_type:"alef"}},
+  {id:"ALAS-ADDR-002", address:"P01.T16.S01.A01.C02.G01.R01", target_id:"COMP-ALEF-001-A", lambda:"λ:task_resolve(λ:alef_resolve(λ:click_resolve('P01.T16.S01.A01.C02.G01.R01')))", meta:{task_type:"alef"}},
+  {id:"ALAS-ADDR-003", address:"P01.T16.S01.A01.C01.G01.R02", target_id:"REQ-ALEF-001-B", lambda:"λ:task_resolve(λ:alef_resolve(λ:click_resolve('P01.T16.S01.A01.C01.G01.R02')))", meta:{task_type:"alef"}}
+]}
+## {type:SpeculativeContext, id:"SPEC-CTX-001", for_address_id:"ALAS-ADDR-001", predicts:[{address_id:"ALAS-ADDR-002", confidence:0.95}, {address_id:"ALAS-ADDR-003", confidence:0.90}], heuristic:"When a task is accessed, its primary components and requirements are likely to be accessed next."}
+## {type:Legend, ref:[[PFSUS.MMCP-Regex.MMCP.MMD]], desc:"All task addresses are lambda-wrapped over alef over click by default: λ:task_resolve(λ:alef_resolve(λ:click_resolve(address))). All regex, parsing, and canonical order standards are defined in the referenced file [[PFSUS.MMCP-Regex.MMCP.MMD]]. Use LambdaJSON order: type, id/name/label, core fields, arrays/children, meta/optional fields, comments. See also: ![[canonical_mermaid_chart.mmd]]"}
+## {type:Changelog, entries:[{"2025-07-22":"All task addresses are now lambda-wrapped over alef over click by default for uniform extensibility and high information density."}]}
+## {type:Audit, changes:[{field:"author", old:"A", new:"Kalxi", timestamp:"2025-07-22T00:00:00Z"}], signatures:[{field:"author", signature:"base64..."}]}
+## {type:LLM_HINTS, prompt_template:"...", context_window:2048}
+## {type:XR_METADATA, spatial_coords:[0,0,0], xr_object:"node-123"}
+## {type:CUSTOM_FIELDS, field_name:"description", type:"string", usage:"Node description"}
+## {type:UnilineGitAddress, id:"GIT-TASK-ADDR-001", target_file:"/project-todo.mmd", target_id:"[MCP-100.107] Evaluate files", lambda:"λ:resolve_git_task(file:target_file, commit:target_id)", meta:{description:"Points to a specific task commit within a gitGraph."}}
+## {type:SelfReference, file:"PFSUS.MMCP-Adress.Standard.v1.2.0.mmcp.mdd", version:"1.2.0", checksum:"sha256:10582a29fcc7af19ad7e06f63b18a47ff2c4fdf9bd0d36e099ceef50b62cfce2", canonical_address:"self", self_repair:{ref:"[[PFSUS.MerMaidContextProtocol.Standard.v1.2.0.mmcp.mmd#SelfReference]]"}, project_agnostic:true}
+## {type:FractalPropagation, id:"PFSUS-Fractal-1.0", desc:"Inherits fractal propagation logic from the core protocol.", ref:"[[PFSUS.MerMaidContextProtocol.Standard.v1.2.0.mmcp.mmd#FractalPropagation]]"}
+## {type:CLITools, id:"PFSUS-CLI-1.0", desc:"Inherits CLI tool definitions from the core protocol.", ref:"[[PFSUS.MerMaidContextProtocol.Standard.v1.2.0.mmcp.mmd#CLITools]]"}
+## {type:QuickRef, summary:{schema:"https://json-schema.org/draft/2020-12/schema", legend:"[[PFSUS.MMCP-Legend.Standard.v1.2.0.mmcp.mdd]]", regex:"[[PFSUS.MMCP-Regex.Standard.v1.2.0.mmcp.mmd]]", strategy:"[[PFSUS.MMCP-Strategy.Guide.v1.2.0.mmcp.mmd]]"}}
+## {type:Links, links:[{"type":"MermaidLink","target":"PFSUS.MerMaidContextProtocol.Standard.v1.2.0.mmcp.mmd","label":"Core Protocol","format":"obsidian","desc":"Main protocol standard"},{"type":"MermaidLink","target":"PFSUS.MMCP-Strategy.Guide.v1.2.0.mmcp.mmd","label":"Strategy Guide","format":"obsidian","desc":"Best practices for code, formatting, and optimization"}]}
+@{visual-meta-start}
+author = {Kalxi},
+title = {PFSUS.MMCP-Adress.Standard.v1.2.0},
+version = {1.2.0},
+structure = { header, meta, schema, color_matrix, regex_patterns, ears, io, config, registry, speculative, legend, changelog, audit, hints, xr, custom_fields, git_address, self_reference, fractal_propagation, cli_tools, quick_ref, links, visualization, references },
+glossary = { header: "Root and title", meta: "Meta block", schema: "JSON schema", color_matrix: "Color definitions", regex_patterns: "Regex patterns", ears: "EARS requirements", io: "IO example", config: "Config example", registry: "Address registry", speculative: "Speculative context", legend: "Legend block", changelog: "Changelog", audit: "Audit block", hints: "LLM hints", xr: "XR metadata", custom_fields: "Custom fields", git_address: "UnilineGitAddress", self_reference: "Self-reference block", fractal_propagation: "Fractal propagation block", cli_tools: "CLI tools block", quick_ref: "Quick reference", links: "Linked standards", visualization: "Mermaid diagram", references: "Linked standards" },
+graph_data = { ... },
+ai_entities = { ... },
+notes = {"This standard is part of the universal, self-referential, self-repairing, project-agnostic PFSUS protocol suite."},
+@{visual-meta-end}
+
+---
+subgraph LEGEND [Legend & Conventions]
+  L_IO["IO Node"]:::io; L_META["Meta Node"]:::meta; L_CORE["Core Node"]:::core; L_USAGE["Usage Node"]:::usage; L_ROLE["Role Node"]:::role; L_WORKFLOW["Workflow Node"]:::workflow; L_METRICS["Metrics Node"]:::metrics; L_FEEDBACK["Feedback Node"]:::feedback; L_CONTEXT["CONTEXT Node: Aggregates all sections"]; L_LAMBDA["λ: LambdaJSON"]; L_CHECKBOX["[ ]/[x]: Actionable/Completion state"]; L_AGNOSTIC["Agnostic/Reusable"]; L_DEF["Definition/Counterdefinition"]; L_MEGO["Megolithic Regex/Counterregex"]; L_EDGE1["Solid: Required/Primary"]; L_EDGE2["Dashed: Optional/Secondary"]; L_EDGE3["Bold: Critical/Versioned"]; L_EDGE4["Label: Channel Type"]; L_EDGE5["<->: Bidirectional"]; L_EDGE6["-.->: Conditional"]; L_EDGE7["==>: Temporal/Sequence"]; L_WIKI["[[wikilink]]"]; L_LICENSE["LICENSE Node"]; L_CODE["CODECHUNK/DATA/DIAGRAM Nodes"]; L_OKLAB["OKLab/OKLCH Color"]; L_TRACK["Tracking/Backtracking/Breadcrumb"]; L_IOGROUP["IO Group"]; L_LAMBDAIO["λ: LambdaJSON IO"]; L_LAMBDAEARS["λ: LambdaJSONEARS"]; L_REGEXSCRIPT["RegexScript"]; L_COLORREL["ColorRelMatrix"]; L_REGEXRWEDIT["RegexRWEdit"]; L_QUICKREF["QuickRef"]; L_LAMBDAJSONORDER["LambdaJSONOrder: universal canonical order for clarity, order-agnostic by nature"]; L_MCPTOOLUSE["MCPToolUse: type,op,format,chunk,total,data,error,meta,$schema"]; L_ADDR_REG["Shorthand Address Registry"]; L_SPECULATIVE["SpeculativeContext Node"]; L_GIT_ADDR["UnilineGitAddress Node"]:::io
+end
+subgraph MerMaidContextProtocol [.mmd]
+  CONTEXT(["[[CONTEXT]]\n{type:Context,provides:[all],for:[LLM,CLI,API,HUMAN,...],agnostic:true}"])
+  SHORTHAND_ADDR_REG(["[[ShorthandAddressRegistry]]\n{type:ShorthandAddressRegistry, categories:[...], addresses:[...]}"])
+  SPECULATIVE_CONTEXT(["[[SpeculativeContext]]\n{type:SpeculativeContext, for_address_id:'...', predicts:[...]}"])
+  UNILINE_GIT_ADDR(["[[UnilineGitAddress]]\n{type:UnilineGitAddress, ...}"]):::io
+  
+  CONTEXT -- λ --> SHORTHAND_ADDR_REG & SPECULATIVE_CONTEXT
+  UNILINE_GIT_ADDR -- "References Task In" --> CONTEXT
+end
+classDef io fill:#b3e5fc,stroke:#0288d1;
+classDef meta fill:#e0f7fa,stroke:#00796b;
+classDef core fill:#fff9c4,stroke:#fbc02d;
+classDef usage fill:#e1bee7,stroke:#6a1b9a;
+classDef workflow fill:#ffe0b2,stroke:#e65100;
+classDef role fill:#f8bbd0,stroke:#ad1457;
+classDef metrics fill:#c8e6c9,stroke:#388e3c;
+classDef feedback fill:#fff9c4,stroke:#fbc02d;
+classDef comment fill:#f5f5f5,stroke:#9e9e9e;
+classDef symbol fill:#e8eaf6,stroke:#3f51b5;
+
+## Visualization
+```mermaid
+graph TD
+    subgraph "Address Standard"
+        A["Shorthand Address Registry"]:::protocol
+        B["Categories"]:::concepts_group
+        C["Addresses"]:::io_group
+        D{Lambda Resolution}:::concept_decision
+    end
+
+    A -- Defines --> B
+    A -- Contains --> C
+    C -- AreResolvedBy --> D
+
+    subgraph "Category Examples"
+        P("P: Project"):::concept
+        T("T: Task"):::concept
+        S("S: Step"):::concept
+        R("R: Requirement"):::concept
+        B -- Comprises --> P & T & S & R
+    end
+
+    subgraph "Address Example"
+        Addr1["P01.T16.S01..."]:::io_ex
+        Target1["TASK-ALEF-001"]:::link_node
+        C -- Includes --> Addr1
+        Addr1 -.-> Target1
+    end
+
+    classDef protocol fill:#e0f7fa,stroke:#00796b,color:#333;
+    classDef concepts_group fill:#fff9c4,stroke:#fbc02d,color:#333;
+    classDef io_group fill:#b3e5fc,stroke:#0288d1,color:#333;
+    classDef concept fill:#c8e6c9,stroke:#388e3c,color:#333;
+    classDef concept_decision fill:#ffe0b2,stroke:#e65100,color:#333;
+    classDef io_ex fill:#d1c4e9,stroke:#512da8,color:#fff;
+    classDef link_node fill:#f5f5f5,stroke:#9e9e9e,color:#333;
+```
+
+## Uniline Git Address
+{type:UnilineGitAddress, id:"GIT-TASK-ADDR-001", target_file:"/project-todo.mmd", target_id:"[MCP-100.107] Evaluate files", lambda:"λ:resolve_git_task(file:target_file, commit:target_id)", meta:{description:"Points to a specific task commit within a gitGraph."}}
+
+---
+> [[PFSUS.MerMaidContextProtocol.Standard.v1.1.0.mmcp.mmd]] 

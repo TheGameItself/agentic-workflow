@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MMCP Standard Document Schema",
+  "type": "object",
+  "required": ["type", "id", "version"],
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": ["Standard", "Specification", "Guide", "Reference", "Meta", "Schema", "Changelog", "Audit", "LLM_HINTS", "XR_METADATA", "CUSTOM_FIELDS", "QuickRef", "ColorMatrix", "RegexPatterns", "EARS", "IO", "Config", "ShorthandAddressRegistry", "SpeculativeContext", "Legend", "UnilineAddress", "SecurityStandard", "ErrorHandlingStandard", "VersioningStandard", "ToolingGuide", "InteropStandard", "UseCases", "FormatWrappingStandard", "Links", "Core", "DeprecationStandard", "MigrationStandard", "TestingStandard", "DataPrivacyStandard", "ComplianceStandard", "InternationalizationStandard", "AccessibilityStandard", "PluginExtensionStandard", "SelfReference", "CoreManifest", "CLITools", "FractalPropagation", "Mathematical"]
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Z]+-[A-Z]+-[0-9]{3}$|^[A-Z]+\\.[A-Za-z0-9-]+\\.[A-Za-z]+\\.[vV][0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "last_modified": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "author": {
+      "type": "string"
+    },
+    "license": {
+      "type": "string"
+    },
+    "desc": {
+      "type": "string"
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["title", "content"],
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "mathematical_operators": {
+      "type": "boolean"
+    },
+    "lambdajson_integration": {
+      "type": "boolean"
+    },
+    "operators": {
+      "type": "object",
+      "properties": {
+        "primary": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "secondary": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "complexity": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      }
+    },
+    "wrapper_assignment": {
+      "type": "object",
+      "additionalProperties": {"type": "string"}
+    },
+    "checksum": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "canonical_address": {
+      "type": "string"
+    }
+  }
+}

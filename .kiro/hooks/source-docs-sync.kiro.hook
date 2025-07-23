@@ -1,0 +1,21 @@
+{
+  "enabled": true,
+  "name": "Source Code Documentation Sync",
+  "description": "Monitors source code files and updates related documentation in README.md and docs folders when changes are detected",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "**/*.py",
+      "**/*.md",
+      "core/MCP/**/*.md",
+      "core/SELF_REPAIR/**/*.md",
+      "core/PFSUS/**/*.md",
+      "core/MCP/WorkingDir/specs/core-refactor/docs/**/*.md"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "I noticed changes to source code files. Please:\n1. Review the changes to understand what functionality was modified\n2. Update the README.md file if the changes affect high-level functionality or usage instructions\n3. Update relevant documentation in the /docs folder or core/MCP/WorkingDir/specs/core-refactor/docs/ directory\n4. If the changes affect self-repair functionality, update documentation in core/SELF_REPAIR/docs/\n5. Ensure any API changes are reflected in API documentation\n6. Update any relevant diagrams or mind maps if the architecture has changed\n7. Make sure the documentation remains consistent across all locations"
+  }
+}

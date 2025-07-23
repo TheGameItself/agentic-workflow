@@ -1,0 +1,39 @@
+{
+  "wikilinks": [
+    {
+      "id": "PFSUS-FW-001",
+      "display": "Format Wrapping Standard",
+      "target": "PFSUS.MMCP-FormatWrapping.Standard.v1.4.0.mmcp.mmd",
+      "type": "standard",
+      "version": "1.4.0"
+    },
+    {
+      "id": "PFSUS-CORE-001",
+      "display": "MerMaidContextProtocol Standard",
+      "target": "PFSUS.MerMaidContextProtocol.Standard.v1.2.0.mmcp.mmd",
+      "type": "standard",
+      "version": "1.2.0"
+    },
+    {
+      "id": "AGENT-SPEC-001",
+      "display": "Agent Specification",
+      "target": "AGENT.Specification.v1.1.0.mmcp.mmd",
+      "type": "specification",
+      "version": "1.1.0"
+    },
+    {
+      "id": "MMCP-REGEX-001",
+      "display": "MMCP Regex Standard",
+      "target": "PFSUS.MMCP-Regex.Standard.v1.2.0.mmcp.mmd",
+      "type": "standard",
+      "version": "1.2.0"
+    },
+    {
+      "id": "MMCP-ADDR-001",
+      "display": "MMCP Address Standard",
+      "target": "PFSUS.MMCP-Adress.Standard.v1.2.0.mmcp.mdd",
+      "type": "standard",
+      "version": "1.2.0"
+    }
+  ]
+}

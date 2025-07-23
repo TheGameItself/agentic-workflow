@@ -1,0 +1,372 @@
+%% Copyright 2025 Kalxi. All rights reserved. See header for terms. %%
+[ ] #".root"# {protocol:"MCP", version:"1.2.0", standard:"PFSUS+EARS+LambdaJSON"}
+# MMCP Format Wrapping Standard v1.2.0
+## {type:Meta, author:"Kalxi", license:"MIT", last_modified:"2025-07-21T00:00:00Z", id:"PFSUS.MMCP-FormatWrapping.Standard.v1.2.0"}
+## {type:Schema, $schema:"https://json-schema.org/draft/2020-12/schema", required:["type","id","version"], properties:{type:{type:"string"},id:{type:"string"},version:{type:"string"},last_modified:{type:"string",format:"date-time"},author:{type:"string"}}}
+## {type:Changelog, entries:[{"2025-07-21":"Initial version of the Format Wrapping Standard."}]}
+
+## {type:FormatWrappingStandard, id:"PFSUS-Format-Wrapping-1.0", desc:"Comprehensive standard for embedding PFSUS content in various file formats and supporting nested wrappings."}
+
+## 1. Introduction
+
+The MMCP Format Wrapping Standard defines how MMCP content can be embedded within various file formats while maintaining its semantic integrity and parsability. This standard enables MMCP to be used in a wide range of development environments and workflows, allowing for seamless integration with existing codebases and documentation systems.
+
+## 2. File Extensions and Naming Conventions
+
+### 2.1 Primary Extensions
+
+MMCP content can be wrapped in various file formats using the following extension patterns:
+
+- `*.mmcp.py`: Python files with embedded MMCP content
+- `*.mmcp.md`: Markdown files with embedded MMCP content
+- `*.mmcp.js`: JavaScript files with embedded MMCP content
+- `*.mmcp.json`: JSON files with embedded MMCP content
+- `*.mmcp.sql`: SQL files with embedded MMCP content
+- `*.mmcp.toml`: TOML files with embedded MMCP content
+- `*.todo.mmcp`: Task/TODO lists with MMCP structure
+- `*.mmcp.lambda`: Lambda calculus expressions with MMCP content
+- `*.mmcp.*`: Any other file format with embedded MMCP content
+
+### 2.2 Extension Precedence
+
+When multiple extensions are present, they should be processed from right to left:
+- `example.mmcp.py` is a Python file containing MMCP content
+- `example.todo.mmcp.md` is a Markdown file containing MMCP-structured TODO content
+
+## 3. Wrapping Syntax
+
+### 3.1 Wrapper Delimiters
+
+Each supported file format has specific delimiters for wrapping MMCP content:
+
+#### 3.1.1 Python (*.mmcp.py)
+```python
+'''
+# MMCP-START
+[MMCP content here]
+# MMCP-END
+'''
+```
+
+#### 3.1.2 Markdown (*.mmcp.md)
+```markdown
+```mmcp
+<!-- MMCP-START -->
+[MMCP content here]
+<!-- MMCP-END -->
+```
+```
+
+#### 3.1.3 JavaScript (*.mmcp.js)
+```javascript
+/*
+ * MMCP-START
+ * [MMCP content here]
+ * MMCP-END
+ */
+```
+
+#### 3.1.4 JSON (*.mmcp.json)
+```json
+{
+  "__mmcp": {
+    "content": "[MMCP content here]"
+  }
+}
+```
+
+#### 3.1.5 SQL (*.mmcp.sql)
+```sql
+/*
+ * MMCP-START
+ * [MMCP content here]
+ * MMCP-END
+ */
+```
+
+#### 3.1.6 TOML (*.mmcp.toml)
+```toml
+# MMCP-START
+[mmcp]
+content = '''
+[MMCP content here]
+'''
+# MMCP-END
+```
+
+#### 3.1.7 TODO Lists (*.todo.mmcp)
+```
+# MMCP-TODO-START
+[MMCP content here]
+# MMCP-TODO-END
+```
+
+#### 3.1.8 Lambda Calculus (*.mmcp.lambda)
+```
+λ:mmcp_wrapper(
+  [MMCP content here]
+)
+```
+
+### 3.2 Comment Styles
+
+Each format has a specific comment style for inline comments within MMCP content:
+
+- Python: `# Comment`
+- Markdown: `<!-- Comment -->`
+- JavaScript: `// Comment`
+- JSON: `// Comment` (in __mmcp metadata, not in standard JSON)
+- SQL: `-- Comment`
+- TOML: `# Comment`
+- TODO Lists: `# Comment`
+- Lambda Calculus: `-- Comment`
+
+## 4. Nested Wrapping
+
+### 4.1 Nesting Syntax
+
+MMCP content can contain nested content in other formats using XML-like tags:
+
+```
+<mmcp:nested type="FORMAT" id="IDENTIFIER" version="VERSION" checksum="CHECKSUM">
+[Content in the specified format]
+</mmcp:nested>
+```
+
+### 4.2 Nesting Attributes
+
+- `type`: Required. The format of the nested content (e.g., "python", "markdown", "json")
+- `id`: Optional. A unique identifier for the nested content
+- `version`: Optional. Version information for the nested content
+- `checksum`: Optional. Integrity verification for the nested content
+
+### 4.3 Nesting Examples
+
+#### 4.3.1 Python Code in MMCP
+```
+<mmcp:nested type="python" id="hello-world" version="1.0.0">
+def hello_world():
+    print("Hello, world!")
+</mmcp:nested>
+```
+
+#### 4.3.2 JSON Data in MMCP
+```
+<mmcp:nested type="json" id="config" version="1.0.0">
+{
+  "name": "example",
+  "version": "1.0.0",
+  "settings": {
+    "enabled": true,
+    "timeout": 30
+  }
+}
+</mmcp:nested>
+```
+
+#### 4.3.3 Multiple Nested Blocks
+```
+<mmcp:nested type="python" id="model">
+class User:
+    def __init__(self, name, email):
+        self.name = name
+        self.email = email
+</mmcp:nested>
+
+<mmcp:nested type="sql" id="schema">
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE
+);
+</mmcp:nested>
+```
+
+## 5. Comments and Metadata
+
+### 5.1 Inline Comments
+
+Inline comments in MMCP follow this format:
+```
+%% This is an inline comment
+```
+
+### 5.2 Block Comments
+
+Block comments span multiple lines:
+```
+%% COMMENT-START
+This is a
+multi-line comment
+%% COMMENT-END
+```
+
+### 5.3 Metadata Comments
+
+Metadata comments provide additional context:
+```
+%% @author: John Doe
+%% @version: 1.0.0
+%% @created: 2025-07-21
+```
+
+### 5.4 TODO Comments
+
+TODO comments mark items for future action:
+```
+%% TODO: Implement error handling
+%% TODO: Add validation for input parameters
+```
+
+### 5.5 Reference Comments
+
+Reference comments link to other resources:
+```
+%% REF: [TASK-001]
+%% REF: [RFC-2119]
+```
+
+## 6. Document Footers
+
+### 6.1 Footer Format
+
+Document footers provide metadata about the MMCP content:
+
+```
+MMCP-FOOTER: version=1.2.0; timestamp=2025-07-21T00:00:00Z; checksum=sha256:abc123...
+```
+
+### 6.2 Required Footer Fields
+
+- `version`: The version of the MMCP standard used
+- `timestamp`: The last modification time in ISO 8601 format
+- `checksum`: A cryptographic hash of the content for integrity verification
+
+### 6.3 Optional Footer Fields
+
+- `author`: The author of the content
+- `license`: The license under which the content is distributed
+- `references`: References to related documents
+- `dependencies`: Dependencies on other MMCP documents
+
+## 7. Information Density Guidelines
+
+### 7.1 Principles
+
+- Use shorthand notation where appropriate (e.g., λ for lambda functions)
+- Leverage nested structures for hierarchical data
+- Use references instead of duplicating content
+- Apply consistent formatting for improved readability
+- Utilize metadata comments for additional context
+- Employ semantic compression through well-defined schemas
+- Balance between human readability and machine parsability
+
+### 7.2 Density Metrics
+
+- **Semantic Density**: Ratio of semantic content to total document size
+- **Reference Efficiency**: Percentage of content represented by references rather than duplication
+- **Parsing Efficiency**: Time required to parse and extract structured data
+
+## 8. Implementation Guide
+
+### 8.1 Parser Requirements
+
+- Must detect and extract MMCP content from supported file formats
+- Must handle nested MMCP content appropriately
+- Must preserve comments and metadata during round-trip operations
+- Must validate extracted content against MMCP schemas
+
+### 8.2 Extension Mechanism
+
+To add support for a new file format:
+
+1. Define wrapper start and end delimiters appropriate for the target format
+2. Define comment style compatible with the target format
+3. Define footer style compatible with the target format
+4. Implement parser extensions to handle the new format
+5. Add format definition to the FormatWrappingStandard
+
+### 8.3 CLI Tools
+
+The following CLI tools should be implemented for working with wrapped MMCP content:
+
+- `wrap`: Wrap MMCP content in another file format
+- `unwrap`: Extract MMCP content from a wrapped file
+- `validate`: Validate wrapped MMCP content against schemas
+- `convert`: Convert between different wrapped formats
+
+## 9. Examples
+
+### 9.1 Python Example
+
+```python
+'''
+# MMCP-START
+[ ] #".root"# {protocol:"MCP", version:"1.2.0", standard:"PFSUS+EARS+LambdaJSON"}
+# Example MMCP in Python
+## {type:Meta, author:"Kalxi", license:"MIT", last_modified:"2025-07-21T00:00:00Z", id:"example.python"}
+
+<mmcp:nested type="python" id="example-function" version="1.0.0">
+def process_data(data):
+    """Process the input data and return the result."""
+    return {k: v * 2 for k, v in data.items()}
+</mmcp:nested>
+
+%% TODO: Add more examples
+# MMCP-END
+'''
+
+def main():
+    print("This is a Python file with embedded MMCP content")
+
+if __name__ == "__main__":
+    main()
+```
+
+### 9.2 Markdown Example
+
+```markdown
+# Document Title
+
+This is a regular Markdown document with embedded MMCP content.
+
+```mmcp
+<!-- MMCP-START -->
+[ ] #".root"# {protocol:"MCP", version:"1.2.0", standard:"PFSUS+EARS+LambdaJSON"}
+# Example MMCP in Markdown
+## {type:Meta, author:"Kalxi", license:"MIT", last_modified:"2025-07-21T00:00:00Z", id:"example.markdown"}
+
+## {type:Requirements, items:[
+  {id:"REQ-001", desc:"The system shall support embedding MMCP in Markdown."},
+  {id:"REQ-002", desc:"The system shall preserve MMCP content during Markdown processing."}
+]}
+<!-- MMCP-END -->
+```
+
+## Conclusion
+
+This document provides examples and guidelines for using MMCP in various contexts.
+```
+
+### 9.3 JSON Example
+
+```json
+{
+  "name": "Example JSON",
+  "description": "JSON file with embedded MMCP content",
+  "__mmcp": {
+    "content": "[ ] #\".root\"# {protocol:\"MCP\", version:\"1.2.0\", standard:\"PFSUS+EARS+LambdaJSON\"}\n# Example MMCP in JSON\n## {type:Meta, author:\"Kalxi\", license:\"MIT\", last_modified:\"2025-07-21T00:00:00Z\", id:\"example.json\"}\n\n## {type:Config, settings:{\"api_key\":\"${ENV:API_KEY}\", \"timeout\":30, \"retry\":true}}\n\n%% This configuration will be used by the application"
+  },
+  "version": "1.0.0"
+}
+```
+
+## {type:SelfReference, file:"PFSUS.MMCP-FormatWrapping.Standard.v1.2.0.mmcp.mmd", version:"1.2.0", checksum:"sha256:e74825a2d300fdffcf075ad8cde825fc9a874f7f705b3b09f4808b9139003799", canonical_address:"format-wrapping", self_repair:{desc:"If checksum fails, fetch canonical version from CoreManifest.", source:"CoreManifest"}, project_agnostic:true}
+
+@{visual-meta-start}
+author = {Kalxi},
+title = {PFSUS.MMCP-FormatWrapping.Standard.v1.2.0},
+version = {1.2.0},
+structure = { introduction, file_extensions, wrapping_syntax, nested_wrapping, comments_metadata, document_footers, information_density, implementation_guide, examples },
+@{visual-meta-end}
+%% MMCP-FOOTER: version=1.2.0; timestamp=2025-07-21T00:00:00Z; checksum=sha256:e74825a2d300fdffcf075ad8cde825fc9a874f7f705b3b09f4808b9139003799; author=Kalxi; license=MIT

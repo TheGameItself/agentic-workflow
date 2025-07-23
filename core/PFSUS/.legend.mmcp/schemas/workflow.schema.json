@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MMCP Workflow Schema",
+  "type": "object",
+  "required": ["type", "id", "version", "workflow"],
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": ["Workflow", "Process", "Pipeline", "Integration"]
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Z]+-[A-Z]+-[0-9]{3}$",
+      "description": "Unique identifier following PFSUS naming convention"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "last_modified": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "author": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "review", "approved", "deprecated"],
+      "description": "Overall workflow status"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Categorization tags for workflow organization"
+    },
+    "workflow": {
+                  "type": "object",
+      "required": ["name", "stages"],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+        "priority": {
+                      "type": "string",
+          "enum": ["low", "medium", "high", "critical"],
+          "description": "Priority level for the workflow"
+                    },
+        "estimated_duration": {
+                      "type": "string",
+          "pattern": "^P(?:\\d+Y)?(?:\\d+M)?(?:\\d+W)?(?:\\d+D)?(?:T(?:\\d+H)?(?:\\d+M)?(?:\\d+S)?)?$",
+          "description": "ISO 8601 duration format"
+        },
+        "stages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "tasks"],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "stage_id": {
+                "type": "string",
+                "description": "Unique identifier for the stage within PFSUS"
+              },
+              "tasks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["name", "status"],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "task_id": {
+                      "type": "string",
+                      "description": "Unique identifier for the task within PFSUS"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["not_started", "in_progress", "completed", "blocked", "skipped", "failed", "pending_review"]
+                    },
+                    "dependencies": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+          }
+                    },
+                    "assignee": {
+                      "type": "string"
+                    },
+                    "reviewers": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "List of required reviewers for this task"
+                    },
+                    "due_date": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "effort": {
+                      "type": "string",
+                      "enum": ["trivial", "minor", "moderate", "major", "critical"],
+                      "description": "Estimated effort required"
+                    },
+                    "artifacts": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "location": {
+                            "type": "string",
+                            "format": "uri"
+                          },
+                          "type": {
+                            "type": "string"
+        }
+      }
+                      },
+                      "description": "Deliverables produced by this task"
+    }
+  }
+}              }
+            }
+          }
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["from", "to"],
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": ["required", "optional", "blocking", "informational"]
+              },
+              "description": {
+                "type": "string",
+                "description": "Explanation of the dependency relationship"
+              }
+            }
+          }
+        },
+        "integrations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "system": {
+                "type": "string",
+                "description": "External system identifier from PFSUS"
+              },
+              "connection_details": {
+                "type": "object",
+                "description": "Integration-specific configuration"
+              },
+              "direction": {
+                "type": "string",
+                "enum": ["inbound", "outbound", "bidirectional"]
+              }
+            }
+          },
+          "description": "External system integrations"
+        }
+      }
+    }
+  }
+}

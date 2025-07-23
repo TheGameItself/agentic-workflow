@@ -1,0 +1,160 @@
+```mermaid
+graph TD
+    %% === SYSTEM ARCHITECTURE (Detailed Breakdown) ===
+    %%
+    %% This diagram provides a granular, layered view of the MCP architecture,
+    %% breaking down major components into their functional sub-modules and
+    %% illustrating key interactions and data flows across the system.
+    %%
+
+    %% ======== STYLES ========
+    classDef ui fill:#FF6347,stroke:#000,stroke-width:2px,rx:5px,ry:5px;
+    classDef integration fill:#87CEEB,stroke:#000,stroke-width:2px,rx:5px,ry:5px;
+    classDef core fill:#1E90FF,stroke:#000,stroke-width:2px,rx:5px,ry:5px;
+    classDef meta fill:#B0C4DE,stroke:#000,stroke-width:2px,rx:5px,ry:5px;
+    classDef cognitive fill:#FFD700,stroke:#000,stroke-width:2px,rx:5px,ry:5px;
+    classDef db fill:#D2B48C,stroke:#000,stroke-width:2px,rx:5px,ry:5px;
+    classDef genetic fill:#00CED1,stroke:#000,stroke-width:2px,rx:5px,ry:5px;
+    classDef hormone fill:#9ACD32,stroke:#000,stroke-width:2px,rx:5px,ry:5px;
+    classDef network fill:#DA70D6,stroke:#000,stroke-width:2px,rx:5px,ry:5px;
+    classDef monitoring fill:#FFA07A,stroke:#000,stroke-width:2px,rx:5px,ry:5px;
+    classDef security fill:#F08080,stroke:#000,stroke-width:2px,rx:5px,ry:5px;
+    classDef automation fill:#90EE90,stroke:#000,stroke-width:2px,rx:5px,ry:5px;
+    classDef test fill:#FF8C00,stroke:#000,stroke-width:2px;
+
+    %% ======== LAYER 1: USER INTERFACE & EXTERNAL INTEGRATIONS ========
+    subgraph "Layer 1: User Interface & External Integrations"
+        direction LR
+        subgraph "Interfaces"
+            Frontend["Frontend (React)<br/>frontend/"]:::ui
+            CLI["CLI (Click)<br/>src/mcp/cli.py"]:::ui
+        end
+        subgraph "Integrations"
+            IDE["IDE Integration<br/>(VSCode, Cursor)"]:::integration
+            APIClient["External API Clients"]:::integration
+            ExtLLM["External LLMs"]:::integration
+        end
+    end
+
+    %% ======== LAYER 2: CORE SERVER & ORCHESTRATION ========
+    subgraph "Layer 2: Core Server & Orchestration"
+        Server["Main Server<br/>src/mcp/server.py"]:::core
+        APIServer["API Gateway"]:::core
+        WorkflowManager["Workflow Manager<br/>src/mcp/workflow.py"]:::core
+        TaskManager["Task Manager<br/>src/mcp/task_manager.py"]:::core
+        ProjectManager["Project Manager<br/>src/mcp/project_manager.py"]:::core
+        PluginSystem["Plugin System<br/>src/mcp/plugin_system.py"]:::meta
+    end
+
+    %% ======== LAYER 3: COGNITIVE & REASONING CORE ========
+    subgraph "Layer 3: Cognitive & Reasoning Core"
+        subgraph "A) Lobes (Task Execution)"
+            direction TB
+            FrontalLobe["Frontal Lobe<br/>(Planning, Decisions)"]:::cognitive
+            ParietalLobe["Parietal Lobe<br/>(Sensory Integration)"]:::cognitive
+            TemporalLobe["Temporal Lobe<br/>(Memory, Language)"]:::cognitive
+            OccipitalLobe["Occipital Lobe<br/>(Vision, Analysis)"]:::cognitive
+        end
+        subgraph "B) Neural & Scientific Engines"
+            direction TB
+            NeuralModels["Neural Networks<br/>src/mcp/neural_network_models/"]:::cognitive
+            RAGSystem["RAG System<br/>src/mcp/rag_system.py"]:::cognitive
+            HypotheticalEngine["Hypothetical Engine<br/>src/mcp/hypothetical_engine.py"]:::cognitive
+            ScientificEngine["Scientific Process<br/>src/mcp/scientific_process.py"]:::cognitive
+        end
+        subgraph "C) Memory & Learning Systems"
+            direction TB
+            MemoryManager["Memory Manager<br/>src/mcp/memory.py"]:::cognitive
+            UnifiedMemory["Unified Memory<br/>src/mcp/unified_memory.py"]:::cognitive
+            EngramEngine["Engram Engine (LTM)<br/>src/mcp/engram.py"]:::cognitive
+            DreamingEngine["Dreaming Engine<br/>src/mcp/dreaming_engine.py"]:::cognitive
+            ContextManager["Context Manager<br/>src/mcp/context_manager.py"]:::cognitive
+        end
+    end
+
+    %% ======== LAYER 4: FOUNDATIONAL SYSTEMS ========
+    subgraph "Layer 4: Foundational Systems"
+        subgraph "A) Data & Persistence"
+            DBManager["Database Manager<br/>(SQLite)"]:::db
+            VectorDB["Vector Store<br/>(FAISS)"]:::db
+            FileSys["File System<br/>(Project Files)"]:::db
+        end
+        subgraph "B) Genetic & Hormone Systems"
+            GeneticTrigger["Genetic Trigger System<br/>src/mcp/genetic_trigger_system/"]:::genetic
+            HormoneSystem["Hormone System<br/>(Regulation)"]:::hormone
+        end
+        subgraph "C) Distributed Network"
+            P2PNetwork["P2P Network<br/>src/mcp/p2p_network.py"]:::network
+            Consensus["Consensus Engine<br/>src/mcp/papal_election_chain_of_command.py"]:::network
+            WebCrawler["Web Crawler<br/>src/mcp/p2p_web_crawler.py"]:::network
+        end
+    end
+
+    %% ======== LAYER 5: CROSS-CUTTING CONCERNS ========
+    subgraph "Layer 5: Cross-Cutting Concerns"
+        direction LR
+        subgraph "A) Monitoring & Observability"
+            PerformanceMonitor["Performance Monitor<br/>src/mcp/performance_monitor.py"]:::monitoring
+            Logging["Structured Logging"]:::monitoring
+            Metrics["Metrics (Prometheus)"]:::monitoring
+        end
+        subgraph "B) Security"
+            Auth["Authentication"]:::security
+            RateLimit["Rate Limiting"]:::security
+            AuditLog["Audit Logging"]:::security
+        end
+        subgraph "C) Automation & Self-Improvement"
+            AutoUpdater["Auto-Updater<br/>src/mcp/automatic_update_system.py"]:::automation
+            SelfDebug["Self-Debugging<br/>src/mcp/self_debug.py"]:::automation
+            Fallback["Fallback Manager<br/>src/mcp/fallback_manager.py"]:::automation
+            TestSuite["Test Suite<br/>tests/"]:::test
+        end
+    end
+
+    %% ======== CONNECTIONS ========
+    %% Layer 1 -> Layer 2
+    Frontend --> APIServer
+    CLI -.-> Server
+    IDE -.-> Server
+    APIClient --> APIServer
+    ExtLLM --> APIServer
+
+    %% Layer 2 -> Layer 3
+    Server -- "dispatches to" --> WorkflowManager
+    WorkflowManager -- "creates" --> TaskManager
+    TaskManager -- "assigns to" --> FrontalLobe
+    Server -- "uses" --> PluginSystem
+    APIServer -- "routes to" --> Server
+
+    %% Layer 3 Interactions (Cognitive Core)
+    FrontalLobe -- "plans using" --> TemporalLobe
+    TemporalLobe -- "accesses" --> MemoryManager
+    FrontalLobe -- "executes with" --> NeuralModels
+    NeuralModels -- "queries" --> RAGSystem
+    RAGSystem -- "retrieves from" --> UnifiedMemory
+    UnifiedMemory -- "accesses" --> EngramEngine
+    MemoryManager -- "manages" --> EngramEngine
+    MemoryManager -- "consolidates via" --> DreamingEngine
+    ContextManager -- "provides context to" --> RAGSystem
+    ScientificEngine -- "guides" --> HypotheticalEngine
+    HypotheticalEngine -- "tests with" --> NeuralModels
+
+    %% Layer 3 -> Layer 4
+    MemoryManager -- "persists via" --> DBManager
+    RAGSystem -- "uses" --> VectorDB
+    ProjectManager -- "manages" --> FileSys
+    Lobes -- "regulated by" --> HormoneSystem
+    NeuralModels -- "optimized by" --> GeneticTrigger
+    P2PNetwork -- "shares data with" --> MemoryManager
+
+    %% Layer 2 -> Layer 4
+    Server -- "uses" --> DBManager
+    Server -- "connects to" --> P2PNetwork
+
+    %% Layer 5 -> All Layers (Cross-Cutting)
+    PerformanceMonitor -- "monitors" --> Server
+    Logging -- "captures logs from" --> Server
+    Auth -- "secures" --> APIServer
+    AutoUpdater -- "updates" --> Server
+    TaskManager -- "triggers" --> TestSuite
+end 

@@ -1,0 +1,220 @@
+%% Copyright 2025 Kalxi. All rights reserved. See header for terms. %%
+[ ] #".root"# {protocol:"MCP", version:"1.1.0", standard:"PFSUS+EARS+LambdaJSON"}
+# MerMaidContextProtocol (MmCP) v1.1.0
+## {type:Meta, author:"Kalxi", license:"MIT", last_modified:"2025-07-22T00:00:00Z", id:"PFSUS.MerMaidContextProtocol.Standard.v1.1.0"}
+## {type:Schema, $schema:"https://json-schema.org/draft/2020-12/schema", required:["type","id","version"], properties:{type:{type:"string"},id:{type:"string"},version:{type:"string"},last_modified:{type:"string",format:"date-time"},author:{type:"string"}}}
+## {type:Changelog, entries:[{"2025-07-22":"All task addresses are now lambda-wrapped for uniform extensibility and high information density."}]}
+## {type:Audit, changes:[{field:"author", old:"A", new:"Kalxi", timestamp:"2025-07-22T00:00:00Z"}], signatures:[{field:"author", signature:"base64..."}]}
+## {type:LLM_HINTS, prompt_template:"...", context_window:2048}
+## {type:XR_METADATA, spatial_coords:[0,0,0], xr_object:"node-123"}
+## {type:CUSTOM_FIELDS, field_name:"description", type:"string", usage:"Node description"}
+## {type:QuickRef, summary:{schema:"https://json-schema.org/draft/2020-12/schema", legend:"[[PFSUS.MMCP-Legend.Standard.v1.1.0.mmcp.mdd]]", regex:"[[PFSUS.MMCP-Regex.Standard.v1.1.0.mmcp.mmd]]", address:"[[PFSUS.MMCP-Adress.Standard.v1.1.0.mmcp.mdd]]", minref:"[[PFSUS.MMCP-Minimal.Ref.v1.1.0.mmcp.mmd]]", rwref:"[[PFSUS.MMCP-ReadWriteDiff.Guide.v1.1.0.mmcp.mdd]]", metaversioning:"[[PFSUS.MMCP-Metaversioning.Standard.v1.1.0.mmcp.mmd]]"}}
+## {type:ColorMatrix, model:"oklch", colors:[{name:"primary",oklch:"0.7 0.15 240"},{name:"secondary",oklch:"0.6 0.2 280 / 75%"},{name:"accent",oklch:"0.8 0.18 60"},{name:"neutral",oklch:"0.9 0 0"},{name:"error",oklch:"0.6 0.2 30"}]}
+## {type:RegexPatterns, patterns:[{field:"type",regex:"type\\s*:\\s*['\"]?(\\w+)['\"]?"},{field:"id",regex:"id\\s*:\\s*['\"]?([\\w-]+)['\"]?"},{field:"oklch",regex:"oklch\\s*:\\s*['\"]?([0-9.]+\\s+[0-9.]+\\s+[0-9.]+(\\s*/\\s*[0-9.%]+)?)['\"]?"},{field:"score",regex:"score\\s*:\\s*([0-9.]+)"},{field:"story",regex:"story\\s*:\\s*['\"]?([^'\"]+)['\"]?"},{field:"acceptance",regex:"acceptance\\s*:\\s*\\[([^\\]]+)\\]"},{field:"array",regex:"\\[([^\\]]*)\\]"},{field:"object",regex:"\\{([^}]*)\\}"},{field:"boolean",regex:"\\b(true|false)\\b"},{field:"number",regex:"([-+]?[0-9]*\\.?[0-9]+)"},{field:"string_quoted",regex:"['\"]([^'\"]*)['\"]"},{field:"string_unquoted",regex:"\\b([a-zA-Z_][\\w-]*)\\b"},{field:"comment",regex:"#.*|//.*$"},{field:"inline_comment",regex:"//{[^{}]*(?:{[^{}]*}[^{}]*)*}"},{field:"trailing_comma",regex:",\\s*([}}\\]])"},{field:"whitespace",regex:"\\s+"},{field:"multiline",regex:"([\\r\\n]+)"}]}
+## {type:EARS, version:"1.0.0", requirements:[{id:"REQ-001", story:"As a user, I want streaming IO.", acceptance:["WHEN data is large THEN system SHALL stream in chunks","IF error occurs THEN system SHALL report error object"]},{id:"REQ-002", story:"As an agent, I want schema validation.", acceptance:["WHEN data received THEN system SHALL validate against schema"]}]}
+## {type:IO, op:"stream", format:"lambdajson", chunk:2, total:4, data:[], error:null, meta:{source:"agent", ts:"2025-07-21T12:34:56Z"}}
+## {type:Config, version:"1.0.0", name:"example", enabled:true, items:[1,2,3], meta:{author:"Kalxi", tags:["lambda","json","example"]}, $schema:"https://json-schema.org/draft/2020-12/schema"}
+## {type:ShorthandAddressRegistry, id:"main_registry", categories:[{code:"P", name:"Project"}, {code:"T", name:"Task"}, {code:"S", name:"Step"}, {code:"A", name:"Assumption"}, {code:"C", name:"Component"}, {code:"G", name:"Group"}, {code:"R", name:"Requirement"}], addresses:[
+  {id:"ALAS-ADDR-001", address:"P01.T16.S01.A01.C01.G01.R01", target_id:"TASK-ALEF-001", lambda:"λ:task_resolve(λ:alef_resolve(λ:click_resolve('P01.T16.S01.A01.C01.G01.R01')))", meta:{task_type:"alef"}},
+  {id:"ALAS-ADDR-002", address:"P01.T16.S01.A01.C02.G01.R01", target_id:"COMP-ALEF-001-A", lambda:"λ:task_resolve(λ:alef_resolve(λ:click_resolve('P01.T16.S01.A01.C02.G01.R01')))", meta:{task_type:"alef"}},
+  {id:"ALAS-ADDR-003", address:"P01.T16.S01.A01.C01.G01.R02", target_id:"REQ-ALEF-001-B", lambda:"λ:task_resolve(λ:alef_resolve(λ:click_resolve('P01.T16.S01.A01.C01.G01.R02')))", meta:{task_type:"alef"}}
+]}
+## {type:SpeculativeContext, id:"SPEC-CTX-001", for_address_id:"ALAS-ADDR-001", predicts:[{address_id:"ALAS-ADDR-002", confidence:0.95}, {address_id:"ALAS-ADDR-003", confidence:0.90}], heuristic:"When a task is accessed, its primary components and requirements are likely to be accessed next."}
+## {type:Legend, ref:[[PFSUS.MMCP-Regex.mmcp.mmd]], desc:"All task addresses are lambda-wrapped. Canonical order: type, id/name/label, core fields, arrays/children, meta/optional fields, comments. See also: ![[canonical_mermaid_chart.mmd]]"}
+## {type:UnilineAddress, id:"ADDR-001", target:"/core/PFSUS.MMCP-Regex.MMCP.MMD", format:"uniline", lambda:"λ:asset_locator('/core/PFSUS.MMCP-Regex.MMCP.MMD')", version:"1.0.0", checksum:"sha256:abc123...", meta:{asset_type:"file", group:"protocol-standards", task:"META-001", task_type:"meta", owner:"Kalxi", status:"active"}}
+## {type:UnilineAddress, id:"ADDR-002", target:"task:ALEF-001", format:"uniline", lambda:"λ:task_locator('ALEF-001')", version:"1.0.0", checksum:"sha256:def456...", meta:{asset_type:"task", group:"alef-tasks", task:"ALEF-001", task_type:"alef", owner:"Kalxi", status:"active"}}
+## {type:SecurityStandard, id:"PFSUS-Sec-Std-1.0", rules:[{"name":"Input Validation","desc":"All inputs MUST be validated against the defined schema."},{"name":"Sanitization","desc":"Data intended for display or storage MUST be sanitized to prevent injection attacks (e.g., XSS)."},{"name":"Principle of Least Privilege","desc":"Agents/tools SHOULD only have access to the data and operations necessary for their function."}]}
+## {type:ErrorHandlingStandard, id:"PFSUS-Err-Std-1.0", structure:{type:"Error",code:"integer",message:"string",details:"object",trace_id:"string"}, categories:[{"range":"1xx","meaning":"Parsing/Validation Errors"},{"range":"2xx","meaning":"Runtime/Execution Errors"},{"range":"3xx","meaning":"Security/Access Errors"}], example:"{type:'Error', code:101, message:'Invalid field'}"}
+## {type:VersioningStandard, id:"PFSUS-Ver-Std-1.0", based_on:"Semantic Versioning 2.0.0", format:"MAJOR.MINOR.PATCH", rules:[{"version":"MAJOR","increment_on":"Incompatible API changes."},{"version":"MINOR","increment_on":"Backwards-compatible functionality."},{"version":"PATCH","increment_on":"Backwards-compatible bug fixes."}]}
+## {type:ToolingGuide, id:"PFSUS-Tool-Guide-1.0", recommendations:[{"category":"Parsing","tools":["Python library with Pydantic for validation","JavaScript library with Zod or similar"]},{"category":"Visualization","tools":["Obsidian with Mermaid support","Custom web-based renderers using Mermaid.js"]},{"category":"Editing","tools":["Any text editor with good regex support","VSCode with Mermaid extensions"]}]}
+## {type:InteropStandard, id:"PFSUS-Interop-Std-1.0", mappings:[{"format":"JSON-LD","notes":"Nodes can be mapped to JSON-LD objects, with types as `@type` and relationships as linked properties."},{"format":"RDF","notes":"Each node can be a subject, with its properties being predicates and values as objects, enabling triple-store integration."},{"format":"SQL/NoSQL","notes":"The flexible key-value nature of LambdaJSON allows for straightforward mapping to document databases like MongoDB or key-value stores like Redis."}]}
+## {type:UseCases, id:"PFSUS-UseCases-1.0", examples:[{"name":"Agent-to-Agent Communication","desc":"An agent can package its entire state, context, and capabilities into a single MmCP document to be streamed to another agent, facilitating complex collaboration."},{"name":"Self-Documenting Systems","desc":"Codebases can embed MmCP blocks that define their architecture, dependencies, and operational status, which can then be automatically parsed into living documentation and diagrams."}]}
+## {type:Links, links:[
+  {"type":"MermaidLink","target":"PFSUS.MerMaidContextProtocol.Standard.v1.1.0.mmcp.mmd","label":"Self","format":"obsidian","desc":"Self-reference for universal, self-repairing protocol"},
+  {"type":"MermaidLink","target":"PFSUS.MMCP-Metaversioning.Standard.v1.1.0.mmcp.mmd","label":"Metaversioning Standard","format":"obsidian","desc":"Protocol Epochs and Compatibility"},
+  {"type":"MermaidLink","target":"PFSUS.MMCP-Legend.Standard.v1.1.0.mmcp.mdd","label":"Legend","format":"obsidian","desc":"Visual key for protocol"},
+  {"type":"MermaidLink","target":"PFSUS.MMCP-Regex.Standard.v1.1.0.mmcp.mmd","label":"Regex","format":"obsidian","desc":"Regex patterns"},
+  {"type":"MermaidLink","target":"PFSUS.MMCP-Adress.Standard.v1.1.0.mmcp.mdd","label":"Address Standard","format":"obsidian","desc":"Addressing"},
+  {"type":"MermaidLink","target":"PFSUS.MMCP-Minimal.Ref.v1.1.0.mmcp.mmd","label":"Minimal Reference","format":"obsidian","desc":"Minimal reference"},
+  {"type":"MermaidLink","target":"PFSUS.MMCP-ReadWriteDiff.Guide.v1.1.0.mmcp.mdd","label":"Read/Write Diff Guide","format":"obsidian","desc":"Read/write diff guide"},
+  {"type":"MermaidLink","target":"canonical_mermaid_chart.mmd","label":"Canonical Chart","format":"mermaid","desc":"Canonical system chart"}
+]}
+## {type:Core, id:"PFSUS-Core-1.0", desc:"Defines the core fields, relationships, and extensibility points for the protocol.", fields:["meta","schema","addressing","visualization","security","versioning","interop","tooling","extensions"]}
+## {type:DeprecationStandard, id:"PFSUS-Deprecation-1.0", desc:"Standard for marking fields, blocks, or features as deprecated.", fields:["deprecated_field","replacement","sunset_date"]}
+## {type:MigrationStandard, id:"PFSUS-Migration-1.0", desc:"Standard for documenting migrations between protocol versions.", fields:["from_version","to_version","migration_steps"]}
+## {type:TestingStandard, id:"PFSUS-Testing-1.0", desc:"Standard for protocol conformance and validation testing.", fields:["test_type","test_case","expected_result"]}
+## {type:DataPrivacyStandard, id:"PFSUS-Privacy-1.0", desc:"Stub for future data privacy and protection requirements.", fields:["data_type","privacy_level","retention_policy"]}
+## {type:ComplianceStandard, id:"PFSUS-Compliance-1.0", desc:"Stub for legal, regulatory, and standards compliance.", fields:["regulation","compliance_status","evidence"]}
+## {type:InternationalizationStandard, id:"PFSUS-I18N-1.0", desc:"Stub for internationalization and localization support.", fields:["language","region","translation_status"]}
+## {type:AccessibilityStandard, id:"PFSUS-Accessibility-1.0", desc:"Stub for accessibility requirements and best practices.", fields:["accessibility_feature","compliance_level"]}
+## {type:PluginExtensionStandard, id:"PFSUS-Plugin-1.0", desc:"Stub for plugin/extension points and custom field registration.", fields:["extension_point","api","registration"]}
+## {type:SelfReference, file:"PFSUS.MerMaidContextProtocol.Standard.v1.1.0.mmcp.mmd", version:"1.1.0", checksum:"sha256:d74825a2d300fdffcf075ad8cde825fc9a874f7f705b3b09f4808b9139003799", canonical_address:"self", self_repair:{desc:"If checksum fails or for full core recreation, use defined strategies.", strategies:[{name:"diff-merge", desc:"For single file repair, fetch canonical version and perform a diff-merge.", source:"git-tag"}, {name:"recreate", desc:"For full core recreation, fetch all files from their canonical locations defined in the CoreManifest.", source:"CoreManifest"}]}, project_agnostic:true}
+## {type:CoreManifest, id:"PFSUS-CoreManifest-1.1", desc:"Defines the canonical source locations for all core project files, enabling self-repair and recreation.", files:[
+  {"id":"PFSUS.Core", "path":"agentic-workflow/core/PFSUS/PFSUS.MerMaidContextProtocol.Standard.v1.1.0.mmcp.mmd"},
+  {"id":"PFSUS.Address", "path":"agentic-workflow/core/PFSUS/PFSUS.MMCP-Adress.Standard.v1.1.0.mmcp.mdd"},
+  {"id":"PFSUS.Legend", "path":"agentic-workflow/core/PFSUS/PFSUS.MMCP-Legend.Standard.v1.1.0.mmcp.mdd"},
+  {"id":"PFSUS.Metaversioning", "path":"agentic-workflow/core/PFSUS/PFSUS.MMCP-Metaversioning.Standard.v1.1.0.mmcp.mmd"},
+  {"id":"PFSUS.MinimalRef", "path":"agentic-workflow/core/PFSUS/PFSUS.MMCP-Minimal.Ref.v1.1.0.mmcp.mmd"},
+  {"id":"PFSUS.ReadWriteDiff", "path":"agentic-workflow/core/PFSUS/PFSUS.MMCP-ReadWriteDiff.Guide.v1.1.0.mmcp.mdd"},
+  {"id":"PFSUS.Regex", "path":"agentic-workflow/core/PFSUS/PFSUS.MMCP-Regex.Standard.v1.1.0.mmcp.mmd"},
+  {"id":"AGENT.Spec", "path":"agentic-workflow/core/AGENT.Specification.v1.1.0.mmcp.mmd"},
+  {"id":"Project.Todo", "path":"agentic-workflow/core/project-todo.mmd"},
+  {"id":"Canonical.Chart", "path":"agentic-workflow/canonical_mermaid_chart.mmd"},
+  {"id":"CLI.Tool", "path":"agentic-workflow/core/PFSUS/cli/pfsus_tool.py"}
+]}
+## {type:CLITools, id:"PFSUS-CLI-1.0", desc:"Standard CLI tools for protocol operations.", tools:[{name:"validate", desc:"Validate a document against its schema.", schema:{input:"file", output:"boolean"}},{name:"lint", desc:"Check for style and best practice violations.", schema:{input:"file", output:"list[warnings]"}},{name:"parse", desc:"Parse a document and output its structure.", schema:{input:"file", format:"json|yaml", output:"string"}},{name:"diff", desc:"Compare two documents.", schema:{input1:"file", input2:"file", output:"diff"}},{name:"repair", desc:"Attempt to auto-repair a corrupted document.", schema:{input:"file", output:"file"}},{name:"export", desc:"Export to another format (e.g., JSON-LD, RDF).", schema:{input:"file", format:"json-ld|rdf", output:"string"}},{name:"import", desc:"Import from another format.", schema:{input:"file", format:"json-ld|rdf", output:"file"}},{name:"visualize", desc:"Generate a visual representation.", schema:{input:"file", format:"svg|png", output:"file"}},{name:"test", desc:"Run validation and linting tests.", schema:{input:"file", output:"test_report"}}]}
+## {type:FractalPropagation, id:"PFSUS-Fractal-1.0", desc:"Supports fractal propagation of context and structure.", directions:["outward","inward"], rules:[
+  "propagate meta, schema, standards to all children",
+  "propagate meta, schema, standards to all children", 
+  "merge/repair missing fields from children upward"
+], recursive_merge_logic:{
+  desc:"On load, recursively scan for parent/child documents. If a child is missing a core block (e.g., `Meta`), inherit from parent. If a parent has a `TODO` field that a child has defined, propagate the value upward.",
+  strategy:"recursive-descent-merge"
+}}
+@{visual-meta-start}
+author = {Kalxi},
+title = {PFSUS.MerMaidContextProtocol.Standard.v1.1.0},
+version = {1.1.0},
+structure = { meta, quickref, schema, color_matrix, regex_patterns, ears, io, config, address_registry, speculative_context, legend, changelog, audit, llm_hints, xr_metadata, custom_fields, uniline_address, security, error_handling, versioning, tooling, interop, usecases, core, deprecation, migration, testing, privacy, compliance, i18n, accessibility, plugin_extension, links, visualization, comment_standard, visual_meta },
+glossary = { meta: "Meta block", quickref: "Quick reference", schema: "JSON schema", color_matrix: "Color definitions", regex_patterns: "Regex patterns", ears: "EARS requirements", io: "IO example", config: "Config example", address_registry: "Address registry", speculative_context: "Speculative context", legend: "Legend block", changelog: "Changelog", audit: "Audit block", llm_hints: "LLM hints", xr_metadata: "XR metadata", custom_fields: "Custom fields", uniline_address: "UnilineAddress", security: "Security standard", error_handling: "Error handling standard", versioning: "Versioning standard", tooling: "Tooling guide", interop: "Interop standard", usecases: "Use cases", core: "Core protocol fields", deprecation: "Deprecation standard", migration: "Migration standard", testing: "Testing standard", privacy: "Data privacy standard", compliance: "Compliance standard", i18n: "Internationalization standard", accessibility: "Accessibility standard", plugin_extension: "Plugin/extension standard", links: "Linked standards", visualization: "Mermaid diagram", comment_standard: "Comment standard", visual_meta: "Visual-Meta appendix" },
+graph_data = { ... },
+ai_entities = { ... },
+notes = {"This protocol is universal, self-referential, self-repairing, project-agnostic, and supports fractal propagation and CLI tools. See relevant blocks."},
+cli_tools = {"Standard CLI tools integrated as part of the protocol core: validate, lint, parse, diff, repair, export, import, visualize, test."},
+fractal_propagation = {"Supports fractal propagation of context and structure both outward (to subdocuments/children) and inward (from subdocuments/children). See FractalPropagation block."},
+@{visual-meta-end}
+%% All meta, schema, and pattern blocks are grouped at the top. Protocol content is compact and reference-based. For regex and parsing standards, see [[PFSUS.MMCP-Regex.mmcp.mmd]].
+subgraph LEGEND [Legend & Conventions]
+  L_IO["IO Node"]:::io; L_META["Meta Node"]:::meta; L_CORE["Core Node"]:::core; L_USAGE["Usage Node"]:::usage; L_ROLE["Role Node"]:::role; L_WORKFLOW["Workflow Node"]:::workflow; L_METRICS["Metrics Node"]:::metrics; L_FEEDBACK["Feedback Node"]:::feedback; L_CONTEXT["CONTEXT Node: Aggregates all sections"]; L_LAMBDA["λ: LambdaJSON"]; L_CHECKBOX["[ ]/[x]: Actionable/Completion state"]; L_AGNOSTIC["Agnostic/Reusable"]; L_DEF["Definition/Counterdefinition"]; L_MEGO["Megolithic Regex/Counterregex"]; L_EDGE1["Solid: Required/Primary"]; L_EDGE2["Dashed: Optional/Secondary"]; L_EDGE3["Bold: Critical/Versioned"]; L_EDGE4["Label: Channel Type"]; L_EDGE5["<->: Bidirectional"]; L_EDGE6["-.->: Conditional"]; L_EDGE7["==>: Temporal/Sequence"]; L_WIKI["[[wikilink]]"]; L_LICENSE["LICENSE Node"]; L_CODE["CODECHUNK/DATA/DIAGRAM Nodes"]; L_OKLAB["OKLab/OKLCH Color"]; L_TRACK["Tracking/Backtracking/Breadcrumb"]; L_IOGROUP["IO Group"]; L_LAMBDAIO["λ: LambdaJSON IO"]; L_LAMBDAEARS["λ: LambdaJSONEARS"]; L_REGEXSCRIPT["RegexScript"]; L_COLORREL["ColorRelMatrix"]; L_REGEXRWEDIT["RegexRWEdit"]; L_QUICKREF["QuickRef"]; L_LAMBDAJSONORDER["LambdaJSONOrder: universal canonical order for clarity, order-agnostic by nature"]; L_MCPTOOLUSE["MCPToolUse: type,op,format,chunk,total,data,error,meta,$schema"]; L_ADDR_REG["Shorthand Address Registry"]; L_SPECULATIVE["SpeculativeContext Node"]; L_SEC_STD["Security Standard"]; L_ERR_STD["Error Handling Standard"]; L_VER_STD["Versioning Standard"]; L_TOOL_GUIDE["Tooling Guide"]; L_INTEROP_STD["Interop Standard"]; L_USE_CASES["Use Cases"]
+end
+subgraph IO_Input [Input IO]; IO_INPUT(["[[Input IO]]\n{type:IO,channel:'input'}"]):::io; end
+subgraph IO_Output [Output IO]; IO_OUTPUT(["[[Output IO]]\n{type:IO,channel:'output'}"]):::io; end
+subgraph IO_Feedback [Feedback IO]; IO_FEEDBACK(["[[Feedback IO]]\n{type:IO,channel:'feedback'}"]):::feedback; end
+subgraph IO_Metrics [Metrics IO]; IO_METRICS(["[[Metrics IO]]\n{type:IO,channel:'metrics'}"]):::metrics; end
+subgraph IO_Logs [Logs IO]; IO_LOGS(["[[Logs IO]]\n{type:IO,channel:'logs'}"]):::io; end
+subgraph IO_Config [Config IO]; IO_CONFIG(["[[Config IO]]\n{type:IO,channel:'config'}"]):::io; end
+subgraph MerMaidContextProtocol [.mmd]
+  AGNOSTIC(["[[Agnostic]]\n{type:Agnostic,desc:'Protocol is project/purpose agnostic'}"]):::meta %% agnostic
+  LICENSE(["[[License]]\n{type:License,text:'Copyright (c) 2024 Kalxi. All rights reserved.'}"]):::meta %% license
+  DEFINITION(["[[Definition]]\n{type:Definition,desc:'Formal, positive definition of what is valid.'}"]):::meta %% definition
+  COUNTERDEF(["[[Counterdefinition]]\n{type:Counterdefinition,desc:'Explicit negative/counter definition.'}"]):::meta %% counterdefinition
+  MEGOREGEX(["[[Megolithic Regex]]\n{type:Regex,pattern:'^(\\[ \\] #\\\".root\\\"#.*|#+\\s.*|---|...etc...)$'}"]):::core %% regex
+  MEGOCOUNTER(["[[Megolithic Counterregex]]\n{type:Counterregex,pattern:'^(?!\\[ \\] #\\\".root\\\"#.*|#+\\s.*|...etc...)'}"]):::core %% counterregex
+  CONTEXT(["[[CONTEXT]]\n{type:Context,provides:[all],for:[LLM,CLI,API,HUMAN,...],agnostic:true}"]) %% context
+  INMUX(["[[Multiplexed IO]]\n{type:IO,direction:'input',desc:'λ: functional input mux'}"]):::io %% input mux
+  OUTDEMUX(["[[Demultiplexed IO]]\n{type:IO,direction:'output',desc:'λ: functional output demux'}"]):::io %% output demux
+  CONFIG(["[[Config]]\n{type:Config}"]) %% config
+  METRICS(["[[Metrics]]\n{type:Metrics}"]) %% metrics
+  LOGS(["[[Logs]]\n{type:Log}"]) %% logs
+  FEEDBACK(["[[Feedback]]\n{type:Feedback}"]) %% feedback
+  VERSION(["[[Versioning]]\n{type:Version}"]) %% versioning
+  ERROR(["[[Error]]\n{type:Error}"]) %% error
+  AUDIT(["[[Audit]]\n{type:Audit}"]) %% audit
+  IDXALL(["[[Index]]\n{type:Index}"]) %% index
+  META(["[[Meta]]\n{type:Meta}"]) %% meta
+  PROOF(["[[Proof]]\n{type:Proof}"]) %% proof
+  OVERVIEW(["[[Overview]]\n{type:Mermaid}"]) %% overview
+  LJSON(["[[LambdaJSON]]\n{type:Spec,desc:'Superset of JSON/JSON5'}"]) %% LambdaJSON
+  NOTATION(["[[Notation]]\n{type:Notation}"]) %% notation
+  ARCH(["[[Architecture]]\n{type:Mermaid}"]) %% architecture
+  CONCEPTS(["[[Concepts]]\n{type:Concept}"]) %% concepts
+  AUTOMATION(["[[Automation]]\n{type:CLI,desc:'λ'}"]) %% automation
+  ADVANCED(["[[Advanced]]\n{type:Speculative}"]) %% advanced
+  SUPPORT(["[[Support]]\n{type:Templates}"]) %% support
+  USAGE(["[[Usage]]\n{type:BestPractice}"]) %% usage
+  DEFS(["[[Definitions]]\n{type:Defs}"]) %% definitions
+  COMPLIANCE(["[[Compliance]]\n{type:Compliance}"]) %% compliance
+  VALIDATION(["[[Validation]]\n{type:Validation}"]) %% validation
+  EXTEND(["[[Extensibility]]\n{type:Extend}"]) %% extensibility
+  SECURITY(["[[Security]]\n{type:Security}"]) %% security
+  INTEROP(["[[Interop]]\n{type:Interop}"]) %% interoperability
+  REFIMPL(["[[ReferenceImpl]]\n{type:RefImpl}"]) %% reference implementation
+  SCRIPT(["[[Scripting]]\n{type:ScriptStd}"]) %% scripting
+  DB(["[[Databasing]]\n{type:DBStd,desc:'λ'}"]) %% database
+  DOCS(["[[Documenting]]\n{type:DocStd}"]) %% documentation
+  SYNTAX(["[[Syntax]]\n{type:SyntaxAlt}"]) %% syntax
+  MULTI(["[[MultiSyntax]]\n{type:MultiSyntax}"]) %% multi-syntax
+  UNILINE(["[[Uniline]]\n{type:Uniline,desc:'λ'}"]) %% uniline
+  OBSIDIAN(["[[Obsidian]]\n{type:Obsidian}"]) %% obsidian
+  NAMING(["[[Naming]]\n{type:Naming}"]) %% naming
+  SEARCH(["[[Searchability]]\n{type:SearchBest}"]) %% searchability
+  DENSE(["[[DensityDemo]]\n{type:Meta,desc:'λ'}"]) %% density demo
+  SPECWORKFLOW(["[[SpecWorkflow]]\n{type:Workflow}"]) %% spec workflow
+  CODECHUNK(["[[CodeChunk]]\n{type:Code,lang:'python',example:'def foo(x): return x+1'}"]) %% code example
+  DATA(["[[DataChunk]]\n{type:Data,lang:'json',example:'{\"key\":\"value\"}'}"]) %% data example
+  DIAGRAM(["[[DiagramChunk]]\n{type:Diagram,desc:'λ: Embedded subgraph'}"]) %% diagram example
+  CUSTOM(["[[Custom]]\n{type:Custom,field:42}"]) %% custom node
+  SHORTHAND_ADDR_REG(["[[ShorthandAddressRegistry]]\n{type:ShorthandAddressRegistry, categories:[...], addresses:[...]}"]) %% shorthand address registry
+  SPECULATIVE_CONTEXT(["[[SpeculativeContext]]\n{type:SpeculativeContext, for_address_id:'...', predicts:[...]}"]) %% Speculative context node
+  SECURITY_STD(["[[SecurityStandard]]\n{type:SecurityStandard}"])
+  ERROR_STD(["[[ErrorHandlingStandard]]\n{type:ErrorHandlingStandard}"])
+  VERSIONING_STD(["[[VersioningStandard]]\n{type:VersioningStandard}"])
+  TOOL_GUIDE(["[[ToolingGuide]]\n{type:ToolingGuide}"])
+  INTEROP_STD(["[[InteropStandard]]\n{type:InteropStandard}"])
+  USE_CASES(["[[UseCases]]\n{type:UseCases}"])
+  OKLABCOLORS(["[[OKLCH]]\n{type:ColorMatrix,model:'oklch',colors:[{name:'primary',oklch:'0.7 0.15 240'}]}}']):::meta %% OKLab/OKLCH colors
+  TRACKING(["[[Tracking]]\n{type:Tracking,desc:'Tracks state, actions, navigation'}"]):::meta %% tracking
+  BACKTRACK(["[[Backtracking]]\n{type:Backtrack,desc:'Records undo/rollback paths'}"]):::meta %% backtracking
+  BREADCRUMB(["[[Breadcrumb]]\n{type:Breadcrumb,path:['C','U','E'],ts:'...'}"]):::meta %% breadcrumb
+  LambdaJSON_IO(["[[LambdaJSON_IO]]\n{type:IO,op:'stream',format:'lambdajson',chunk:2,total:4}"]) %% LambdaJSON IO
+  LambdaJSONEARS(["[[LambdaJSONEARS]]\n{type:EARS,reqs:[{id:'REQ-001',story:'...'}]}"]):::meta %% LambdaJSONEARS
+  REGEX_SCRIPT(["[[RegexScript]]\n{type:RegexScript,input:'protocol.mmd',output:'...',status:'success'}"]) %% regex script
+  COLOR_REL_MATRIX(["[[ColorRelMatrix]]\n{type:ColorRelMatrix,nodes:[...],edges:[...]}']):::meta %% color relationship matrix
+  REGEX_RWEDIT(["[[RegexRWEdit]]\n{patterns:[{field:'type',regex:'...'}]}"]) %% regex patterns
+  LAMBDAJSONORDER(["[[LambdaJSONOrder]]\n{type:'Standard',desc:'LambdaJSON/lambda functions are order-agnostic by nature. Canonical order is for human/tool clarity: type first, then id/name/label, then core fields, then arrays/children, then meta/optional fields, comments at end.',template:'{type:<Type>,id:<ID>,name:<Name>,label:<Label>,<core fields>,<arrays/children>,<meta/optional fields>} %% <inline comment>',example:'{type:\\'ColorMatrix\\',id:\\'main\\',model:\\'oklch\\',version:\\'1.0.0\\',colors:[{name:\\'primary\\',oklch:\\'0.7 0.15 240\\'}],meta:{author:\\'Bastian\\'}} %% ColorMatrix example',order_table:[['type','Always first'],['id/name/label','If present, after type'],['core fields','Protocol-specific, by importance'],['arrays/children','All arrays/children, by importance'],['meta/optional fields','Always last'],['inline comment','At end of line']],note:'Canonical order is for clarity; actual field order is not semantically significant. New fields may be added at the end. Comments (%%) always at end.',style:'Whitespace, indentation, color, comments, headings, and sectioning should be used for readability and visual cues. Support both dense/compact and readable/annotated forms. Use headings and section dividers for large objects.',collaboration:'Use versioning, changelogs, and collaborative editing tools. Track schema and field changes. Encourage clear commit messages and review.',roundtripping:'Support machine/human roundtripping. Prefer lossless conversions. Document lossy conversions and schema migrations. Use explicit type and schema references.',crosswalks:['JSON','YAML','TOML','XML','SQL','NoSQL','JSON-LD','Avro','Parquet','CSV','Graph','Document','Columnar','Linked Data','Semantic Web'],evolution:'Protocols should evolve via transparent governance, RFCs, and stewardship. Maintain backward compatibility and changelogs.',accessibility:'Ensure accessibility, internationalization, and localization. Use Unicode, right-to-left, and multi-language support.',security:'Ensure security, privacy, and data integrity. Validate all input, avoid injection, and support encryption/signing.',extensibility:'Support plugin/extension points and custom fields. Document extension mechanisms and reserved namespaces.',compliance:'Provide validation, conformance testing, and compliance tools. Use JSON Schema or equivalent.',integration:'Integrate with documentation, visualization, and graph tools. Support export/import to major formats and graph views.'}"]):::meta %% LambdaJSON canonical order (universal, actionable, living reference)
+  CONTEXT -- λ --> LJSON & DB & USAGE & SCRIPT & DOCS & VALIDATION & META & CONFIG & AUTOMATION & UNILINE & ALLNODES & INMUX & OUTDEMUX & METRICS & LOGS & FEEDBACK & VERSION & ERROR & AUDIT & IDXALL & PROOF & OVERVIEW & NOTATION & ARCH & CONCEPTS & ADVANCED & SUPPORT & DEFS & COMPLIANCE & EXTEND & SECURITY & INTEROP & REFIMPL & SYNTAX & MULTI & OBSIDIAN & NAMING & SEARCH & DENSE & SPECWORKFLOW & LICENSE & CODECHUNK & DATA & DIAGRAM & CUSTOM & AGNOSTIC & DEFINITION & COUNTERDEF & MEGOREGEX & MEGOCOUNTER & OKLABCOLORS & TRACKING & BREADCRUMB & LambdaJSONEARS & REGEX_SCRIPT & COLOR_REL_MATRIX & REGEX_RWEDIT & LAMBDAJSONORDER & QUICKREF & SHORTHAND_ADDR_REG & SPECULATIVE_CONTEXT & SECURITY_STD & ERROR_STD & VERSIONING_STD & TOOL_GUIDE & INTEROP_STD & USE_CASES;
+  ERROR -- context λ --> BACKTRACK; AUDIT -- context λ --> TRACKING; WORKFLOW -- context λ --> BREADCRUMB
+  CONTEXT -- role λ --> LLM & CLI & API & HUMAN & CRAWLER & SERVICE & AUDITOR & TESTER
+  INMUX -- data --> IO_INPUT; IO_INPUT -- data λ --> LJSON & LambdaJSON_IO; INMUX -- config --> IO_CONFIG; IO_CONFIG -- config --> CONFIG; INMUX -- metrics --> IO_METRICS; IO_METRICS -- metrics --> METRICS; INMUX -- logs --> IO_LOGS; IO_LOGS -- logs --> LOGS; INMUX -- feedback --> IO_FEEDBACK; IO_FEEDBACK -- feedback --> FEEDBACK;
+  OUTDEMUX -- data --> IO_OUTPUT; IO_OUTPUT -- data λ --> USAGE & LambdaJSON_IO
+  USAGE -- feedback --> IO_FEEDBACK; USAGE -- metrics --> IO_METRICS; USAGE -- logs --> IO_LOGS; USAGE -- config --> IO_CONFIG
+  ALLNODES --> OUTDEMUX
+  VERSION -- updated ===> CUSTOM & LJSON & SPECWORKFLOW
+  HUMAN -.-> USAGE; LLM -.-> LJSON; CLI -.-> AUTOMATION; CRAWLER -.-> SEARCH; API -.-> USAGE; SERVICE -.-> AUTOMATION; AUDITOR -.-> AUDIT; TESTER -.-> VALIDATION
+  click USAGE "[[#USAGE]]"; click LJSON "[[#LJSON]]"; click VERSION "[[#VERSION]]"
+  USAGE --> SCRIPT & DB & DOCS & SYNTAX & MULTI & UNILINE & OBSIDIAN & NAMING & SEARCH & DENSE
+  META --> VERSION & COMPLIANCE & VALIDATION & EXTEND & SECURITY & INTEROP & REFIMPL & SCRIPTING_STD & DB_STD & DOCS_STD
+  LJSON <--> DB; USAGE -.-> ADVANCED; VERSION ==> AUDIT
+end
+classDef io fill:#b3e5fc,stroke:#0288d1; classDef meta fill:#e0f7fa,stroke:#00796b; classDef core fill:#fff9c4,stroke:#fbc02d; classDef usage fill:#e1bee7,stroke:#6a1b9a; classDef workflow fill:#ffe0b2,stroke:#e65100; classDef role fill:#f8bbd0,stroke:#ad1457; classDef metrics fill:#c8e6c9,stroke:#388e3c; classDef feedback fill:#fff9c4,stroke:#fbc02d; classDef comment fill:#f5f5f5,stroke:#9e9e9e;
+classDef symbol fill:#e8eaf6,stroke:#3f51b5;
+## Visualization Standard
+{type:VisualizationStandard, id:"PFSUS-Viz-Std-1.1", rules:[
+  {name:"Standardized classDef", desc:"Use predefined CSS-like classes for consistent node styling. All diagrams must include the full classDef block.",
+    classes:[
+      {name:"root", style:"fill:#f9f9f9,stroke:#333,stroke-width:4px"},
+      {name:"protocol", style:"fill:#e0f7fa,stroke:#00796b,color:#333"},
+      {name:"concept", style:"fill:#c8e6c9,stroke:#388e3c,color:#333"},
+      {name:"concept_decision", style:"fill:#ffe0b2,stroke:#e65100,color:#333"},
+      {name:"io_ex", style:"fill:#d1c4e9,stroke:#512da8,color:#fff"},
+      {name:"link_node", style:"fill:#f5f5f5,stroke:#9e9e9e,color:#333"}
+    ]},
+  {name:"Semantic Node Shapes", desc:"Use different shapes for different data types.",
+    shapes:[
+      {shape:"Rectangle `[]`", use:"Core objects, groups"},
+      {shape:"Stadium `([])`", use:"Data, IO, examples"},
+      {shape:"Rhombus `{}`", use:"Decisions, conditional logic"},
+      {shape:"Asymmetric `>`", use:"External data, code blocks"}
+    ]},
+  {name:"Meaningful Edge Styles", desc:"Use varied arrow types to define relationships.",
+    edges:[
+      {style:"`-->`", use:"Containment, direct relationship"},
+      {style:"`-.->`", use:"Reference, link"},
+      {style:"`==>`", use:"Sequence, temporal flow"}
+    ]},
+  {name:"Data-Rich Node Text", desc:"Embed key attributes from LambdaJSON objects into node labels.", example:"`B[\"{type:PFSUS_Protocol, id:MmCP-1.1.0.0}\"]:::protocol`"}
+]}
+## Speculative Integration
+{type:SpeculativeContext, id:"PFSUS-CTX-001", for_id:"MmCP-1.1.0.0", predicts:[
+  {target_id:"PFSUS.MMCP-Legend.Standard.v1.1.0.mmcp.mdd", confidence:0.98, reason:"Protocol requires legend"},
+  {target_id:"PFSUS.MMCP-Regex.Standard.v1.1.0.mmcp.mmd", confidence:0.95, reason:"Protocol uses regex patterns"},
+  {target_id:"PFSUS.MMCP-Adress.Standard.v1.1.0.mmcp.mdd", confidence:0.95, reason:"Protocol uses addressing"}
+], heuristic:"When the main protocol is accessed, its dependent standards are highly likely to be needed."}
+## Comment Standard
+{type:CommentStandard, id:"PFSUS-Comment-Std-1.0", rules:[
+  {name:"Inline Comments `%%`", desc:"Must follow non-comment content on the same line. For annotating data elements.", example:"{type:Node} %% Annotation"},
+  {name:"Nested Block Comments `%%(...)`", desc:"For multi-line or nested comments. The block is enclosed in `%%(` and `)`. Nesting is recursive.", example:"%%(Outer comment %%(Inner comment))"}
+]}
+{type:RegexPatterns, id:"CommentRegex-1.0", patterns:[
+  {name:"NestedComment", regex:"%%\\((?:[^()]*|\\((?R)\\))*\\)"}
+]}

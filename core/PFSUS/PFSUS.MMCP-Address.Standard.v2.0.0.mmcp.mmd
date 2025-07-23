@@ -1,0 +1,503 @@
+%% Copyright 2025 Kalxi. All rights reserved. See header for terms. %%
+[ ] #".root"# {protocol:"MCP", version:"2.0.0", standard:"PFSUS+EARS+LambdaJSON+MathOps"}
+# PFSUS Address Standard v2.0.0
+
+## {type:Meta, author:"Kalxi", license:"MIT", last_modified:"2025-07-22T17:00:00Z", id:"PFSUS.MMCP-Address.Standard.v2.0.0", status:"active", priority:"high", domain:"addressing", category:"core-standard"}
+## {type:Schema, $schema:"https://json-schema.org/draft/2020-12/schema", required:["type","id","version"], properties:{type:{type:"string"},id:{type:"string"},version:{type:"string"},last_modified:{type:"string",format:"date-time"},author:{type:"string"}}}
+## {type:ColorMatrix, model:"oklch", colors:[{name:"primary",oklch:"0.7 0.15 240"},{name:"secondary",oklch:"0.6 0.2 280 / 75%"},{name:"accent",oklch:"0.8 0.18 60"},{name:"neutral",oklch:"0.9 0 0"},{name:"error",oklch:"0.6 0.2 30"}]}
+## {type:RegexPatterns, patterns:[
+  {field:"type",regex:"type\\s*:\\s*['\"]?(\\w+)['\"]?"},
+  {field:"id",regex:"id\\s*:\\s*['\"]?([\\w-]+)['\"]?"},
+  {field:"address",regex:"([A-Z][0-9]{2})(\\.[A-Z][0-9]{2})*"},
+  {field:"hierarchical_address",regex:"([A-Z][0-9]{2})(\\.[A-Z][0-9]{2}){1,10}"},
+  {field:"semantic_address",regex:"@\\{([\\w.-]+)\\}"},
+  {field:"composite_address",regex:"<([\\w.-]+)\\+([\\w.-]+)(\\+[\\w.-]+)*>"},
+  {field:"lambda_wrapped_address",regex:"λ:[\\w_]+(\\(λ:[\\w_]+\\(.*\\)\\))"},
+  {field:"git_address",regex:"git:([\\w/.-]+)@([\\w.-]+)"},
+  {field:"uri_address",regex:"(https?|file|ftp)://([\\w.-]+)(/[\\w.-]+)*"},
+  {field:"mathematical_address",regex:"([λℵΔβΩiτ])\\(([^\\)]*)\\)"},
+  {field:"oklch",regex:"oklch\\s*:\\s*['\"]?([0-9.]+\\s+[0-9.]+\\s+[0-9.]+(\\s*/\\s*[0-9.%]+)?)['\"]?"}
+]}
+## {type:AddressStandard, id:"PFSUS-Address-2.0", desc:"Enhanced standard for addressing and referencing in MMCP documents with support for hierarchical, semantic, mathematical, and composite addressing schemes.", version:"2.0.0", compatibility:["1.0.0+", "1.1.0+", "1.2.0+"], extensions:["MathOps", "LambdaJSON"]}
+
+## 1. Address Types and Formats
+
+### 1.1 Hierarchical Addressing
+
+Hierarchical addresses use a dot-separated format with category codes and numeric identifiers:
+
+```
+P01.T16.S01.A01.C01.G01.R01
+```
+
+Where:
+- `P` = Project
+- `T` = Task
+- `S` = Step
+- `A` = Assumption
+- `C` = Component
+- `G` = Group
+- `R` = Requirement
+
+Each segment consists of a category code (uppercase letter) followed by a two-digit number.
+
+### 1.2 Semantic Addressing
+
+Semantic addresses use a domain-based format with descriptive identifiers:
+
+```
+@{DOMAIN.CATEGORY.IDENTIFIER}
+```
+
+Examples:
+- `@{MATH.ADD.001}` - Reference to addition operator
+- `@{LOGIC.IMPL.001}` - Reference to implication operator
+- `@{AGENT.FUNCTION.001}` - Reference to agent function
+
+### 1.3 Composite Addressing
+
+Composite addresses combine multiple semantic addresses:
+
+```
+<DOMAIN1.CATEGORY1.ID1+DOMAIN2.CATEGORY2.ID2>
+```
+
+Example:
+```
+<MATH.CALC+SET.THEORY+LOGIC.PROOF>
+```
+
+### 1.4 Lambda-Wrapped Addressing
+
+Lambda-wrapped addresses provide functional transformation capabilities:
+
+```
+λ:function_name(address)
+```
+
+Nested lambda wrapping:
+```
+λ:outer_function(λ:inner_function(address))
+```
+
+Example:
+```
+λ:task_resolve(λ:alef_resolve(λ:click_resolve('P01.T16.S01.A01.C01.G01.R01')))
+```
+
+### 1.5 Mathematical Addressing
+
+Mathematical addressing uses calculus notation wrappers:
+
+```
+λ(address)    // Lambda calculus (functional transformations)
+ℵ(address)    // Alef (set-theoretic operations)
+Δ(address)    // Delta (meta-operations and calculus)
+β(address)    // Beta (reduction operations)
+Ω(address)    // Omega (terminal operations)
+i(address)    // Imaginary (complex states)
+τ(address)    // Turing (computational complexity)
+```
+
+### 1.6 Git Addressing
+
+Git addresses reference specific commits or files in a git repository:
+
+```
+git:path/to/file@commit_id
+```
+
+Example:
+```
+git:project-todo.mmd@a1b2c3d4
+```
+
+### 1.7 URI Addressing
+
+URI addresses reference external resources:
+
+```
+protocol://domain/path
+```
+
+Example:
+```
+https://github.com/kalxi/mmcp/blob/main/README.md
+```
+
+## 2. Address Registry
+
+### 2.1 Shorthand Address Registry
+
+The Shorthand Address Registry maintains mappings between addresses and their targets:
+
+```json
+{
+  "type": "ShorthandAddressRegistry",
+  "id": "registry_id",
+  "categories": [
+    {"code": "P", "name": "Project"},
+    {"code": "T", "name": "Task"},
+    {"code": "S", "name": "Step"}
+  ],
+  "addresses": [
+    {
+      "id": "ADDR-001",
+      "address": "P01.T16.S01",
+      "target_id": "TARGET-001",
+      "lambda": "λ:resolve('P01.T16.S01')",
+      "meta": {"type": "task"}
+    }
+  ]
+}
+```
+
+### 2.2 Address Resolution
+
+Address resolution follows these steps:
+
+1. Parse address format to determine type
+2. Look up address in appropriate registry
+3. Apply any lambda transformations
+4. Resolve to target resource
+5. Apply any post-resolution transformations
+
+### 2.3 Address Validation
+
+Addresses must be validated against their format-specific rules:
+
+- Hierarchical: Must match pattern `([A-Z][0-9]{2})(\\.[A-Z][0-9]{2})*`
+- Semantic: Must match pattern `@\\{([\\w.-]+)\\}`
+- Composite: Must match pattern `<([\\w.-]+)\\+([\\w.-]+)(\\+[\\w.-]+)*>`
+- Lambda-wrapped: Must be valid lambda expressions
+- Mathematical: Must use valid calculus notation wrappers
+- Git: Must reference valid git paths and commits
+- URI: Must be valid URIs
+
+## 3. Speculative Context
+
+### 3.1 Predictive Address Resolution
+
+Speculative Context enables predictive address resolution:
+
+```json
+{
+  "type": "SpeculativeContext",
+  "id": "SPEC-CTX-001",
+  "for_address_id": "ADDR-001",
+  "predicts": [
+    {"address_id": "ADDR-002", "confidence": 0.95},
+    {"address_id": "ADDR-003", "confidence": 0.90}
+  ],
+  "heuristic": "When a task is accessed, its components and requirements are likely to be accessed next."
+}
+```
+
+### 3.2 Confidence Scoring
+
+Confidence scores range from 0.0 to 1.0:
+- 0.9-1.0: Very high confidence
+- 0.7-0.9: High confidence
+- 0.5-0.7: Medium confidence
+- 0.3-0.5: Low confidence
+- 0.0-0.3: Very low confidence
+
+### 3.3 Heuristic Types
+
+Common heuristic types include:
+- Temporal: Based on access patterns over time
+- Semantic: Based on content relationships
+- Structural: Based on hierarchical relationships
+- Collaborative: Based on multi-user access patterns
+- Task-based: Based on workflow dependencies
+
+## 4. Advanced Addressing Features
+
+### 4.1 Address Transformation
+
+Addresses can be transformed using lambda functions:
+
+```
+λ:transform(address, transformation_type)
+```
+
+Common transformations:
+- Canonicalization: `λ:canonicalize(address)`
+- Normalization: `λ:normalize(address)`
+- Versioning: `λ:version(address, version)`
+- Contextualization: `λ:contextualize(address, context)`
+
+### 4.2 Address Composition
+
+Addresses can be composed using functional composition:
+
+```
+λ:compose(address1, address2, composition_type)
+```
+
+Composition types:
+- Sequential: `address1 → address2`
+- Parallel: `address1 || address2`
+- Conditional: `address1 ? address2 : address3`
+- Iterative: `address1 * n`
+
+### 4.3 Address Patterns
+
+Address patterns enable matching multiple addresses:
+
+```
+P*.T*.*
+```
+
+Pattern operators:
+- `*`: Match any sequence
+- `?`: Match any single character
+- `[abc]`: Match any character in set
+- `[a-z]`: Match any character in range
+- `{a,b,c}`: Match any of the alternatives
+
+### 4.4 Mathematical Address Operations
+
+Mathematical operations on addresses:
+
+```
+λ(a ∪ b)       // Union of addresses
+ℵ(a ∩ b)       // Intersection of addresses
+Δ(∂a/∂context) // Partial derivative of address with respect to context
+τ(O(a))        // Computational complexity of address resolution
+```
+
+## 5. Implementation Guidelines
+
+### 5.1 Address Resolution Algorithm
+
+```python
+def resolve_address(address, context=None):
+    """Resolve an address to its target resource."""
+    # Determine address type
+    address_type = detect_address_type(address)
+    
+    # Parse address according to its type
+    parsed_address = parse_address(address, address_type)
+    
+    # Look up in registry
+    target = lookup_in_registry(parsed_address)
+    
+    # Apply lambda transformations if present
+    if has_lambda_wrapper(address):
+        target = apply_lambda_transformations(target, address)
+    
+    # Apply context-specific transformations
+    if context:
+        target = apply_context(target, context)
+    
+    return target
+```
+
+### 5.2 Address Registry Implementation
+
+```python
+class AddressRegistry:
+    """Registry for address mappings."""
+    
+    def __init__(self):
+        self.categories = {}
+        self.addresses = {}
+    
+    def register_category(self, code, name):
+        """Register a new address category."""
+        self.categories[code] = name
+    
+    def register_address(self, id, address, target_id, lambda_fn=None, meta=None):
+        """Register a new address mapping."""
+        self.addresses[id] = {
+            "address": address,
+            "target_id": target_id,
+            "lambda": lambda_fn,
+            "meta": meta or {}
+        }
+    
+    def lookup(self, address):
+        """Look up an address in the registry."""
+        for addr_id, addr_info in self.addresses.items():
+            if addr_info["address"] == address:
+                return addr_info
+        return None
+```
+
+### 5.3 Speculative Context Implementation
+
+```python
+class SpeculativeContext:
+    """Predictive address resolution context."""
+    
+    def __init__(self, id, for_address_id):
+        self.id = id
+        self.for_address_id = for_address_id
+        self.predictions = []
+        self.heuristic = ""
+    
+    def add_prediction(self, address_id, confidence):
+        """Add a prediction for related addresses."""
+        self.predictions.append({
+            "address_id": address_id,
+            "confidence": confidence
+        })
+    
+    def set_heuristic(self, heuristic):
+        """Set the heuristic description."""
+        self.heuristic = heuristic
+    
+    def get_predictions(self, threshold=0.5):
+        """Get predictions above confidence threshold."""
+        return [p for p in self.predictions if p["confidence"] >= threshold]
+```
+
+## 6. Integration with Other Standards
+
+### 6.1 EARS Integration
+
+```
+WHEN address is resolved THEN system SHALL return the target resource
+IF address has lambda wrapper THEN system SHALL apply the lambda transformation
+WHEN address is not found THEN system SHALL return a not found error
+```
+
+### 6.2 LambdaJSON Integration
+
+```json
+{
+  "λ:address_resolve": {
+    "address": "P01.T16.S01",
+    "context": {"user": "current", "project": "active"},
+    "transformation": "canonicalize",
+    "return_type": "Resource"
+  }
+}
+```
+
+### 6.3 MathOps Integration
+
+```json
+{
+  "λ:address_operations": {
+    "addresses": ["a", "b", "c"],
+    "operation": "UNION",
+    "result_type": "AddressSet"
+  },
+  "ℵ:address_set_operations": {
+    "set1": ["a", "b", "c"],
+    "set2": ["b", "c", "d"],
+    "operation": "INTERSECTION",
+    "result": ["b", "c"]
+  },
+  "τ:address_complexity": {
+    "address": "P01.T16.S01.A01.C01.G01.R01",
+    "resolution_complexity": "O(log n)",
+    "transformation_complexity": "O(1)"
+  }
+}
+```
+
+## {type:ShorthandAddressRegistry, id:"enhanced_registry", categories:[
+  {"code":"P", "name":"Project", "description":"Top-level project container"},
+  {"code":"T", "name":"Task", "description":"Discrete unit of work"},
+  {"code":"S", "name":"Step", "description":"Individual step within a task"},
+  {"code":"A", "name":"Assumption", "description":"Working assumption or constraint"},
+  {"code":"C", "name":"Component", "description":"System component or module"},
+  {"code":"G", "name":"Group", "description":"Logical grouping of items"},
+  {"code":"R", "name":"Requirement", "description":"System requirement"},
+  {"code":"D", "name":"Document", "description":"Documentation or specification"},
+  {"code":"M", "name":"Model", "description":"Data or domain model"},
+  {"code":"I", "name":"Interface", "description":"API or user interface"},
+  {"code":"V", "name":"View", "description":"Visual representation or perspective"}
+], addresses:[
+  {"id":"ADDR-001", "address":"P01.T16.S01.A01.C01.G01.R01", "target_id":"TASK-001", "lambda":"λ:task_resolve(λ:alef_resolve(λ:click_resolve('P01.T16.S01.A01.C01.G01.R01')))", "meta":{"task_type":"implementation", "priority":"high"}},
+  {"id":"ADDR-002", "address":"P01.T16.S01.A01.C02.G01.R01", "target_id":"COMP-001", "lambda":"λ:component_resolve(λ:alef_resolve(λ:click_resolve('P01.T16.S01.A01.C02.G01.R01')))", "meta":{"component_type":"core", "status":"active"}},
+  {"id":"ADDR-003", "address":"P01.T16.S01.A01.C01.G01.R02", "target_id":"REQ-001", "lambda":"λ:requirement_resolve(λ:alef_resolve(λ:click_resolve('P01.T16.S01.A01.C01.G01.R02')))", "meta":{"requirement_type":"functional", "status":"approved"}},
+  {"id":"ADDR-004", "address":"@{MATH.ADD.001}", "target_id":"MATH-001", "lambda":"λ:math_resolve('@{MATH.ADD.001}')", "meta":{"math_type":"operator", "domain":"arithmetic"}},
+  {"id":"ADDR-005", "address":"@{LOGIC.IMPL.001}", "target_id":"LOGIC-001", "lambda":"λ:logic_resolve('@{LOGIC.IMPL.001}')", "meta":{"logic_type":"operator", "domain":"propositional"}},
+  {"id":"ADDR-006", "address":"<MATH.CALC+SET.THEORY+LOGIC.PROOF>", "target_id":"COMPOSITE-001", "lambda":"λ:composite_resolve('<MATH.CALC+SET.THEORY+LOGIC.PROOF>')", "meta":{"composite_type":"interdisciplinary", "domains":["mathematics", "set theory", "logic"]}}
+]}
+
+## {type:SpeculativeContext, id:"SPEC-CTX-001", for_address_id:"ADDR-001", predicts:[
+  {"address_id":"ADDR-002", "confidence":0.95, "reason":"Component is part of the task"},
+  {"address_id":"ADDR-003", "confidence":0.90, "reason":"Requirement is associated with the task"},
+  {"address_id":"ADDR-004", "confidence":0.70, "reason":"Mathematical operations are used in the task"},
+  {"address_id":"ADDR-005", "confidence":0.65, "reason":"Logical operations are used in the task"}
+], heuristic:"When a task is accessed, its components, requirements, and related mathematical/logical concepts are likely to be accessed next.", learning_rate:0.05, adaptation_strategy:"Bayesian update based on access patterns"}
+
+## {type:AddressTransformations, transformations:[
+  {"name":"canonicalize", "description":"Convert address to canonical form", "lambda":"λ:canonicalize(address)", "complexity":"O(1)"},
+  {"name":"normalize", "description":"Normalize address format", "lambda":"λ:normalize(address)", "complexity":"O(1)"},
+  {"name":"version", "description":"Apply version to address", "lambda":"λ:version(address, version)", "complexity":"O(1)"},
+  {"name":"contextualize", "description":"Apply context to address", "lambda":"λ:contextualize(address, context)", "complexity":"O(log n)"},
+  {"name":"compose", "description":"Compose multiple addresses", "lambda":"λ:compose(address1, address2, type)", "complexity":"O(n)"},
+  {"name":"resolve", "description":"Resolve address to target", "lambda":"λ:resolve(address)", "complexity":"O(log n)"},
+  {"name":"validate", "description":"Validate address format", "lambda":"λ:validate(address)", "complexity":"O(1)"}
+]}
+
+## {type:AddressPatterns, patterns:[
+  {"pattern":"P*.T*.*", "description":"All steps in all tasks in all projects", "example":"P01.T01.S01, P02.T03.S02, etc."},
+  {"pattern":"P01.T*.*", "description":"All steps in all tasks in project P01", "example":"P01.T01.S01, P01.T02.S01, etc."},
+  {"pattern":"*.*.*.A01.*.*.*", "description":"All items with assumption A01", "example":"P01.T01.S01.A01.C01.G01.R01"},
+  {"pattern":"@{MATH.*.*}", "description":"All mathematical concepts", "example":"@{MATH.ADD.001}, @{MATH.SUB.001}, etc."},
+  {"pattern":"<MATH.*+*.*>", "description":"All composite addresses starting with MATH", "example":"<MATH.CALC+SET.THEORY>"}
+]}
+
+## {type:SelfReference, file:"PFSUS.MMCP-Address.Standard.v2.0.0.mmcp.mmd", version:"2.0.0", checksum:"sha256:placeholder", canonical_address:"address-standard-v2.0", mathematical_operators:true, lambdajson_integration:true}
+
+@{visual-meta-start}
+author = {Kalxi},
+title = {PFSUS.MMCP-Address.Standard.v2.0.0},
+version = {2.0.0},
+mathematical_operators = true,
+lambdajson_support = true,
+structure = { address_types, address_registry, speculative_context, advanced_features, implementation_guidelines, integration },
+@{visual-meta-end}
+
+%% MMCP-FOOTER: version=2.0.0; timestamp=2025-07-22T17:00:00Z; checksum=sha256:placeholder; author=Kalxi; license=MIT; mathematical_operators=true; lambdajson_integration=true; information_density=high
+
+```mermaid
+graph TD
+    subgraph "Address Standard v2.0.0"
+        A["Address Types"]:::protocol
+        B["Address Registry"]:::protocol
+        C["Speculative Context"]:::protocol
+        D["Advanced Features"]:::protocol
+        E["Implementation"]:::protocol
+        F["Integration"]:::protocol
+    end
+
+    A --> A1["Hierarchical"]:::concept
+    A --> A2["Semantic"]:::concept
+    A --> A3["Composite"]:::concept
+    A --> A4["Lambda-Wrapped"]:::concept
+    A --> A5["Mathematical"]:::concept
+    A --> A6["Git"]:::concept
+    A --> A7["URI"]:::concept
+
+    B --> B1["Registry Structure"]:::concept
+    B --> B2["Resolution"]:::concept
+    B --> B3["Validation"]:::concept
+
+    C --> C1["Predictive Resolution"]:::concept
+    C --> C2["Confidence Scoring"]:::concept
+    C --> C3["Heuristics"]:::concept
+
+    D --> D1["Transformation"]:::concept
+    D --> D2["Composition"]:::concept
+    D --> D3["Patterns"]:::concept
+    D --> D4["Mathematical Ops"]:::concept
+
+    E --> E1["Resolution Algorithm"]:::concept
+    E --> E2["Registry Implementation"]:::concept
+    E --> E3["Context Implementation"]:::concept
+
+    F --> F1["EARS Integration"]:::concept
+    F --> F2["LambdaJSON Integration"]:::concept
+    F --> F3["MathOps Integration"]:::concept
+
+    classDef protocol fill:#e0f7fa,stroke:#00796b,color:#333;
+    classDef concept fill:#c8e6c9,stroke:#388e3c,color:#333;
+```

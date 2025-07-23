@@ -1,0 +1,157 @@
+Collected Lambda Calculus Functions
+
+The following is a small collection of functions in the untyped lambda calculus which I feel are noteworthy for one reason or another, either by relevance to the foundations of lambda calculus (such as the combinators and natural numbers) or by utility to people who wish to actively make use of this Turing tarpit. Some of them are taken from Wikipedia (which tends to be very reliable on mathematical issues), while others (primarily the list functions) I derived myself.
+
+Unless explicitly noted otherwise, natural numbers, booleans, pairs & lists, and all functions for dealing with them use the Church encodings of their values. Operations on other types (e.g., negative or non-integral numbers) are not defined, and if the reader desires them, he must construct such types and the operations on them himself (possibly with the use of pairs acting as typed unions). Additionally, functions for operating on numbers, lists, etc. are only meant for use on those types; if a value of the wrong type is supplied (e.g., if a list is passed to SUCC) or a non-Church encoded value is used, the results are undefined.
+Common Combinators
+
+    K := λxy. x ≡ X (X (X X)) ≡ X′ X′ X′
+    S := λxyz. (x z) (y z) ≡ X (X (X (X X))) ≡ X K ≡ X′ (X′ X′) ≡ B (B (B W) C) (B B)
+    I := λx. x ≡ S K S ≡ S K K ≡ X X
+    X := λx. x S K — also called ι (iota)
+    X′ := λx. x K S K
+    B := λxyz. x (y z) ≡ S (K S) K — function composition
+    C := λxyz. x z y ≡ S (S (K (S (K S) K)) S) (K K)
+    W := λxy. x y y ≡ S S (K (S K K))
+    Y := λg. (λx. g (x x)) (λx. g (x x)) ≡ S (K (S I I)) (S (S (K S) K) (K (S I I)))
+    Y′ := (λxy. x y x) (λyx. y (x y x)) ≡ S S K (S (K (S S (S (S S K)))) K)
+    Θ := (λxy. y (x x y)) (λxy. y (x x y)) — called the "Turing fixed-point combinator"
+    ω := λx. x x ≡ S I I
+    Ω := ω ω
+    Ω2 := (λx. x x x) (λx. x x x)
+    A fixed point combinator is any function F for which F g ≡ g (F g) for all g; examples include Y, Y′, and Θ. Since lambda calculus functions cannot refer to themselves by name, fixed point combinators are needed to implement recursion. For example, the factorial function can be implemented using f := λgx. ISZERO x 1 (MULT x (g (PRED x))), which takes a function g and a number x; if x is not zero, it is multiplied by the result of g (PRED x). Defining FACTORIAL := Y f (or Y′ f or Θ f) means that FACTORIAL x ≡ Y f x ≡ f (Y f) x, and so f is able to recurse on itself indefinitely.
+
+Natural Numbers
+
+    0 := λfx. x
+    1 := λfx. f x
+    2 := λfx. f (f x)
+    3 := λfx. f (f (f x))
+    4 := λfx. f (f (f (f x)))
+    5 := λfx. f (f (f (f (f x))))
+    et cetera
+
+Mathematical Operators
+
+    The successor operator (given a natural number n, calculate n+1):
+    SUCC := λnfx. f (n f x)
+    The predecessor operator (for all n > 0, calculate n-1; for zero, return zero):
+    PRED	:=	λnfx. n (λgh. h (g f)) (λu. x) (λu. u)
+    	≡	λn. n (λgk. ISZERO (g 1) k (PLUS (g k) 1)) (λv. 0) 0
+    	≡	λn. CAR (n (λx. PAIR (CDR x) (SUCC (CDR x))) (PAIR 0 0))
+    Addition:
+    PLUS	:=	λmnfx. n f (m f x)
+    	≡	λmn. n SUCC m
+    Subtraction — SUB m n evaluates to m - n if m > n and to zero otherwise:
+    SUB := λmn. n PRED m
+    Multiplication:
+    MULT	:=	λmnf. m (n f)
+    	≡	λmn. m (PLUS n) 0
+    	≡	B
+    Division — DIV a b evaluates to a pair of two numbers, a idiv b and a mod b:
+    DIV := Y (λgqab. LT a b (PAIR q a) (g (SUCC q) (SUB a b) b)) 0
+    Integer division:
+    IDIV := λab. CAR (DIV a b)
+    Modulus:
+    MOD := λab. CDR (DIV a b)
+    Exponentiation (EXP a b ≡ ab):
+    EXP := λab. b a ≡ C I
+    Factorial:
+    FACTORIAL	:=	Y (λgx. ISZERO x 1 (MULT x (g (PRED x))))
+    	≡	λn. Y (λgax. GT x n a (g (MUL a x) (SUCC x))) 1 1
+    	≡	λn. n (λfax. f (MUL a x) (SUCC x)) K 1 1
+    Fibonacci numbers — FIBONACCI n evaluates to the n-th Fibonacci number:
+    FIBONACCI := λn. n (λfab. f b (PLUS a b)) K 0 1
+    Greatest common divisor/highest common factor:
+    GCD := (λgmn. LEQ m n (g n m) (g m n)) (Y (λgxy. ISZERO y x (g y (MOD x y))))
+
+Booleans
+
+Given a boolean value b, the expression b t f will evaluate to t if b is true and to f if b is false. This allows conditional expressions to be written simply as a condition applied directly to the two possible results without the need for an IF function.
+
+    TRUE := λxy. x ≡ K
+    FALSE := λxy. y ≡ 0 ≡ λx. I ≡ K I ≡ S K ≡ X (X X)
+    AND := λpq. p q p
+    OR := λpq. p p q
+    XOR := λpq. p (NOT q) q
+    NOT := λpab. p b a ≡ λp. p FALSE TRUE
+
+Numeric Comparison Operators
+
+    Test whether a number is zero:
+    ISZERO := λn. n (λx. FALSE) TRUE
+    Less than:
+    LT := λab. NOT (LEQ b a)
+    Less than or equal to:
+    LEQ := λmn. ISZERO (SUB m n)
+    Equal to:
+    EQ := λmn. AND (LEQ m n) (LEQ n m)
+    Not equal to:
+    NEQ := λab. OR (NOT (LEQ a b)) (NOT (LEQ b a))
+    Greater than or equal to:
+    GEQ := λab. LEQ b a
+    Greater than:
+    GT := λab. NOT (LEQ a b)
+
+Pairs and Lists
+
+Pairs and lists are structured the same way that they are in Lisp and its relatives: a pair is made up of two components, called the car and the cdr, and a list is either NIL (the empty list) or a pair whose cdr is another list (and whose car is an element of the enclosing list).
+
+    PAIR x y — create a pair with a car of x and a cdr of y; also called CONS:
+    PAIR := λxyf. f x y
+    CAR p — get the car of pair p; also called FIRST or HEAD:
+    CAR := λp. p TRUE
+    CDR p — get the cdr of pair p; also called SECOND, TAIL, or REST:
+    CDR := λp. p FALSE
+    The empty list:
+    NIL := λx. TRUE
+    NULL p — evaluates to TRUE if p is NIL or to FALSE if p is a normal pair (all other types are undefined):
+    NULL := λp. p (λxy. FALSE)
+
+List Functions
+
+    Concatenate two lists:
+    APPEND := Y (λgab. NULL a b (PAIR (CAR a) (g (CDR a) b)))
+    Calculate the length of a list:
+    LENGTH := Y (λgcx. NULL x c (g (SUCC c) (CDR x))) 0
+    INDEX x i — evaluates to the i-th (zero-based) element of list x, assuming that x has at least i+1 elements:
+    INDEX := λxi. CAR (i CDR x)
+    Get the last element in a list:
+    LAST := Y (λgx. NULL x NIL (NULL (CDR x) (CAR x) (g (CDR x))))
+    Get a list without its last element:
+    TRUNCATE := Y (λgx. NULL x NIL (NULL (CDR x) NIL (PAIR (CAR x) (g (CDR x)))))
+    Reverse a list:
+    REVERSE := Y (λgal. NULL l a (g (PAIR (CAR l) a) (CDR l))) NIL
+    RANGE s e — evaluates to a list of all natural numbers from s up through e, or to NIL when s > e.
+    RANGE := λse. Y (λgc. LEQ c e (PAIR c (g (SUCC c) e)) NIL) s
+    LIST n a0 a1 ... an-1 — evaluates to a0 ... an-1 as a list
+    LIST := λn. n (λfax. f (PAIR x a)) REVERSE NIL
+    APPLY f x — passes the elements of the list x to f:
+    APPLY := Y (λgfx. NULL x f (g (f (CAR x)) (CDR x)))
+    MAP f x — maps each element of the list x through f:
+    MAP := Y (λgfx. NULL x NIL (PAIR (f (CAR x)) (g f (CDR x))))
+    FILTER f x — evaluates to a list of all e in the list x for which f e is TRUE (assuming that f returns only TRUE or FALSE for all elements of x):
+    FILTER := Y (λgfx. NULL x NIL (f (CAR x) (PAIR (CAR x)) I (g f (CDR x))))
+    CROSS f l m — evaluates to a list of all values of f a b where a is in the list l and b is in the list m. To obtain the Cartesian cross product of l and m, supply PAIR (or a similar function) for f.
+    CROSS := λflm. FOLD-LEFT APPEND NIL (MAP (λx. MAP (f x) m) l)
+    FOLD-LEFT f e x — Apply f a to each element of the list x, where a is the result of the previous application (or e for the first application) and return the result of the last application:
+    FOLD-LEFT := Y (λgfex. NULL x e (g f (f e (CAR x)) (CDR x)))
+    FOLD-RIGHT f e x — Apply (λy. f y a) to each element of the list x in reverse order, where a is the result of the previous application (or e for the first application) and return the result of the last application:
+    FOLD-RIGHT := λfex. Y (λgy. NULL y e (f (CAR y) (g (CDR y)))) x
+
+Other
+
+    GET n i a0 a1 ... an-1 =β ai:
+    GET := λni. i K (SUB n (SUCC i) K)
+
+Sources
+
+    Wikipedia: Lambda calculus
+    Wikipedia: Combinatory logic
+    Wikipedia: SKI combinator calculus
+    Wikipedia: Fixed point combinator
+    Wikipedia: B,C,K,W system
+
+Main Page
+
+$Id: lambda.html,v 1.3 2014/06/23 01:42:31 jwodder Exp jwodder $

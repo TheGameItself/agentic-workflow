@@ -1,0 +1,54 @@
+[ ] #".root"# {protocol:"MCP", version:"1.1.0", standard:"PFSUS+EARS+LambdaJSON"}
+# PFSUS Visual Legend Standard v1.1.0
+## {type:Meta, id:"PFSUS.MMCP-Legend.Standard.v1.1.0", author:"Kalxi", license:"MIT", last_modified:"2025-07-22T00:00:00Z"}
+## {type:LegendStandard, id:"PFSUS-Legend-1.1", desc:"Defines the standard visual language (colors, shapes, lines) for all .mmcp.mmd diagrams."}
+## {type:QuickRef, summary:{schema:"https://json-schema.org/draft/2020-12/schema", regex:"[[PFSUS.MMCP-Regex.Standard.v1.1.0.mmcp.mmd]]"}}
+## {type:Links, links:[{"type":"MermaidLink","target":"PFSUS.MerMaidContextProtocol.Standard.v1.1.0.mmcp.mmd","label":"Core Protocol","format":"obsidian","desc":"Main protocol standard"}]}
+## {type:SelfReference, file:"PFSUS.MMCP-Legend.Standard.v1.1.0.mmcp.mdd", version:"1.1.0", checksum:"sha256:6be2f41fd3e2b1d7ae917317302de4b0aadbea0e81bc3a975fd00c459f74e102", canonical_address:"self", self_repair:{ref:"[[PFSUS.MerMaidContextProtocol.Standard.v1.1.0.mmcp.mmd#SelfReference]]"}, project_agnostic:true}
+## {type:FractalPropagation, id:"PFSUS-Fractal-1.0", desc:"Inherits fractal propagation logic from the core protocol.", ref:"[[PFSUS.MerMaidContextProtocol.Standard.v1.1.0.mmcp.mmd#FractalPropagation]]"}
+## {type:CLITools, id:"PFSUS-CLI-1.0", desc:"Inherits CLI tool definitions from the core protocol.", ref:"[[PFSUS.MerMaidContextProtocol.Standard.v1.1.0.mmcp.mmd#CLITools]]"}
+## Visualization
+```mermaid
+graph TD
+    subgraph "Legend"
+        A["Node Shapes & Colors"]:::concepts_group
+        B["Edge & Line Styles"]:::concepts_group
+    end
+    subgraph "Node Examples"
+        Proto(["Core Protocol"])
+        Concept(("Concept"))
+        Decision{"Decision"}
+        IO[("IO / Example")]
+        A -- Comprises --> Proto & Concept & Decision & IO
+    end
+    subgraph "Edge Examples"
+        Containment["A --> B"]
+        Reference["A -.-> B"]
+        Sequence["A ==> B"]
+        B -- Comprises --> Containment & Reference & Sequence
+    end
+    classDef concepts_group fill:#fff9c4,stroke:#fbc02d,color:#333;
+```
+## Definitions
+### Node Types
+- **Core Protocol Component**: `([])` Represents a fundamental part of the PFSUS spec.
+- **Concept**: `(())` Describes data about data (schemas, versioning).
+- **Decision**: `{}` Represents conditional logic.
+- **IO / Example**: `[()]` Represents input, output, or examples.
+### Edge Styles
+- **`-->` (Solid Line)**: A required, primary relationship.
+- **`-.->` (Dashed Line)**: An optional or secondary relationship.
+- **`==>` (Thick Dotted Arrow)**: Indicates a sequence of events.
+---
+> [[PFSUS.MerMaidContextProtocol.Standard.v1.1.0.mmcp.mmd]]
+@{visual-meta-start}
+author = {Kalxi},
+title = {PFSUS.MMCP-Legend.Standard.v1.1.0},
+version = {1.1.0},
+structure = { header, meta, legend_standard, quick_ref, links, self_reference, fractal_propagation, cli_tools, visualization, definitions, references },
+glossary = { header: "Root and title", meta: "Meta block", legend_standard: "LegendStandard block", quick_ref: "Quick reference", links: "Linked standards", self_reference: "Self-reference block", fractal_propagation: "Fractal propagation block", cli_tools: "CLI tools block", visualization: "Mermaid diagram", definitions: "Node and edge types", references: "Linked standards" },
+graph_data = { ... },
+ai_entities = { ... },
+notes = {"This standard is part of the universal, self-referential, self-repairing, project-agnostic PFSUS protocol suite."},
+@{visual-meta-end}
+

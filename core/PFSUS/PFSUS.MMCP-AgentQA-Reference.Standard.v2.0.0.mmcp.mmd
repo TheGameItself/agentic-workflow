@@ -1,0 +1,552 @@
+%% Copyright 2025 Kalxi. All rights reserved. See header for terms. %%
+[ ] #".root"# {protocol:"MCP", version:"2.0.0", standard:"PFSUS+EARS+LambdaJSON+MathOps"}
+# MMCP Agent QA Reference Standard v2.0.0
+## {type:Meta, author:"Kalxi", license:"MIT", last_modified:"2025-07-22T16:00:00Z", id:"PFSUS.MMCP-AgentQA-Reference.Standard.v2.0.0", status:"active", priority:"high", domain:"agent-reference", category:"standard-template"}
+## {type:Schema, $schema:"https://json-schema.org/draft/2020-12/schema", required:["type","id","version"], properties:{type:{type:"string"},id:{type:"string"},version:{type:"string"},last_modified:{type:"string",format:"date-time"},author:{type:"string"}}}
+## {type:Changelog, entries:[
+  {"2025-07-22":"Initial version of the Agent QA Reference Standard."},
+  {"2025-07-22":"Enhanced with comprehensive mathematical notation and information density optimization."},
+  {"2025-07-22":"Updated wrapping with improved mermaid integration and conditional reference capabilities."}
+]}
+## {type:ColorMatrix, model:"oklch", colors:[{name:"primary",oklch:"0.7 0.15 240"},{name:"secondary",oklch:"0.6 0.2 280 / 75%"},{name:"accent",oklch:"0.8 0.18 60"},{name:"neutral",oklch:"0.9 0 0"},{name:"error",oklch:"0.6 0.2 30"}]}
+## {type:RegexPatterns, patterns:[{field:"qa_id",regex:"QA-[A-Z]+-\\d{3}"},{field:"mathematical_notation",regex:"(λ|∀|∃|∧|∨|→|⟺|∈|⊆|∪|∩|∅|ℝ|O\\(|lim|∑|∏|∇|∂|\\|\\||≥|≤|≈|≠|⊥|∞|μ|σ|∝)"},{field:"complexity",regex:"O\\((1|log n|n|n log n|n\\^[0-9.]+|2\\^n)\\)"},{field:"probability",regex:"P\\(([^\\)]+)\\)"}]}
+## {type:ConditionalReference, conditions:[
+  {"if":"context.contains('error_handling')", "then":"reference('error-handling', 'recovery', 'fault-tolerance')"},
+  {"if":"context.contains('optimization')", "then":"reference('performance', 'efficiency', 'resource-management')"},
+  {"if":"context.contains('mathematical_model')", "then":"reference('mathematics', 'theory', 'formal-methods')"},
+  {"if":"context.contains('integration')", "then":"reference('interfaces', 'communication', 'interoperability')"}
+]}
+## {type:TemplateMetadata, purpose:"Standard template for creating agent QA reference documentation", usage:"Use this template as a starting point for creating comprehensive agent reference documentation with mathematical notation", version_compatibility:"2.0.0+", required_extensions:["MathOps", "LambdaJSON"], recommended_tools:["MMCP-CLI", "MMCP-Validator", "MMCP-Visualizer"]}
+
+## {type:AgentQAReferenceStandard, 
+    id:"PFSUS-AgentQA-Reference-2.0", 
+    desc:"Enhanced standard for creating agent reference documentation with question-answer pairs using mathematical notation for maximum information density.", 
+    version:"2.0.0", 
+    compatibility:["1.0.0+"], 
+    extensions:["MathOps", "LambdaJSON", "EARS", "MermaidDiagrams", "ConditionalReferences"], 
+    validation_level:"strict",
+    information_architecture:{
+        primary_structure:"question-answer",
+        secondary_structure:"category-based",
+        cross_reference_model:"graph",
+        indexing_strategy:"multi-dimensional",
+        search_optimization:"semantic+keyword"
+    },
+    mathematical_notation:{
+        primary_systems:["lambda-calculus", "set-theory", "logic", "calculus", "probability", "complexity"],
+        rendering_support:["unicode", "latex", "ascii-fallback"],
+        density_optimization:true,
+        symbolic_compression:true
+    },
+    visualization_capabilities:{
+        diagram_types:["hierarchical", "flow", "relationship", "state-transition"],
+        interactive_elements:true,
+        conditional_rendering:true,
+        responsive_layout:true
+    },
+    extension_points:[
+        "custom_notation_systems", 
+        "domain_specific_templates", 
+        "specialized_qa_categories", 
+        "integration_adapters"
+    ]}
+## {type:UsageGuidelines, primary_use_case:"Agent documentation with mathematical precision", secondary_use_cases:["Knowledge base creation", "Training material", "API documentation"], target_audience:["Developers", "AI Engineers", "System Architects"], complexity_level:"Advanced", prerequisites:["Mathematical notation familiarity", "Functional programming concepts", "Agent architecture understanding"]}
+## {type:ImplementationTools, recommended_tools:[
+  {"name":"MMCP-CLI", "purpose":"Command-line creation and validation of MMCP files", "url":"https://github.com/kalxi/mmcp-cli"},
+  {"name":"MMCP-Validator", "purpose":"Validation of MMCP files against schemas", "url":"https://github.com/kalxi/mmcp-validator"},
+  {"name":"MMCP-Visualizer", "purpose":"Visualization of MMCP files with mathematical notation", "url":"https://github.com/kalxi/mmcp-visualizer"},
+  {"name":"MMCP-Editor", "purpose":"Specialized editor for MMCP files with mathematical notation support", "url":"https://github.com/kalxi/mmcp-editor"}
+]}
+
+## 1. Agent QA Reference Structure
+
+### 1.1 Core Components
+
+The Agent QA Reference structure consists of these core components:
+
+```json
+{
+  "type": "AgentQAReference",
+  "id": "AGENT-QA-REF-001",
+  "agent_id": "AGENT-001",
+  "agent_name": "ExampleAgent",
+  "version": "2.0.0",
+  "description": "Comprehensive Q&A reference with mathematical notation for high information density",
+  "qa_pairs": [
+    {
+      "id": "QA-001",
+      "question": "What is the agent's primary function?",
+      "answer": "The agent's primary function is to perform task X with optimal efficiency.",
+      "mathematical_notation": "λtask.(optimize(process(task)))",
+      "tags": ["function", "purpose", "optimization"]
+    },
+    {
+      "id": "QA-002",
+      "question": "How does the agent handle errors?",
+      "answer": "The agent uses a try-catch mechanism with exponential backoff and circuit breakers.",
+      "mathematical_notation": "λerr.(try(λx.f(x)) catch(λe.backoff(e, t))) ∧ P(circuit_open|failures) = sigmoid(error_rate - threshold)",
+      "tags": ["error-handling", "resilience", "circuit-breaker"]
+    }
+  ],
+  "categories": [
+    {
+      "name": "Functionality",
+      "qa_ids": ["QA-001"]
+    },
+    {
+      "name": "Error Handling",
+      "qa_ids": ["QA-002"]
+    }
+  ],
+  "mathematical_operators": [
+    {
+      "symbol": "λ",
+      "description": "Lambda calculus function abstraction",
+      "usage": "λx.f(x) represents a function mapping x to f(x)"
+    },
+    {
+      "symbol": "∧",
+      "description": "Logical conjunction (AND)",
+      "usage": "P ∧ Q is true when both P and Q are true"
+    }
+  ]
+}
+```
+
+### 1.2 QA Pair Structure
+
+Each QA pair follows this enhanced structure:
+
+```json
+{
+  "id": "QA-XXX",
+  "question": "Clear, concise question about agent functionality or behavior?",
+  "answer": "Detailed answer with high information density using precise technical language.",
+  "mathematical_notation": "Formal mathematical representation using appropriate notation.",
+  "code_example": "Optional code snippet demonstrating implementation.",
+  "complexity": "Optional computational complexity analysis.",
+  "tags": ["relevant", "categorization", "tags"]
+}
+```
+
+## 2. QA Pair Categories
+
+### 2.1 Fundamental Concepts
+
+Questions about core principles, architecture, and theoretical foundations:
+
+```json
+{
+  "type": "FundamentalQA",
+  "question": "What is the agent's architectural pattern?",
+  "answer": "The agent follows a layered hexagonal architecture with functional core.",
+  "mathematical_notation": "Agent = Core ∘ (Adapters ∘ Ports)",
+  "tags": ["architecture", "design-pattern", "hexagonal"]
+}
+```
+
+### 2.2 Functional Components
+
+Questions about specific functional modules and capabilities:
+
+```json
+{
+  "type": "FunctionalQA",
+  "question": "How does the agent process input data?",
+  "answer": "The agent uses a pipeline of validation, transformation, and enrichment.",
+  "mathematical_notation": "process = λdata.(validate ∘ transform ∘ enrich)(data)",
+  "tags": ["processing", "pipeline", "transformation"]
+}
+```
+
+### 2.3 Operational Aspects
+
+Questions about runtime behavior, resource usage, and performance:
+
+```json
+{
+  "type": "OperationalQA",
+  "question": "What are the agent's resource requirements?",
+  "answer": "The agent requires CPU, memory, and storage resources scaling with input size.",
+  "mathematical_notation": "R(n) = {cpu: O(log n), memory: O(n^0.5), storage: O(n)}",
+  "tags": ["resources", "scaling", "performance"]
+}
+```
+
+### 2.4 Implementation Details
+
+Questions about code structure, algorithms, and technical implementation:
+
+```json
+{
+  "type": "ImplementationQA",
+  "question": "How is the agent's state managed?",
+  "answer": "The agent uses immutable state with functional updates and event sourcing.",
+  "mathematical_notation": "S' = f(S, E) where S is state and E is event",
+  "code_example": "new_state = update_state(current_state, event)",
+  "tags": ["state-management", "immutability", "event-sourcing"]
+}
+```
+
+### 2.5 Advanced Concepts
+
+Questions about theoretical foundations, mathematical models, and advanced techniques:
+
+```json
+{
+  "type": "AdvancedQA",
+  "question": "What mathematical models underlie the agent?",
+  "answer": "The agent uses category theory, lambda calculus, and information theory.",
+  "mathematical_notation": "Category C with morphisms f: A → B representing transformations",
+  "tags": ["mathematics", "category-theory", "lambda-calculus"]
+}
+```
+
+### 2.6 Integration Aspects
+
+Questions about how the agent interacts with other systems:
+
+```json
+{
+  "type": "IntegrationQA",
+  "question": "How does the agent communicate with external systems?",
+  "answer": "The agent uses event-driven communication with message queues and webhooks.",
+  "mathematical_notation": "comm(a,b) = events(a→b) ∪ messages(a→b) ∪ api_calls(a→b)",
+  "tags": ["communication", "events", "integration"]
+}
+```
+
+### 2.7 Security Considerations
+
+Questions about security features and protections:
+
+```json
+{
+  "type": "SecurityQA",
+  "question": "How does the agent secure sensitive data?",
+  "answer": "The agent uses encryption, access controls, and audit logging.",
+  "mathematical_notation": "secure(data) = encrypt(data, key) ∧ access(user, data) ⟺ authorized(user, data)",
+  "tags": ["security", "encryption", "access-control"]
+}
+```
+
+## 3. Mathematical Notation Guidelines
+
+### 3.1 Lambda Calculus Notation
+
+Use lambda calculus for functional transformations with enhanced clarity:
+
+```
+λx.f(x)                 // Simple function
+λx.λy.f(x, y)           // Multi-parameter function
+(λx.f(x))(a)            // Function application
+Y = λf.(λx.f(x x))(λx.f(x x))  // Fixed point combinator
+f ∘ g                   // Function composition (f after g)
+λx.f(g(x))              // Equivalent to f ∘ g
+```
+
+### 3.2 Set Theory Notation
+
+Use set theory for collections and relationships with precise semantics:
+
+```
+x ∈ A                   // Element membership
+A ∪ B                   // Union
+A ∩ B                   // Intersection
+A ⊆ B                   // Subset
+A × B                   // Cartesian product
+P(A)                    // Power set
+A △ B                   // Symmetric difference
+|A|                     // Cardinality
+A^c                     // Complement
+```
+
+### 3.3 Logic Notation
+
+Use logic notation for rules and conditions with formal precision:
+
+```
+P ∧ Q                   // Conjunction (AND)
+P ∨ Q                   // Disjunction (OR)
+¬P                      // Negation (NOT)
+P → Q                   // Implication
+P ↔ Q                   // Biconditional
+∀x P(x)                 // Universal quantification
+∃x P(x)                 // Existential quantification
+P ⟺ Q                   // Logical equivalence
+⊢ P                     // Provability
+⊨ P                     // Semantic entailment
+```
+
+### 3.4 Calculus Notation
+
+Use calculus notation for continuous processes and optimization:
+
+```
+∂f/∂x                   // Partial derivative
+∇f                      // Gradient
+∫f(x) dx                // Integral
+∑_{i=1}^n a_i           // Summation
+∏_{i=1}^n a_i           // Product
+lim_{x→a} f(x)          // Limit
+df/dx                   // Derivative
+∫_a^b f(x) dx           // Definite integral
+∇²f                     // Laplacian
+```
+
+### 3.5 Probability and Statistics
+
+Use probability notation for uncertainty and statistical models:
+
+```
+P(A)                    // Probability of event A
+P(A|B)                  // Conditional probability
+P(A,B)                  // Joint probability
+E[X]                    // Expected value
+Var(X)                  // Variance
+σ                       // Standard deviation
+μ                       // Mean
+X ~ N(μ,σ²)             // Distribution
+P(X ≤ x)                // Cumulative distribution
+ρ(X,Y)                  // Correlation
+```
+
+### 3.6 Complexity Notation
+
+Use complexity notation for performance characteristics:
+
+```
+O(1)                    // Constant time
+O(log n)                // Logarithmic time
+O(n)                    // Linear time
+O(n log n)              // Linearithmic time
+O(n²)                   // Quadratic time
+O(2^n)                  // Exponential time
+Ω(n)                    // Lower bound
+Θ(n)                    // Tight bound
+```
+
+### 3.7 Category Theory
+
+Use category theory for abstract structures and transformations:
+
+```
+f: A → B                // Morphism from A to B
+F: C → D                // Functor between categories
+η: F ⇒ G                // Natural transformation
+F ∘ G                   // Functor composition
+id_A                    // Identity morphism
+T(A)                    // Monad application
+μ: T² ⇒ T               // Monad multiplication
+η: Id ⇒ T               // Monad unit
+```
+
+### 3.8 Information Theory
+
+Use information theory for uncertainty and data analysis:
+
+```
+H(X)                    // Entropy
+I(X;Y)                  // Mutual information
+D_KL(P||Q)              // Kullback-Leibler divergence
+H(X|Y)                  // Conditional entropy
+C                       // Channel capacity
+R                       // Information rate
+β                       // Compression ratio
+```
+
+## 4. Enhanced Information Density Techniques
+
+### 4.1 Mathematical Shorthand
+
+Use mathematical shorthand for concise expression:
+
+```
+∀x∈A. P(x)              // For all x in A, P(x) holds
+∃x∈A. P(x)              // There exists x in A such that P(x) holds
+f: A→B, x↦f(x)          // Function mapping with explicit mapping
+x ∈ A ⟹ x ∈ B           // Conditional set membership
+A ≅ B                   // Isomorphism between structures
+A ≃ B                   // Homotopy equivalence
+f ≈ g                   // Approximate equality of functions
+```
+
+### 4.2 Compound Notation
+
+Combine notations for multi-aspect descriptions:
+
+```
+∀x. (P(x) ∧ Q(x)) → R(x)  // Logical implication with quantification
+∫_A f(x) dx where A = {x ∈ ℝ : P(x)}  // Integration over defined set
+lim_{n→∞} ∑_{i=1}^n f(i/n) = ∫_0^1 f(x) dx  // Limit and integral relationship
+P(success) = ∫_θ p(θ) P(success|θ) dθ  // Bayesian integration
+```
+
+### 4.3 Nested Operators
+
+Use nested operators for complex relationships:
+
+```
+∇·(k∇T) = ρc_p ∂T/∂t   // Heat equation with differential operators
+E[max_{a∈A} f(a,θ)]    // Expected maximum value
+P(∀t∈[0,T]. X_t ∈ A)   // Probability of path containment
+∑_{i=1}^n ∏_{j=1}^m a_{ij}  // Nested summation and product
+```
+
+### 4.4 Operator Chaining
+
+Chain operators for process sequences:
+
+```
+f ∘ g ∘ h               // Triple function composition
+A ∪ B ∩ C               // Union and intersection (with precedence)
+∂²f/∂x∂y                // Mixed partial derivative
+∇×(∇×F) = ∇(∇·F) - ∇²F  // Vector calculus identity
+```
+
+## 5. Implementation Examples
+
+### 5.1 Basic Agent QA Reference
+
+graph TD
+    A[Agent QA Reference] --> B[Fundamental QA]
+    A --> C[Functional QA]
+    A --> D[Operational QA]
+    A --> E[Implementation QA]
+    A --> F[Advanced QA]
+    A --> G[Integration QA]
+    A --> H[Security QA]
+    
+    B --> B1["Q: What is the agent's purpose?<br>A: λtask.(process(task) ∘ optimize(result))"]
+    B --> B2["Q: What architectural pattern?<br>A: hexagonal(core, adapters, ports)"]
+    
+    C --> C1["Q: How is input processed?<br>A: λinput.(validate ∘ transform ∘ enrich)(input)"]
+    C --> C2["Q: What outputs are produced?<br>A: output = {primary, metadata, logs, metrics}"]
+    
+    D --> D1["Q: Resource requirements?<br>A: R(n) = {cpu: O(log n), memory: O(n^0.5)}"]
+    D --> D2["Q: Scaling behavior?<br>A: perf(n) = base_perf × (1 + log(n/base_n))"]
+    
+    E --> E1["Q: State management?<br>A: S' = f(S, E) with immutable updates"]
+    E --> E2["Q: Concurrency model?<br>A: async(tasks) with promise resolution"]
+    
+    F --> F1["Q: Mathematical foundation?<br>A: category_theory ∧ lambda_calculus"]
+    F --> F2["Q: Convergence properties?<br>A: lim(t→∞) process^t(data) = fixed_point"]
+    
+    G --> G1["Q: External communication?<br>A: events(a→b) ∪ messages(a→b) ∪ api_calls(a→b)"]
+    G --> G2["Q: Integration patterns?<br>A: {adapter, facade, proxy, mediator}"]
+    
+    H --> H1["Q: Security model?<br>A: encrypt(data) ∧ authorize(user, resource)"]
+    H --> H2["Q: Threat mitigations?<br>A: ∀threat∈STRIDE. ∃mitigation. addresses(mitigation, threat)"]
+```
+
+### 5.2 Comprehensive Agent QA Reference
+
+graph TD
+    A[Agent QA Reference] --> B[Fundamental QA]
+    A --> C[Functional QA]
+    A --> D[Operational QA]
+    A --> E[Implementation QA]
+    A --> F[Advanced QA]
+    A --> G[Integration QA]
+    A --> H[Security QA]
+    
+    B --> B1["Q: Primary purpose?<br>A: λtask.(process(task) ∘ optimize(result))"]
+    B --> B2["Q: Architectural pattern?<br>A: hexagonal(core, adapters, ports)"]
+    B --> B3["Q: Design principles?<br>A: {functional, immutable, composable, testable}"]
+    B --> B4["Q: Theoretical foundation?<br>A: category_theory ∧ lambda_calculus ∧ information_theory"]
+    
+    C --> C1["Q: Input processing?<br>A: λinput.(validate ∘ transform ∘ enrich)(input)"]
+    C --> C2["Q: Output production?<br>A: output = {primary, metadata, logs, metrics}"]
+    C --> C3["Q: Core capabilities?<br>A: capabilities = {c | c ∈ core_functions ∧ exposed(c)}"]
+    C --> C4["Q: Processing pipeline?<br>A: pipeline = [stage_i | i ∈ {1..n} ∧ connected(stage_i, stage_{i+1})]"]
+    
+    D --> D1["Q: Resource requirements?<br>A: R(n) = {cpu: O(log n), memory: O(n^0.5), storage: O(n)}"]
+    D --> D2["Q: Scaling behavior?<br>A: perf(n) = base_perf × (1 + log(n/base_n))"]
+    D --> D3["Q: Performance metrics?<br>A: metrics = {throughput, latency, error_rate, resource_usage}"]
+    D --> D4["Q: Operational constraints?<br>A: constraints = {c | c ∈ {memory, cpu, network, time} ∧ limited(c)}"]
+    
+    E --> E1["Q: State management?<br>A: S' = f(S, E) with immutable updates"]
+    E --> E2["Q: Concurrency model?<br>A: async(tasks) with promise resolution"]
+    E --> E3["Q: Error handling?<br>A: λerr.(try(λx.f(x)) catch(λe.recover(e)))"]
+    E --> E4["Q: Code organization?<br>A: modules = {m | m ∈ codebase ∧ single_responsibility(m)}"]
+    
+    F --> F1["Q: Mathematical foundation?<br>A: category_theory ∧ lambda_calculus ∧ information_theory"]
+    F --> F2["Q: Convergence properties?<br>A: lim(t→∞) process^t(data) = fixed_point"]
+    F --> F3["Q: Complexity analysis?<br>A: T(n) = O(n log n) time, S(n) = O(n) space"]
+    F --> F4["Q: Formal verification?<br>A: ∀spec∈Specifications. ∃proof. validates(proof, spec, implementation)"]
+    
+    G --> G1["Q: External communication?<br>A: comm(a,b) = events(a→b) ∪ messages(a→b) ∪ api_calls(a→b)"]
+    G --> G2["Q: Integration patterns?<br>A: patterns = {adapter, facade, proxy, mediator}"]
+    G --> G3["Q: API design?<br>A: api = {endpoints, schemas, versioning, documentation}"]
+    G --> G4["Q: Interoperability?<br>A: protocols = {http, grpc, websocket, message_queue}"]
+    
+    H --> H1["Q: Security model?<br>A: security = encrypt(data) ∧ authorize(user, resource) ∧ authenticate(user)"]
+    H --> H2["Q: Threat mitigations?<br>A: ∀threat∈STRIDE. ∃mitigation. addresses(mitigation, threat)"]
+    H --> H3["Q: Data protection?<br>A: protection = {encryption, access_control, audit_logging, sanitization}"]
+    H --> H4["Q: Compliance?<br>A: compliant_with = {standard | standard ∈ Standards ∧ meets(agent, standard)}"]
+```
+
+## 6. Integration with Other Standards
+
+### 6.1 EARS Integration
+
+```
+WHEN agent receives query THEN agent SHALL respond with appropriate QA pair
+IF query matches multiple QA pairs THEN agent SHALL return most relevant pair based on semantic similarity
+WHEN agent cannot find matching QA pair THEN agent SHALL generate response based on available knowledge
+```
+
+### 6.2 LambdaJSON Integration
+
+```json
+{
+  "λ:qa_lookup": {
+    "query": "function",
+    "match_strategy": "semantic",
+    "return_type": "QAPair[]",
+    "similarity_threshold": 0.75,
+    "max_results": 3
+  }
+}
+```
+
+### 6.3 MathOps Integration
+
+```json
+{
+  "Δ:qa_complexity": {
+    "query_complexity": "O(log n)",
+    "response_time": "O(1)",
+    "memory_usage": "O(m)",
+    "index_structure": "B-tree",
+    "optimization_strategy": "memoization"
+  }
+}
+```
+
+### 6.4 Format Wrapping Integration
+
+```
+## Mathematical QA Wrapper Example
+λ:qa_mathematical_expression({
+  question: "How does the agent optimize performance?",
+  answer: "The agent uses gradient descent to minimize response time.",
+  mathematical_notation: "w' = w - α∇L(w) where L is latency function",
+  complexity: "O(iterations × parameters)"
+})
+
+%% Inline: Optimization converges when ||∇L(w)|| < ε @{MATH.CONVERGENCE.001}
+```
+
+## {type:SelfReference, file:"PFSUS.MMCP-AgentQA-Reference.Standard.v2.0.0.mmcp.mmd", version:"2.0.0", checksum:"sha256:placeholder", canonical_address:"agent-qa-reference-v2.0", mathematical_operators:true, lambdajson_integration:true}
+
+@{visual-meta-start}
+author = {Kalxi},
+title = {PFSUS.MMCP-AgentQA-Reference.Standard.v2.0.0},
+version = {2.0.0},
+mathematical_operators = true,
+lambdajson_support = true,
+structure = { core_components, qa_pair_categories, mathematical_notation, information_density, implementation_examples, integration },
+@{visual-meta-end}
+
+%% MMCP-FOOTER: version=2.0.0; timestamp=2025-07-22T16:00:00Z; checksum=sha256:placeholder; author=Kalxi; license=MIT; mathematical_operators=true; lambdajson_integration=true; information_density=high

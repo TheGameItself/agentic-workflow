@@ -1,0 +1,277 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pfsus.org/schemas/agent.schema.json",
+  "title": "Enhanced Agent Schema",
+  "description": "Schema for MMCP agent specifications with comprehensive capabilities",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "const": "Agent",
+      "description": "Must be 'Agent' for agent specifications"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^AGENT-[A-Z0-9]{3}$",
+      "description": "Unique identifier in format AGENT-XXX"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable agent name",
+      "minLength": 1
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semantic version number"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of agent purpose and functionality"
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "data_processing", "validation", "transformation", "analysis",
+          "communication", "coordination", "monitoring", "alerting",
+          "learning", "adaptation", "reasoning", "decision_making",
+          "planning", "execution", "optimization", "prediction",
+          "classification", "clustering", "recommendation", "search",
+          "natural_language", "computer_vision", "speech_processing",
+          "knowledge_management", "workflow_orchestration", "integration"
+        ]
+      },
+      "description": "List of agent capabilities"
+    },
+    "interfaces": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["REST", "GraphQL", "gRPC", "WebSocket", "MQTT", "AMQP", "HTTP", "TCP", "UDP"]
+      },
+      "description": "Supported communication interfaces"
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "External dependencies required by the agent"
+    },
+    "resources": {
+      "type": "object",
+      "properties": {
+        "cpu": {"type": "string", "description": "CPU requirements (e.g., '2 cores', '1000m')"},
+        "memory": {"type": "string", "description": "Memory requirements (e.g., '4GB', '512Mi')"},
+        "storage": {"type": "string", "description": "Storage requirements (e.g., '10GB', '1Ti')"},
+        "gpu": {"type": "string", "description": "GPU requirements (e.g., '1 GPU', 'NVIDIA V100')"},
+        "network": {"type": "string", "description": "Network requirements (e.g., '1Gbps', 'low-latency')"}
+      },
+      "description": "Resource requirements for the agent"
+    },
+    "monitoring": {
+      "type": "object",
+      "properties": {
+        "health_check": {"type": "string", "description": "Health check endpoint or method"},
+        "metrics": {"type": "string", "description": "Metrics endpoint or collection method"},
+        "logging": {
+          "type": "object",
+          "properties": {
+            "level": {"type": "string", "enum": ["DEBUG", "INFO", "WARN", "ERROR", "FATAL"]},
+            "format": {"type": "string", "enum": ["JSON", "TEXT", "STRUCTURED"]},
+            "destination": {"type": "string", "description": "Log destination (file, stdout, syslog, etc.)"}
+          }
+        },
+        "alerts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {"type": "string"},
+              "condition": {"type": "string"},
+              "severity": {"type": "string", "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]},
+              "action": {"type": "string"}
+            },
+            "required": ["name", "condition", "severity"]
+          }
+        }
+      },
+      "description": "Monitoring and observability configuration"
+    },
+    "security": {
+      "type": "object",
+      "properties": {
+        "authentication": {"type": "string", "enum": ["JWT", "OAuth2", "API_KEY", "BASIC", "CERTIFICATE", "NONE"]},
+        "authorization": {"type": "string", "enum": ["RBAC", "ABAC", "ACL", "NONE"]},
+        "encryption": {
+          "type": "object",
+          "properties": {
+            "in_transit": {"type": "string", "enum": ["TLS", "mTLS", "NONE"]},
+            "at_rest": {"type": "string", "enum": ["AES-256", "AES-128", "RSA", "NONE"]}
+          }
+        },
+        "compliance": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["GDPR", "HIPAA", "SOX", "PCI-DSS", "ISO-27001", "NIST"]
+          }
+        }
+      },
+      "description": "Security configuration and requirements"
+    },
+    "deployment": {
+      "type": "object",
+      "properties": {
+        "strategy": {"type": "string", "enum": ["blue_green", "rolling", "canary", "recreate", "a_b_testing"]},
+        "replicas": {"type": "integer", "minimum": 1, "description": "Number of agent instances"},
+        "scaling": {
+          "type": "object",
+          "properties": {
+            "auto": {"type": "boolean"},
+            "min_replicas": {"type": "integer", "minimum": 1},
+            "max_replicas": {"type": "integer", "minimum": 1},
+            "metrics": {
+              "type": "array",
+              "items": {"type": "string", "enum": ["CPU", "MEMORY", "REQUESTS", "CUSTOM"]}
+            }
+          }
+        },
+        "environment": {"type": "string", "enum": ["development", "staging", "production", "testing"]},
+        "platform": {"type": "string", "enum": ["kubernetes", "docker", "serverless", "vm", "bare_metal"]}
+      },
+      "description": "Deployment configuration"
+    },
+    "behavior": {
+      "type": "object",
+      "properties": {
+        "autonomy_level": {
+          "type": "string",
+          "enum": ["manual", "semi_autonomous", "autonomous", "fully_autonomous"],
+          "description": "Level of agent autonomy"
+        },
+        "learning_mode": {
+          "type": "string",
+          "enum": ["static", "online", "batch", "reinforcement", "federated"],
+          "description": "Learning and adaptation mode"
+        },
+        "decision_making": {
+          "type": "string",
+          "enum": ["rule_based", "ml_based", "hybrid", "human_in_loop"],
+          "description": "Decision making approach"
+        },
+        "communication_style": {
+          "type": "string",
+          "enum": ["reactive", "proactive", "event_driven", "scheduled"],
+          "description": "Communication behavior pattern"
+        },
+        "error_handling": {
+          "type": "string",
+          "enum": ["fail_fast", "graceful_degradation", "retry", "circuit_breaker"],
+          "description": "Error handling strategy"
+        }
+      },
+      "description": "Agent behavior configuration"
+    },
+    "performance": {
+      "type": "object",
+      "properties": {
+        "throughput": {
+          "type": "object",
+          "properties": {
+            "target": {"type": "number"},
+            "unit": {"type": "string", "enum": ["requests/sec", "messages/sec", "transactions/sec"]}
+          }
+        },
+        "latency": {
+          "type": "object",
+          "properties": {
+            "target": {"type": "number"},
+            "percentile": {"type": "number", "enum": [50, 90, 95, 99]},
+            "unit": {"type": "string", "enum": ["ms", "s"]}
+          }
+        },
+        "availability": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Target availability percentage"
+        },
+        "reliability": {
+          "type": "object",
+          "properties": {
+            "mtbf": {"type": "number", "description": "Mean Time Between Failures (hours)"},
+            "mttr": {"type": "number", "description": "Mean Time To Recovery (minutes)"}
+          }
+        }
+      },
+      "description": "Performance targets and SLAs"
+    },
+    "integration": {
+      "type": "object",
+      "properties": {
+        "upstream_agents": {
+          "type": "array",
+          "items": {"type": "string", "pattern": "^AGENT-[A-Z0-9]{3}$"},
+          "description": "Agents that send data to this agent"
+        },
+        "downstream_agents": {
+          "type": "array",
+          "items": {"type": "string", "pattern": "^AGENT-[A-Z0-9]{3}$"},
+          "description": "Agents that receive data from this agent"
+        },
+        "data_formats": {
+          "type": "array",
+          "items": {"type": "string", "enum": ["JSON", "XML", "AVRO", "PROTOBUF", "CSV", "PARQUET", "BINARY"]},
+          "description": "Supported data formats"
+        },
+        "protocols": {
+          "type": "array",
+          "items": {"type": "string", "enum": ["HTTP", "HTTPS", "TCP", "UDP", "MQTT", "AMQP", "KAFKA", "GRPC"]},
+          "description": "Supported communication protocols"
+        }
+      },
+      "description": "Integration configuration with other agents and systems"
+    },
+    "testing": {
+      "type": "object",
+      "properties": {
+        "unit_tests": {
+          "type": "object",
+          "properties": {
+            "coverage_target": {"type": "number", "minimum": 0, "maximum": 100},
+            "framework": {"type": "string"}
+          }
+        },
+        "integration_tests": {
+          "type": "object",
+          "properties": {
+            "scenarios": {"type": "array", "items": {"type": "string"}}
+          }
+        },
+        "performance_tests": {
+          "type": "object",
+          "properties": {
+            "load_scenarios": {"type": "array", "items": {"type": "string"}}
+          }
+        }
+      },
+      "description": "Testing strategy and requirements"
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "author": {"type": "string"},
+        "team": {"type": "string"},
+        "created": {"type": "string", "format": "date-time"},
+        "last_modified": {"type": "string", "format": "date-time"},
+        "tags": {"type": "array", "items": {"type": "string"}},
+        "documentation": {"type": "string", "format": "uri"},
+        "repository": {"type": "string", "format": "uri"}
+      },
+      "description": "Agent metadata and documentation"
+    }
+  },
+  "required": ["type", "id", "name", "version", "capabilities"],
+  "additionalProperties": false
+}

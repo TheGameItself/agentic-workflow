@@ -1,0 +1,32 @@
+{
+  "system": {
+    "max_workers": 4,
+    "enable_async": true,
+    "enable_monitoring": true,
+    "log_level": "INFO",
+    "backup_enabled": true,
+    "backup_interval": 3600,
+    "performance_optimization": true,
+    "experimental_features": false,
+    "hormone_system_enabled": true,
+    "vector_storage_enabled": true
+  },
+  "database": {
+    "max_connections": 10,
+    "enable_query_cache": true,
+    "cache_size": 10000,
+    "journal_mode": "wal",
+    "synchronous": "normal"
+  },
+  "memory": {
+    "working_capacity": 10,
+    "short_term_capacity": 100,
+    "long_term_capacity": 10000,
+    "consolidation_interval": 60
+  },
+  "context": {
+    "default_model": "gpt-3.5-turbo",
+    "max_tokens": 4096,
+    "cache_enabled": true
+  }
+}
