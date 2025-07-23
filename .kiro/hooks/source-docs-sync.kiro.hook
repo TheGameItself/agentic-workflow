@@ -16,6 +16,6 @@
   },
   "then": {
     "type": "askAgent",
-    "prompt": "I noticed changes to source code files. Please:\n1. Review the changes to understand what functionality was modified\n2. Update the README.md file if the changes affect high-level functionality or usage instructions\n3. Update relevant documentation in the /docs folder or core/MCP/WorkingDir/specs/core-refactor/docs/ directory\n4. If the changes affect self-repair functionality, update documentation in core/SELF_REPAIR/docs/\n5. Ensure any API changes are reflected in API documentation\n6. Update any relevant diagrams or mind maps if the architecture has changed\n7. Make sure the documentation remains consistent across all locations"
+    "prompt": "I noticed changes to source code files. Please:\n1. Review the changes to understand what functionality was modified\n2. Update the README.md file if the changes affect high-level functionality or usage instructions\n3. Update relevant documentation in the /docs folder or core/MCP/WorkingDir/specs/core-refactor/docs/ directory\n4. If the changes affect self-repair functionality, update documentation in core/SELF_REPAIR/docs/\n5. Ensure any API changes are reflected in API documentation\n6. Update any relevant diagrams or mind maps if the architecture has changed\n7. Make sure the documentation remains consistent across all locations\nEnforce PFSUS and (within) nested Tautologic standards"
   }
 }

@@ -402,8 +402,6 @@ class OptimizedDatabaseManager:
                 rows = cursor.fetchall()
                 result = [dict(row) for row in rows]
 
-                # Cache SELECT query rms)
-        esults
                 # Cache SELECT query results
                 if use_cache and self.query_cache and query.strip().upper().startswith('SELECT'):
                     self.query_cache.put(query, params, result)

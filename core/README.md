@@ -1,4 +1,150 @@
 # MCP Core System
+
+```mermaid
+sequenceDiagram
+    autonumber
+    
+    participant User as User/Client
+    participant WebUI as Ω:WebInterface
+    participant Core as Ω:MCPCoreSystem
+    participant Stdio as τ:StdioServer
+    participant Memory as ℵ:MemoryManager
+    participant Vector as ℵ:VectorMemory
+    participant Neural as λ:NeuralModels
+    participant Workflow as Δ:WorkflowManager
+    participant Task as Δ:TaskManager
+    participant P2P as τ:P2PNetwork
+    participant Monitor as β:MonitoringSystem
+    participant DB as Ω:DatabaseManager
+    participant LLM as τ:LLMAPIs
+    participant SelfRepair as i:SelfRepair
+    participant Genetic as i:GeneticTriggerSystem
+    
+    %% System Initialization Sequence
+    Note over User,Genetic: λ:System Initialization Phase
+    User->>Core: λ:initialize_system()
+    Core->>Core: β:health_check()
+    Core->>DB: Ω:initialize_database()
+    DB-->>Core: β:database_ready
+    Core->>Memory: ℵ:initialize_memory_tiers()
+    Memory->>Vector: λ:setup_vector_storage()
+    Vector-->>Memory: i:vector_storage_ready
+    Memory-->>Core: ℵ:memory_system_ready
+    Core->>Monitor: β:start_monitoring()
+    Monitor-->>Core: τ:monitoring_active
+    Core->>Stdio: τ:start_json_rpc_server()
+    Stdio-->>Core: λ:server_ready
+    Core->>WebUI: Ω:initialize_web_interface()
+    WebUI-->>Core: Δ:web_interface_ready
+    Core-->>User: Ω:system_initialized
+    
+    %% User Request Processing Sequence
+    Note over User,Genetic: Δ:Request Processing Flow
+    User->>WebUI: λ:submit_request(query)
+    WebUI->>Core: β:validate_request(query)
+    Core->>Memory: ℵ:retrieve_context(query)
+    
+    par Memory Operations
+        Memory->>Vector: λ:semantic_search(query)
+        Vector-->>Memory: ℵ:relevant_vectors
+    and Neural Processing
+        Core->>Neural: λ:process_query(query)
+        Neural->>Neural: Ω:model_inference()
+        Neural-->>Core: i:processed_result
+    end
+    
+    Memory-->>Core: ℵ:context_retrieved
+    Core->>Workflow: Δ:create_workflow(query, context)
+    Workflow->>Task: λ:decompose_into_tasks()
+    Task-->>Workflow: Δ:task_hierarchy_created
+    Workflow-->>Core: β:workflow_ready
+    
+    %% LLM Integration and Processing
+    Note over User,Genetic: τ:LLM Integration Phase
+    Core->>LLM: τ:send_request(context, query)
+    LLM-->>Core: λ:llm_response
+    Core->>Memory: ℵ:store_interaction(query, response)
+    Memory->>Vector: i:update_embeddings()
+    Vector-->>Memory: β:embeddings_updated
+    Memory-->>Core: ℵ:interaction_stored
+    
+    %% Monitoring and Optimization
+    Note over User,Genetic: β:Continuous Monitoring
+    loop Performance Monitoring
+        Monitor->>Core: β:collect_metrics()
+        Core-->>Monitor: τ:system_metrics
+        Monitor->>Monitor: λ:analyze_performance()
+        
+        critical Performance Optimization
+            Monitor->>SelfRepair: i:performance_issue_detected
+            SelfRepair->>SelfRepair: λ:diagnostic_analysis()
+            SelfRepair->>Core: Δ:apply_optimization()
+        option No Issues
+            Monitor->>Monitor: β:performance_normal
+        end
+    end
+    
+    %% P2P Network Operations
+    Note over User,Genetic: τ:P2P Network Synchronization
+    par P2P Operations
+        Core->>P2P: τ:sync_with_peers()
+        P2P->>P2P: λ:discover_peers()
+        P2P->>P2P: β:validate_connections()
+        P2P-->>Core: Δ:peer_sync_complete
+    and Genetic Evolution
+        Core->>Genetic: i:trigger_evolution()
+        Genetic->>Genetic: λ:evaluate_fitness()
+        Genetic->>Neural: Δ:update_models()
+        Neural-->>Genetic: β:model_updated
+        Genetic-->>Core: i:evolution_complete
+    end
+    
+    %% Response Generation and Delivery
+    Note over User,Genetic: Ω:Response Generation
+    Core->>Workflow: Δ:execute_workflow()
+    Workflow->>Task: τ:execute_tasks()
+    Task->>Task: λ:process_task()
+    Task-->>Workflow: β:task_completed
+    Workflow-->>Core: Δ:workflow_executed
+    
+    Core->>Memory: ℵ:consolidate_results()
+    Memory->>Vector: i:optimize_storage()
+    Vector-->>Memory: β:storage_optimized
+    Memory-->>Core: ℵ:results_consolidated
+    
+    Core->>WebUI: Ω:format_response(results)
+    WebUI-->>User: λ:deliver_response
+    
+    %% Self-Improvement Cycle
+    Note over User,Genetic: i:Self-Improvement Cycle
+    loop Continuous Improvement
+        SelfRepair->>Core: i:analyze_system_performance()
+        Core-->>SelfRepair: β:performance_data
+        SelfRepair->>SelfRepair: λ:identify_improvements()
+        
+        break System Needs Update
+            SelfRepair->>Core: Δ:apply_improvements()
+            Core->>Memory: ℵ:update_memory_strategies()
+            Core->>Neural: λ:retrain_models()
+            Core->>Workflow: Δ:optimize_workflows()
+        end
+        
+        SelfRepair-->>Core: i:improvement_cycle_complete
+    end
+    
+    %% Error Handling and Recovery
+    Note over User,Genetic: β:Error Recovery
+    critical System Error Handling
+        Core->>SelfRepair: β:error_detected(error_type)
+        SelfRepair->>SelfRepair: λ:diagnose_error()
+        SelfRepair->>Core: Δ:recovery_action()
+        Core->>Monitor: β:log_recovery()
+    option Critical Failure
+        SelfRepair->>Core: i:initiate_failsafe()
+        Core->>DB: Ω:backup_critical_data()
+        Core->>User: β:notify_critical_error()
+    end
+```
 ## λ:core_system_overview(brain_inspired_modular_framework)
 
 The MCP (Model Context Protocol) Core System is a brain-inspired, modular AI system designed to enhance AI agent workflows and context management. It provides a sophisticated framework for managing AI interactions, memory, and task execution with PFSUS-compliant lambda operator integration.

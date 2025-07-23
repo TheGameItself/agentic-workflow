@@ -82,6 +82,28 @@ pytest core/tests/
 
 See [[core/CORE_SYSTEM_GUIDE.md]] @{DEV.GUIDE.001} for development guidelines and architecture details.
 
+### β:code_quality_tools(standards_enforcement)
+
+The project includes automated tools for maintaining code quality and standards compliance:
+
+#### PFSUS Standards Enforcer
+```bash
+# λ:standards_scan(workspace_compliance_check)
+python core/PFSUS/cli/pfsus_standards_enforcer.py --scan --workspace .
+
+# ℵ:auto_fix(compliance_corrections)
+python core/PFSUS/cli/pfsus_standards_enforcer.py --scan --fix --dry-run
+
+# Δ:report_generation(compliance_analysis)
+python core/PFSUS/cli/pfsus_standards_enforcer.py --scan --report compliance_report.md
+```
+
+This tool automatically:
+- **τ:file_validation(naming_convention_compliance)**: Validates PFSUS file naming conventions
+- **i:lambda_optimization(operator_usage_analysis)**: Analyzes and suggests lambda operator improvements
+- **β:compliance_monitoring(standards_adherence_checking)**: Monitors adherence to MMCP standards
+- **Ω:automated_fixing(violation_correction)**: Provides automated fixes for common violations
+
 ## License
 ### Ω:legal_framework(mit_license)
 

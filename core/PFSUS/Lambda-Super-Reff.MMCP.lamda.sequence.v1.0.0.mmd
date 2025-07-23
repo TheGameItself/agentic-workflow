@@ -1,4 +1,16 @@
----
+%% Copyright 2025 Kalxi. All rights reserved. See header for terms. %%
+[ ] #".root"# {protocol:"MCP", version:"2.0.0", standard:"PFSUS+EARS+LambdaJSON+MathOps+EnglishShorthand"}
+# Lambda Super Reference MMCP Sequence v1.0.0
+## {type:Meta, author:"Kalxi", license:"MIT", last_modified:"2025-07-22T20:15:00Z", id:"Lambda-Super-Reff.MMCP.lamda.sequence.v1.0.0"}
+## {type:Schema, $schema:"https://json-schema.org/draft/2020-12/schema", required:["type","id","version"], properties:{type:{type:"string"},id:{type:"string"},version:{type:"string"},last_modified:{type:"string",format:"date-time"},author:{type:"string"}}}
+## {type:Changelog, entries:[
+  {"2025-07-22":"Initial creation of Lambda Super Reference sequence diagram."},
+  {"2025-07-22":"Enhanced with comprehensive routing and conditional paths."},
+  {"2025-07-22":"Integrated with PFSUS v2.0.0 English shorthand notation."},
+  {"2025-07-22":"Added bidirectional flow between knowledge domains."}
+]}
+
+config:
   theme: neo-dark
 ---
 sequenceDiagram
@@ -29,19 +41,7 @@ sequenceDiagram
     participant FormalVerification as Formal Verification Sub-Module
     participant AdvancedTopics as Advanced Topics Module
     participant AdvConcepts as Advanced Concepts Module (Speculative)
-    participant Applications as Applications & Relevance Module
-
-    Note over User,System: User initiates an exploration session with the Adaptive Lambda Calculus System.
-    User->>+System: Request to START_SESSION (Initial Query / Topic Selection)
-    System->>System: Initialize session state, user profile, and contextual memory.
-    System->>User: Display "Welcome to the Adaptive Lambda Calculus System! Today is Tuesday, July 22, 2025. How may I assist your exploration into Lambda Calculus?"
-    System->>User: Display initial broad topics: [Overview, Syntax & Semantics, Church Encoding, Combinators, Mathematical Ops, Booleans, Num. Comparison, Data Structures, Recursion, Typed LC, Advanced Topics, Applications & Relevance, Advanced Concepts (Speculative)]
-
-    alt User provides a direct query at start
-        User->>+System: Direct Query: "Explain the Y combinator in simple terms."
-        System->>+MetaLambdaQueryParser: ParseQuery(query_string)
-        Note over MetaLambdaQueryParser: `QUERY_PARSE := λraw_query. (λintent_extractor. λquery_classifier. λcontext. (query_classifier (intent_extractor raw_query) context))`
-        MetaLambdaQueryParser->>MetaLambdaQueryParser: Determine query type: LLM_GENERATIVE or DIRECT_LOOKUP.
+    participant Applications as Applications & Relevance Modulee query type: LLM_GENERATIVE or DIRECT_LOOKUP.
         alt Query is LLM_GENERATIVE
             MetaLambdaQueryParser->>LLMInterface: ForwardQuery(query_string, context)
         else Query is DIRECT_LOOKUP
@@ -58,7 +58,7 @@ sequenceDiagram
 
             alt User chooses "Why Study Lambda Calculus?"
                 User->>Overview: Select "Why Study Lambda Calculus?"
-                Overview->>User: Display "It's the foundation of functional programming languages, provides a simple model for understanding computation, helps in designing programming languages and compilers, and offers insights into logic and type theory.<br><b>Commonality (Conceptual LC for pattern matching):</b> Commonality of LC principles can be represented by functions that analyze encoded terms. E.g. `IS_COMMON_IDIOM := λterm. (λpattern_matcher. λpattern_database. (pattern_matcher term pattern_database))` which checks if `term` matches an encoded common pattern."
+                Overview->>User: Display "It's the foundation of functional programming languages, provides a simple model for understanding computation, helps in designing programming languages and compilers, and offers insights into logic and type theory.<br><b>Commonality (Conceptual LC for pattern matching):</b> Commonality of LC principles can be represented by functions that analyze encoded terms. E.g. `IS_COMMON_IDIOM := λterm. ...` which checks if `term` matches an encoded common pattern like `(λx.x)` for `I`."
             end
             Overview->>-System: Overview section handled.
             System->>User: Display "Returning to Overview main menu. Or choose a new broad topic."
@@ -71,7 +71,8 @@ sequenceDiagram
 
             alt User chooses "Lambda Terms"
                 User->>SyntaxSemantics: Select "Lambda Terms"
-                SyntaxSemantics->>User: Display "Lambda Terms are composed of: Variables (x, y) Abstractions (λx.M) and Applications (M N). Example: (λx.x) y.<br><b>Parsing (Conceptual Lambda):</b> `PARSE_TERM := λstring_rep. (λtokenizer. λparser. λast_builder. (ast_builder (parser (tokenizer string_rep))))`. This involves mapping string characters to LC-encoded AST nodes (e.g. `VAR_NODE` `ABS_NODE` `APP_NODE`).<br><b>Nesting (Conceptual Lambda):</b> `DEPTH_OF_TERM := Y (λget_depth. λterm_node. (λis_app. λis_abs.            else User chooses "Beta-Reduction (Dynamic)"
+                SyntaxSemantics->>User: Display "Lambda Terms are composed of: Variables (x, y) Abstractions (λx.M) and Applications (M N). Example: (λx.x) y.<br><b>Parsing (Conceptual Lambda):</b> `PARSE_TERM := λstring_rep. (BUILD_AST string_rep)`. This involves mapping string characters to LC-encoded AST nodes (e.g. `VAR_NODE` `ABS_NODE` `APP_NODE`).<br><b>Nesting (Conceptual Lambda):</b> `DEPTH_OF_TERM := Y (λget_depth. λterm_node. IF (IS_APP_NODE term_node) (SUCC (MAX (get_depth (APP_FUN_CHILD term_node)) (get_depth (APP_ARG_CHILD term_node)))) (IF (IS_ABS_NODE term_node) (SUCC (get_depth (ABS_BODY_CHILD term_node))) ZERO))`."
+            else alt User chooses "Beta-Reduction (Dynamic)"
                 User->>SyntaxSemantics: Select "Beta-Reduction (Dynamic)"
                 SyntaxSemantics->>User: Request "Enter *any* valid lambda term for step-by-step beta-reduction:"
                 User->>SyntaxSemantics: Input "(λx.λy.x y) (λz.z) A"
@@ -92,906 +93,226 @@ sequenceDiagram
                     end
                 end
                 Note over System,User: Predictive Contextual Routing (PCR) Suggestion
-                System->>User: Suggested Next Steps: [Explore Alpha-Conversion, Try another reduction, Learn about Normal Forms, Return to Syntax & Semantics menu]
+            
+            par Parallel Combinator Lookup
+                router--)storage: ℵRetrieve(S_combinator)
+                router--)storage: ℵRetrieve(K_combinator) 
+                router--)storage: ℵRetrieve(I_combinator)
             end
-            SyntaxSemantics->>-System: Syntax & Semantics session.
-            System->>User: Choose from suggested options.
-
-        alt User chooses "Church Encoding"
-            User->>System: Select "Church Encoding"
-            System->>+ChurchEncoding: Load ChurchEncoding_Main
-            ChurchEncoding->>User: Display "Church Encoding: How basic data types and operations are represented in pure Lambda Calculus. Which encoding?"
-            ChurchEncoding->>User: Display options: [Booleans (TRUE, FALSE, IF), Church Numerals (0, 1, 2, SUCC), Pairs, Lists, Arithmetic Operations, Numeric Comparison]
-
-            alt User chooses "Church Numerals (0, 1, 2, SUCC)"
-                User->>ChurchEncoding: Select "Church Numerals (0, 1, 2, SUCC)"
-                ChurchEncoding->>+MetaLambdaQueryParser: ParseQuery(term_type: "ChurchNumeral", terms: "0,1,2,3,SUCC")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "ChurchNumeral", terms: "0,1,2,3,SUCC")
-                Note over MetaLambdaMultiplexer: `MULTIPLEX := λquery_id.λdata_streams. (COMBINE_STREAMS data_streams query_id)`
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "ChurchNumeral", terms: "0,1,2,3,SUCC")
-                Note over FileRoutingIndex: `FILE_ROUTING_INDEX := λquery. (LOOKUP_TABLE query)`
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(0_raw, 1_raw, 2_raw, 3_raw, SUCC_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(0_raw, 1_raw, 2_raw, 3_raw, SUCC_raw)
-                Note over MetaLambdaDemultiplexer: `DEMULTIPLEX := λcombined_stream.λquery_id. (EXTRACT_STREAM combined_stream query_id)`
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                Note over ResultFormatter: `FORMAT_RESULT := λraw_data.λformat_spec. (APPLY_FORMAT raw_data format_spec`
-                ResultFormatter-->>-ChurchEncoding: FormattedResult(0_formatted, 1_formatted, ..., SUCC_formatted)
-                ChurchEncoding->>User: Display "<b>0 (Zero):</b> See <a href='#0-zero'>Detailed Lambda Definitions</a> for full lambda and trinary.<br><b>1 (One):</b> See <a href='#1-one'>Detailed Lambda Definitions</a> for full lambda and trinary.<br><b>2 (Two):</b> See <a href='#2-two'>Detailed Lambda Definitions</a> for full lambda and trinary.<br><b>3 (Three):</b> See <a href='#3-three'>Detailed Lambda Definitions</a> for full lambda and trinary.<br><b>SUCC (Successor):</b> See <a href='#succ-successor'>Detailed Lambda Definitions</a> for full lambda and trinary."
-                ChurchEncoding->>User: Suggested: "Show definition of 4, 5, or reduction of SUCC ONE?"
-            end
-            ChurchEncoding->>-System: Church Encoding section handled.
-            System->>User: Display "Returning to Church Encoding main menu. Or choose a new broad topic."
-
-        alt User chooses "Combinators"
-            User->>System: Select "Combinators"
-            System->>+Combinators: Load Combinators_Main
-            Combinators->>User: Display "Combinators: Core functional building blocks. Which combinator or concept?<br>These are fundamental building blocks of Lambda Calculus often used to simplify expressions or enable complex behaviors like recursion without explicit variable binding."
-            Combinators->>User: Display options: [I, K, S, B, C, W, X, X', Y, Y', Θ, ω, Ω, Ω2, SKI Basis, Fixed-Point Theorem]
-
-            alt User chooses "I (Identity)"
-                User->>Combinators: Select "I (Identity)"
-                Combinators->>+MetaLambdaQueryParser: ParseQuery(term_type: "Combinator", term: "I")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "Combinator", term: "I")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "Combinator", term: "I")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(I_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(I_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-Combinators: FormattedResult(I_formatted)
-                Combinators->>User: Display "<b>I (Identity):</b> See <a href='#i-identity'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "K (Kestrel)"
-                User->>Combinators: Select "K (Kestrel)"
-                Combinators->>+MetaLambdaQueryParser: ParseQuery(term_type: "Combinator", term: "K")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "Combinator", term: "K")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "Combinator", term: "K")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(K_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(K_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-Combinators: FormattedResult(K_formatted)
-                Combinators->>User: Display "<b>K (Kestrel / Konstant):</b> See <a href='#k-kestrel-konstant'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "S (Starling)"
-                User->>Combinators: Select "S (Starling)"
-                Combinators->>+MetaLambdaQueryParser: ParseQuery(term_type: "Combinator", term: "S")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "Combinator", term: "S")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "Combinator", term: "S")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(S_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(S_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-Combinators: FormattedResult(S_formatted)
-                Combinators->>User: Display "<b>S (Starling / Successor / Switcher):</b> See <a href='#s-starling-successor-switcher'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "B (Bluebird)"
-                User->>Combinators: Select "B (Bluebird)"
-                Combinators->>+MetaLambdaQueryParser: ParseQuery(term_type: "Combinator", term: "B")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "Combinator", term: "B")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "Combinator", term: "B")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(B_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(B_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-Combinators: FormattedResult(B_formatted)
-                Combinators->>User: Display "<b>B (Bluebird / Function Composition):</b> See <a href='#b-bluebird-function-composition'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "C (Cardinal)"
-                User->>Combinators: Select "C (Cardinal)"
-                Combinators->>+MetaLambdaQueryParser: ParseQuery(term_type: "Combinator", term: "C")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "Combinator", term: "C")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "Combinator", term: "C")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(C_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(C_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-Combinators: FormattedResult(C_formatted)
-                Combinators->>User: Display "<b>C (Cardinal / Argument Swapping):</b> See <a href='#c-cardinal-argument-swapping'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "W (Warbler)"
-                User->>Combinators: Select "W (Warbler)"
-                Combinators->>+MetaLambdaQueryParser: ParseQuery(term_type: "Combinator", term: "W")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "Combinator", term: "W")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "Combinator", term: "W")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(W_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(W_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-Combinators: FormattedResult(W_formatted)
-                Combinators->>User: Display "<b>W (Warbler / Duplication):</b> See <a href='#w-warbler-duplication'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "X (Iota)"
-                User->>Combinators: Select "X (Iota)"
-                Combinators->>+MetaLambdaQueryParser: ParseQuery(term_type: "Combinator", term: "X")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "Combinator", term: "X")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "Combinator", term: "X")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(X_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(X_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-Combinators: FormattedResult(X_formatted)
-                Combinators->>User: Display "<b>X (Iota):</b> See <a href='#x-iota'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "X' (Iota Prime)"
-                User->>Combinators: Select "X' (Iota Prime)"
-                Combinators->>+MetaLambdaQueryParser: ParseQuery(term_type: "Combinator", term: "X'")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "Combinator", term: "X'")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "Combinator", term: "X'")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(X'_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(X'_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-Combinators: FormattedResult(X'_formatted)
-                Combinators->>User: Display "<b>X' (Iota Prime):</b> See <a href='#x-iota-prime'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "Y (Fixed-Point)"
-                User->>Combinators: Select "Y (Fixed-Point)"
-                Combinators->>+MetaLambdaQueryParser: ParseQuery(term_type: "Combinator", term: "Y")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "Combinator", term: "Y")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "Combinator", term: "Y")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(Y_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(Y_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-Combinators: FormattedResult(Y_formatted)
-                Combinators->>User: Display "<b>Y (Fixed-Point Combinator):</b> See <a href='#y-fixed-point-combinator'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "Y' (Alternative Fixed-Point)"
-                User->>Combinators: Select "Y' (Alternative Fixed-Point)"
-                Combinators->>+MetaLambdaQueryParser: ParseQuery(term_type: "Combinator", term: "Y'")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "Combinator", term: "Y'")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "Combinator", term: "Y'")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(Y'_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(Y'_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-Combinators: FormattedResult(Y'_formatted)
-                Combinators->>User: Display "<b>Y' (Alternative Fixed-Point Combinator):</b> See <a href='#y-alternative-fixed-point-combinator'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "Θ (Turing Fixed-Point Combinator)"
-                User->>Combinators: Select "Θ (Turing Fixed-Point Combinator)"
-                Combinators->>+MetaLambdaQueryParser: ParseQuery(term_type: "Combinator", term: "Θ")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "Combinator", term: "Θ")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "Combinator", term: "Θ")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(Θ_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(Θ_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-Combinators: FormattedResult(Θ_formatted)
-                Combinators->>User: Display "<b>Θ (Turing Fixed-Point Combinator):</b> See <a href='#turing-fixed-point-combinator'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "ω (Omega)"
-                User->>Combinators: Select "ω (Omega)"
-                Combinators->>+MetaLambdaQueryParser: ParseQuery(term_type: "Combinator", term: "ω")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "Combinator", term: "ω")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "Combinator", term: "ω")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(ω_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(ω_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-Combinators: FormattedResult(ω_formatted)
-                Combinators->>User: Display "<b>ω (Omega):</b> See <a href='#omega'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "Ω (Big Omega)"
-                User->>Combinators: Select "Ω (Big Omega)"
-                Combinators->>+MetaLambdaQueryParser: ParseQuery(term_type: "Combinator", term: "Ω")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "Combinator", term: "Ω")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "Combinator", term: "Ω")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(Ω_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(Ω_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-Combinators: FormattedResult(Ω_formatted)
-                Combinators->>User: Display "<b>Ω (Big Omega):</b> See <a href='#big-omega'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "Ω2"
-                User->>Combinators: Select "Ω2"
-                Combinators->>+MetaLambdaQueryParser: ParseQuery(term_type: "Combinator", term: "Ω2")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "Combinator", term: "Ω2")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "Combinator", term: "Ω2")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(Ω2_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(Ω2_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-Combinators: FormattedResult(Ω2_formatted)
-                Combinators->>User: Display "<b>Ω2:</b> See <a href='#omega2'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            end
-            Combinators->>-System: Combinators session.
-            System->>User: Choose from suggested options.
-
-        alt User chooses "Mathematical Operators"
-            User->>System: Select "Mathematical Operators"
-            System->>+MathOperators: Load MathOperators_Main
-            MathOperators->>User: Display "Mathematical Operators: Implementations of arithmetic and number theory functions. For full lambda and trinary definitions, see <a href='#mathematical-operators'>Detailed Lambda Definitions</a>."
-            MathOperators->>User: Display options: [SUCC, PRED, PLUS, SUB, MULT, DIV (Pair) IDIV, MOD, EXP, FACTORIAL, FIBONACCI, GCD, More (Advanced Math Operators)]
-
-            alt User chooses "SUCC (Successor)"
-                User->>MathOperators: Select "SUCC (Successor)"
-                MathOperators->>+MetaLambdaQueryParser: ParseQuery(term_type: "MathOperator", term: "SUCC")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "MathOperator", term: "SUCC")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "MathOperator", term: "SUCC")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(SUCC_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(SUCC_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-MathOperators: FormattedResult(SUCC_formatted)
-                MathOperators->>User: Display "<b>SUCC (Successor):</b> See <a href='#succ-successor'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "PRED (Predecessor)"
-                User->>MathOperators: Select "PRED (Predecessor)"
-                MathOperators->>+MetaLambdaQueryParser: ParseQuery(term_type: "MathOperator", term: "PRED")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "MathOperator", term: "PRED")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "MathOperator", term: "PRED")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(PRED_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(PRED_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-MathOperators: FormattedResult(PRED_formatted)
-                MathOperators->>User: Display "<b>PRED (Predecessor):</b> See <a href='#pred-predecessor'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "PLUS (Addition)"
-                User->>MathOperators: Select "PLUS (Addition)"
-                MathOperators->>+MetaLambdaQueryParser: ParseQuery(term_type: "MathOperator", term: "PLUS")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "MathOperator", term: "PLUS")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "MathOperator", term: "PLUS")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(PLUS_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(PLUS_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-MathOperators: FormattedResult(PLUS_formatted)
-                MathOperators->>User: Display "<b>PLUS (Addition):</b> See <a href='#plus-addition'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "SUB (Subtraction)"
-                User->>MathOperators: Select "SUB (Subtraction)"
-                MathOperators->>+MetaLambdaQueryParser: ParseQuery(term_type: "MathOperator", term: "SUB")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "MathOperator", term: "SUB")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "MathOperator", term: "SUB")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(SUB_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(SUB_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-MathOperators: FormattedResult(SUB_formatted)
-                MathOperators->>User: Display "<b>SUB (Subtraction):</b> See <a href='#sub-subtraction'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "MULT (Multiplication)"
-                User->>MathOperators: Select "MULT (Multiplication)"
-                MathOperators->>+MetaLambdaQueryParser: ParseQuery(term_type: "MathOperator", term: "MULT")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "MathOperator", term: "MULT")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "MathOperator", term: "MULT")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(MULT_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(MULT_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-MathOperators: FormattedResult(MULT_formatted)
-                MathOperators->>User: Display "<b>MULT (Multiplication):</b> See <a href='#mult-multiplication'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "DIV (Division)"
-                User->>MathOperators: Select "DIV (Division)"
-                MathOperators->>+MetaLambdaQueryParser: ParseQuery(term_type: "MathOperator", term: "DIV")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "MathOperator", term: "DIV")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "MathOperator", term: "DIV")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(DIV_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(DIV_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-MathOperators: FormattedResult(DIV_formatted)
-                MathOperators->>User: Display "<b>DIV (Division):</b> See <a href='#div-division'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "IDIV (Integer Division)"
-                User->>MathOperators: Select "IDIV (Integer Division)"
-                MathOperators->>+MetaLambdaQueryParser: ParseQuery(term_type: "MathOperator", term: "IDIV")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "MathOperator", term: "IDIV")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "MathOperator", term: "IDIV")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(IDIV_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(IDIV_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-MathOperators: FormattedResult(IDIV_formatted)
-                MathOperators->>User: Display "<b>IDIV (Integer Division):</b> See <a href='#idiv-integer-division'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "MOD (Modulus)"
-                User->>MathOperators: Select "MOD (Modulus)"
-                MathOperators->>+MetaLambdaQueryParser: ParseQuery(term_type: "MathOperator", term: "MOD")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "MathOperator", term: "MOD")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "MathOperator", term: "MOD")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(MOD_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(MOD_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-MathOperators: FormattedResult(MOD_formatted)
-                MathOperators->>User: Display "<b>MOD (Modulus):</b> See <a href='#mod-modulus'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "EXP (Exponentiation)"
-                User->>MathOperators: Select "EXP (Exponentiation)"
-                MathOperators->>+MetaLambdaQueryParser: ParseQuery(term_type: "MathOperator", term: "EXP")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "MathOperator", term: "EXP")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "MathOperator", term: "EXP")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(EXP_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(EXP_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-MathOperators: FormattedResult(EXP_formatted)
-                MathOperators->>User: Display "<b>EXP (Exponentiation):</b> See <a href='#exp-exponentiation'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "FACTORIAL"
-                User->>MathOperators: Select "FACTORIAL"
-                MathOperators->>+MetaLambdaQueryParser: ParseQuery(term_type: "MathOperator", term: "FACTORIAL")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "MathOperator", term: "FACTORIAL")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "MathOperator", term: "FACTORIAL")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(FACTORIAL_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(FACTORIAL_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-MathOperators: FormattedResult(FACTORIAL_formatted)
-                MathOperators->>User: Display "<b>FACTORIAL:</b> See <a href='#factorial'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "FIBONACCI"
-                User->>MathOperators: Select "FIBONACCI"
-                MathOperators->>+MetaLambdaQueryParser: ParseQuery(term_type: "MathOperator", term: "FIBONACCI")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "MathOperator", term: "FIBONACCI")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "MathOperator", term: "FIBONACCI")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(FIBONACCI_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(FIBONACER_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-MathOperators: FormattedResult(FIBONACCI_formatted)
-                MathOperators->>User: Display "<b>FIBONACCI:</b> See <a href='#fibonacci'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "GCD (Greatest Common Divisor)"
-                User->>MathOperators: Select "GCD (Greatest Common Divisor)"
-                MathOperators->>+MetaLambdaQueryParser: ParseQuery(term_type: "MathOperator", term: "GCD")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "MathOperator", term: "GCD")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "MathOperator", term: "GCD")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(GCD_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(GCD_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-MathOperators: FormattedResult(GCD_formatted)
-                MathOperators->>User: Display "<b>GCD (Greatest Common Divisor):</b> See <a href='#gcd-greatest-common-divisor'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "More (Advanced Math Operators)"
-                User->>MathOperators: Select "More (Advanced Math Operators)"
-                MathOperators->>User: Display "Advanced Mathematical Operators: (Note: These are speculative extensions or conceptual mappings in pure Lambda Calculus.)"
-                MathOperators->>User: Display options: [Aleph Numbers (Conceptual), Functional Derivatives, Integrals (Conceptual), WFC (Wave Function Collapse - Probabilistic)]
-
-                alt User chooses "Aleph Numbers (Conceptual)"
-                    User->>MathOperators: Select "Aleph Numbers (Conceptual)"
-                    MathOperators->>User: Display "Aleph Numbers (ℵ₀, ℵ₁, etc.) represent cardinalities of infinite sets. Pure Lambda Calculus struggles to directly represent infinite *sets* as values but can represent *processes* that enumerate them.<br><b>Conceptual LC Representation (Enumerable Infinity):</b> `INFINITE_ENUMERATOR := Y (λenum.λn. PAIR n (enum (SUCC n)))`. This would generate an infinite stream of Church numerals: `(0 (1 (2 ...)))`. This models countability (ℵ₀). Full expansion would include Y, PAIR, SUCC, and recursive `enum` application."
-                else alt User chooses "Functional Derivatives"
-                    User->>MathOperators: Select "Functional Derivatives"
-                    MathOperators->>User: Display "<b>DIFFERENTIATE: λf.λh.λx. (f (ADD x h) SUB (f x)) DIV h</b> | This function approximates the derivative of a function 'f' numerically using a small step 'h'. It calculates the slope of the secant line between 'x' and 'x+h'. | trinary: (conceptual). The full self-contained lambda for DERIVATIVE would include the colossal full forms of SUB, ADD, and DIV, making it impractically long for display here."
-                else alt User chooses "Integrals (Conceptual)"
-                    User->>MathOperators: Select "Integrals (Conceptual)"
-                    MathOperators->>User: Display "<b>INTEGRATE: λf.λa.λb.λn. (sum of f(x)*dx)</b> | This function approximates the definite integral of a function 'f' from 'a' to 'b' using a numerical method (e.g., Riemann sum) with 'n' sub-intervals. It essentially sums small rectangles under the curve. | trinary: (conceptual). Fully expanding this would involve dozens of nested definitions (Y, FOLD_LEFT, PLUS, ZERO, MAP, RANGE, DIV, SUB, etc.) resulting in an extremely long and complex term."
-                else alt User chooses "WFC (Wave Function Collapse - Probabilistic)"
-                    User->>MathOperators: Select "WFC (Wave Function Collapse - Probabilistic)"
-                    MathOperators->>User: Display "Wave Function Collapse (WFC): A quantum mechanics concept. Highly speculative in pure Lambda Calculus, requiring encoding of probabilistic choice and state observation, usually by extending the calculus.<br><b>Conceptual LC Representation (Deterministic Pseudo-WFC):</b> Could involve `CHOOSE_PROBABILISTICALLY := λdist.λoptions. elf` (requiring an external oracle or extension) or `OBSERVE := λstate_list.λseed. DD, and DIV, making it impractically long for state_list))`. The latter would be a massive lambda requiring full definitions of `SELECT_FROM_LIST` (which needs Y, CAR, CDR, NULL, etc.), `MOD`, and `LENGTH`."
+            
+            storage-->>router: βCombined(SKI_definitions)
+            router->>+reducer: λDemonstrate(SKI_equivalences)
+            reducer->>reducer: ΔProve(I_equals_SKK)
+            reducer-->>-formatter: τProof(step_by_step)
+            formatter-->>combinators: ℵComplete(SKI_demonstration)
+            combinators-->>user: iInteractive(combinator_playground)
+            
+        else ΔMathematics(arithmetic_operations)
+            user->>mathops: ΔRequest("Addition implementation")
+            mathops->>+parser: λAnalyze("PLUS definition")
+            parser->>router: ΔRoute(math_op: "PLUS")
+            router->>+storage: ℵQuery(arithmetic_implementations)
+            storage-->>-router: βData(PLUS_variants)
+            router->>+formatter: τFormat(multiple_definitions)
+            formatter->>reducer: λReduce("PLUS TWO THREE")
+            reducer-->>formatter: ΔResult(step_by_step_addition)
+            formatter-->>-mathops: ℵComplete(addition_explanation)
+            mathops-->>user: iInteractive(arithmetic_playground)
+            
+        else βLogic(boolean_operations)
+            user->>booleans: βExplore("Boolean logic in LC")
+            booleans->>+router: ΔMultiplex(booleans: "TRUE,FALSE,AND,OR,NOT")
+            router->>storage: λRetrieve(boolean_encodings)
+            storage-->>router: ℵData(logic_definitions)
+            router->>+formatter: βProcess(interactive_truth_tables)
+            formatter->>reducer: λDemonstrate("AND TRUE FALSE")
+            reducer-->>formatter: τReduction(boolean_evaluation)
+            formatter-->>-booleans: ℵComplete(logic_explanation)
+            booleans-->>user: iDisplay(boolean_playground)
+            
+        else ℵStructures(data_organization)
+            user->>pairs: ℵRequest("Pair and list operations")
+            pairs->>+router: ΔRoute(structures: "PAIR,CAR,CDR,NIL")
+            router->>storage: λLookup(data_structure_defs)
+            storage-->>router: βData(structure_implementations)
+            router->>+lists: ΔForward(list_operations)
+            lists->>formatter: τFormat(list_examples)
+            formatter->>reducer: λReduce("CAR (PAIR A B)")
+            reducer-->>formatter: ΔResult(pair_access_demo)
+            formatter-->>lists: ℵComplete(structure_explanation)
+            lists-->>pairs: βIntegrated(data_structures)
+            pairs-->>user: iInteractive(structure_playground)
+            
+        else λRecursion(fixed_point_theory)
+            user->>recursion: λExplore("Y combinator applications")
+            recursion->>+router: ΔRoute(recursion: "Y,FACTORIAL,FIBONACCI")
+            router->>storage: ℵRetrieve(recursive_definitions)
+            storage-->>router: βData(fixed_point_examples)
+            router->>+formatter: τFormat(recursive_explanations)
+            formatter->>reducer: λDemonstrate("Y FACTORIAL_STEP THREE")
+            
+            loop Recursive Evaluation
+                reducer->>reducer: λApply(fixed_point_expansion)
+                reducer->>reducer: ΔUnfold(recursive_call)
+                reducer->>reducer: βEvaluate(base_case_check)
+                alt Base case reached
+                    reducer-->>formatter: τComplete(factorial_result)
+                    break
                 end
             end
-            MathOperators->>-System: Math Operators session.
-            System->>User: Display "Returning to Math Operators main menu. Or choose a new broad topic."
-
-        alt User chooses "Booleans"
-            User->>System: Select "Booleans"
-            System->>+Booleans: Load Booleans_Main
-            Booleans->>User: Display "Booleans: Logical truth values and operations. For full lambda and trinary definitions, see <a href='#booleans'>Detailed Lambda Definitions</a>."
-            Booleans->>User: Display options: [TRUE, FALSE, AND, OR, XOR, NOT, IMPL, IFF]
-
-            alt User chooses "TRUE"
-                User->>Booleans: Select "TRUE"
-                Booleans->>+MetaLambdaQueryParser: ParseQuery(term_type: "Boolean", term: "TRUE")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "Boolean", term: "TRUE")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "Boolean", term: "TRUE")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(TRUE_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(TRUE_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-Booleans: FormattedResult(TRUE_formatted)
-                Booleans->>User: Display "<b>TRUE:</b> See <a href='#true'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "FALSE"
-                User->>Booleans: Select "FALSE"
-                Booleans->>+MetaLambdaQueryParser: ParseQuery(term_type: "Boolean", term: "FALSE")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "Boolean", term: "FALSE")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "Boolean", term: "FALSE")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(FALSE_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(FALSE_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-Booleans: FormattedResult(FALSE_formatted)
-                Booleans->>User: Display "<b>FALSE:</b> See <a href='#false'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "AND"
-                User->>Booleans: Select "AND"
-                Booleans->>+MetaLambdaQueryParser: ParseQuery(term_type: "Boolean", term: "AND")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "Boolean", term: "AND")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "Boolean", term: "AND")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(AND_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(AND_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-Booleans: FormattedResult(AND_formatted)
-                Booleans->>User: Display "<b>AND:</b> See <a href='#and'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "OR"
-                User->>Booleans: Select "OR"
-                Booleans->>+MetaLambdaQueryParser: ParseQuery(term_type: "Boolean", term: "OR")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "Boolean", term: "OR")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "Boolean", term: "OR")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(OR_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(OR_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-Booleans: FormattedResult(OR_formatted)
-                Booleans->>User: Display "<b>OR:</b> See <a href='#or'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "XOR"
-                User->>Booleans: Select "XOR"
-                Booleans->>+MetaLambdaQueryParser: ParseQuery(term_type: "Boolean", term: "XOR")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "Boolean", term: "XOR")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "Boolean", term: "XOR")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(XOR_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(XOR_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-Booleans: FormattedResult(XOR_formatted)
-                Booleans->>User: Display "<b>XOR (Exclusive OR):</b> See <a href='#xor-exclusive-or'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "NOT"
-                User->>Booleans: Select "NOT"
-                Booleans->>+MetaLambdaQueryParser: ParseQuery(term_type: "Boolean", term: "NOT")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "Boolean", term: "NOT")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "Boolean", term: "NOT")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(NOT_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(NOT_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-Booleans: FormattedResult(NOT_formatted)
-                Booleans->>User: Display "<b>NOT (Logical Negation):</b> See <a href='#not-logical-negation'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "IMPL"
-                User->>Booleans: Select "IMPL"
-                Booleans->>+MetaLambdaQueryParser: ParseQuery(term_type: "Boolean", term: "IMPL")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "Boolean", term: "IMPL")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "Boolean", term: "IMPL")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(IMPL_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(IMPL_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-Booleans: FormattedResult(IMPL_formatted)
-                Booleans->>User: Display "<b>IMPL (Implication):</b> See <a href='#impl-implication'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "IFF"
-                User->>Booleans: Select "IFF"
-                Booleans->>+MetaLambdaQueryParser: ParseQuery(term_type: "Boolean", term: "IFF")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "Boolean", term: "IFF")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "Boolean", term: "IFF")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(IFF_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(IFF_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-Booleans: FormattedResult(IFF_formatted)
-                Booleans->>User: Display "<b>IFF (If and Only If / Bi-implication):</b> See <a href='#iff-if-and-only-if-bi-implication'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            end
-            Booleans->>-System: Booleans section handled.
-            System->>User: Display "Returning to Booleans main menu. Or choose a new broad topic."
-
-        alt User chooses "Numeric Comparison"
-            User->>System: Select "Numeric Comparison"
-            System->>+NumericComparison: Load NumericComparison_Main
-            NumericComparison->>User: Display "Numeric Comparison Operators: Functions to compare Church Numerals. For full lambda and trinary definitions, see <a href='#numeric-comparison-operators'>Detailed Lambda Definitions</a>."
-            NumericComparison->>User: Display options: [ISZERO, LT, LEQ, EQ, NEQ, GEQ, GT]
-
-            alt User chooses "ISZERO"
-                User->>NumericComparison: Select "ISZERO"
-                NumericComparison->>+MetaLambdaQueryParser: ParseQuery(term_type: "NumericComparison", term: "ISZERO")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "NumericComparison", term: "ISZERO")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "NumericComparison", term: "ISZERO")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(ISZERO_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(ISZERO_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-NumericComparison: FormattedResult(ISZERO_formatted)
-                NumericComparison->>User: Display "<b>ISZERO (Is Zero?):</b> See <a href='#iszero-is-zero'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "LT (Less Than)"
-                User->>NumericComparison: Select "LT (Less Than)"
-                NumericComparison->>+MetaLambdaQueryParser: ParseQuery(term_type: "NumericComparison", term: "LT")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "NumericComparison", term: "LT")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "NumericComparison", term: "LT")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(LT_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(LT_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-NumericComparison: FormattedResult(LT_formatted)
-                NumericComparison->>User: Display "<b>LT (Less Than):</b> See <a href='#lt-less-than'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "LEQ (Less Than or Equal)"
-                User->>NumericComparison: Select "LEQ (Less Than or Equal)"
-                NumericComparison->>+MetaLambdaQueryParser: ParseQuery(term_type: "NumericComparison", term: "LEQ")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "NumericComparison", term: "LEQ")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "NumericComparison", term: "LEQ")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(LEQ_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(LEQ_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-NumericComparison: FormattedResult(LEQ_formatted)
-                NumericComparison->>User: Display "<b>LEQ (Less Than or Equal To):</b> See <a href='#leq-less-than-or-equal-to'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "EQ (Equal To)"
-                User->>NumericComparison: Select "EQ (Equal To)"
-                NumericComparison->>+MetaLambdaQueryParser: ParseQuery(term_type: "NumericComparison", term: "EQ")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "NumericComparison", term: "EQ")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "NumericComparison", term: "EQ")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(EQ_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(EQ_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-NumericComparison: FormattedResult(EQ_formatted)
-                NumericComparison->>User: Display "<b>EQ (Equal To):</b> See <a href='#eq-equal-to'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "NEQ (Not Equal To)"
-                User->>NumericComparison: Select "NEQ (Not Equal To)"
-                NumericComparison->>+MetaLambdaQueryParser: ParseQuery(term_type: "NumericComparison", term: "NEQ")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "NumericComparison", term: "NEQ")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "NumericComparison", term: "NEQ")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(NEQ_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(NEQ_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-NumericComparison: FormattedResult(NEQ_formatted)
-                NumericComparison->>User: Display "<b>NEQ (Not Equal To):</b> See <a href='#neq-not-equal-to'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "GEQ (Greater Than or Equal To)"
-                User->>NumericComparison: Select "GEQ (Greater Than or Equal To)"
-                NumericComparison->>+MetaLambdaQueryParser: ParseQuery(term_type: "NumericComparison", term: "GEQ")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "NumericComparison", term: "GEQ")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "NumericComparison", term: "GEQ")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(GEQ_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(GEQ_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-NumericComparison: FormattedResult(GEQ_formatted)
-                NumericComparison->>User: Display "<b>GEQ (Greater Than or Equal To):</b> See <a href='#geq-greater-than-or-equal-to'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "GT (Greater Than)"
-                User->>NumericComparison: Select "GT (Greater Than)"
-                NumericComparison->>+MetaLambdaQueryParser: ParseQuery(term_type: "NumericComparison", term: "GT")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "NumericComparison", term: "GT")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "NumericComparison", term: "GT")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(GT_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(GT_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-NumericComparison: FormattedResult(GT_formatted)
-                NumericComparison->>User: Display "<b>GT (Greater Than):</b> See <a href='#gt-greater-than'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            end
-            NumericComparison->>-System: Numeric Comparison section handled.
-            System->>User: Display "Returning to Numeric Comparison main menu. Or choose a new broad topic."
-
-        alt User chooses "Pairs & Lists"
-            User->>System: Select "Pairs & Lists"
-            System->>+PairsLists: Load PairsLists_Main
-            PairsLists->>User: Display "Pairs & Lists: Encoding compound data structures. For full lambda and trinary definitions, see <a href='#pairs-and-lists'>Detailed Lambda Definitions</a>."
-            PairsLists->>User: Display options: [PAIR (or CONS), CAR (or HEAD), CDR (or TAIL), NIL (Empty List), NULL (Is Empty?)]
-
-            alt User chooses "PAIR (or CONS)"
-                User->>PairsLists: Select "PAIR (or CONS)"
-                PairsLists->>+MetaLambdaQueryParser: ParseQuery(term_type: "PairList", term: "PAIR")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "PairList", term: "PAIR")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "PairList", term: "PAIR")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(PAIR_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(PAIR_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-PairsLists: FormattedResult(PAIR_formatted)
-                PairsLists->>User: Display "<b>PAIR (or CONS):</b> See <a href='#pair-or-cons'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "CAR (or HEAD)"
-                User->>PairsLists: Select "CAR (or HEAD)"
-                PairsLists->>+MetaLambdaQueryParser: ParseQuery(term_type: "PairList", term: "CAR")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "PairList", term: "CAR")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "PairList", term: "CAR")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(CAR_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(CAR_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-PairsLists: FormattedResult(CAR_formatted)
-                PairsLists->>User: Display "<b>CAR (or FIRST / HEAD):</b> See <a href='#car-or-first-head'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "CDR (or TAIL)"
-                User->>PairsLists: Select "CDR (or TAIL)"
-                PairsLists->>+MetaLambdaQueryParser: ParseQuery(term_type: "PairList", term: "CDR")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "PairList", term: "CDR")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "PairList", term: "CDR")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(CDR_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(CDR_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-PairsLists: FormattedResult(CDR_formatted)
-                PairsLists->>User: Display "<b>CDR (or SECOND / TAIL / REST):</b> See <a href='#cdr-or-second-tail-rest'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "NIL (Empty List)"
-                User->>PairsLists: Select "NIL (Empty List)"
-                PairsLists->>+MetaLambdaQueryParser: ParseQuery(term_type: "PairList", term: "NIL")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "PairList", term: "NIL")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "PairList", term: "NIL")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(NIL_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(NIL_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-PairsLists: FormattedResult(NIL_formatted)
-                PairsLists->>User: Display "<b>NIL (Empty List):</b> See <a href='#nil-empty-list'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "NULL (Is Empty?)"
-                User->>PairsLists: Select "NULL (Is Empty?)"
-                PairsLists->>+MetaLambdaQueryParser: ParseQuery(term_type: "PairList", term: "NULL")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "PairList", term: "NULL")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "PairList", term: "NULL")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(NULL_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(NULL_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-PairsLists: FormattedResult(NULL_formatted)
-                PairsLists->>User: Display "<b>NULL (Is Empty?):</b> See <a href='#null-is-empty'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            end
-            PairsLists->>-System: Pairs & Lists section handled.
-            System->>User: Display "Returning to Pairs & Lists main menu. Or choose a new broad topic."
-
-        alt User chooses "List Functions"
-            User->>System: Select "List Functions"
-            System->>+ListFunctions: Load ListFunctions_Main
-            ListFunctions->>User: Display "List Functions: Operations on Church-encoded lists. For full lambda and trinary definitions, see <a href='#list-functions'>Detailed Lambda Definitions</a>."
-            ListFunctions->>User: Display options: [APPEND, LENGTH, INDEX, LAST, TRUNCATE, REVERSE, RANGE, LIST (Constructor), APPLY, MAP, FILTER, CROSS, FOLD-LEFT, FOLD-RIGHT]
-
-            alt User chooses "APPEND"
-                User->>ListFunctions: Select "APPEND"
-                ListFunctions->>+MetaLambdaQueryParser: ParseQuery(term_type: "ListFunction", term: "APPEND")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "ListFunction", term: "APPEND")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "ListFunction", term: "APPEND")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(APPEND_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(APPEND_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-ListFunctions: FormattedResult(APPEND_formatted)
-                ListFunctions->>User: Display "<b>APPEND:</b> See <a href='#append'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "LENGTH"
-                User->>ListFunctions: Select "LENGTH"
-                ListFunctions->>+MetaLambdaQueryParser: ParseQuery(term_type: "ListFunction", term: "LENGTH")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "ListFunction", term: "LENGTH")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "ListFunction", term: "LENGTH")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(LENGTH_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(LENGTH_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-ListFunctions: FormattedResult(LENGTH_formatted)
-                ListFunctions->>User: Display "<b>LENGTH:</b> See <a href='#length'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "INDEX"
-                User->>ListFunctions: Select "INDEX"
-                ListFunctions->>+MetaLambdaQueryParser: ParseQuery(term_type: "ListFunction", term: "INDEX")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "ListFunction", term: "INDEX")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "ListFunction", term: "INDEX")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(INDEX_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(INDEX_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-ListFunctions: FormattedResult(INDEX_formatted)
-                ListFunctions->>User: Display "<b>INDEX:</b> See <a href='#index'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "LAST"
-                User->>ListFunctions: Select "LAST"
-                ListFunctions->>+MetaLambdaQueryParser: ParseQuery(term_type: "ListFunction", term: "LAST")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "ListFunction", term: "LAST")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "ListFunction", term: "LAST")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(LAST_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(LAST_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-ListFunctions: FormattedResult(LAST_formatted)
-                ListFunctions->>User: Display "<b>LAST:</b> See <a href='#last'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "TRUNCATE"
-                User->>ListFunctions: Select "TRUNCATE"
-                ListFunctions->>+MetaLambdaQueryParser: ParseQuery(term_type: "ListFunction", term: "TRUNCATE")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "ListFunction", term: "TRUNCATE")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "ListFunction", term: "TRUNCATE")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(TRUNCATE_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(TRUNCATE_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-ListFunctions: FormattedResult(TRUNCATE_formatted)
-                ListFunctions->>User: Display "<b>TRUNCATE:</b> See <a href='#truncate'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "REVERSE"
-                User->>ListFunctions: Select "REVERSE"
-                ListFunctions->>+MetaLambdaQueryParser: ParseQuery(term_type: "ListFunction", term: "REVERSE")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "ListFunction", term: "REVERSE")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "ListFunction", term: "REVERSE")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(REVERSE_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(REVERSE_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-ListFunctions: FormattedResult(REVERSE_formatted)
-                ListFunctions->>User: Display "<b>REVERSE:</b> See <a href='#reverse'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "RANGE"
-                User->>ListFunctions: Select "RANGE"
-                ListFunctions->>+MetaLambdaQueryParser: ParseQuery(term_type: "ListFunction", term: "RANGE")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "ListFunction", term: "RANGE")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "ListFunction", term: "RANGE")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(RANGE_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(RANGE_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-ListFunctions: FormattedResult(RANGE_formatted)
-                ListFunctions->>User: Display "<b>RANGE:</b> See <a href='#range'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "LIST (Constructor)"
-                User->>ListFunctions: Select "LIST (Constructor)"
-                ListFunctions->>+MetaLambdaQueryParser: ParseQuery(term_type: "ListFunction", term: "LIST")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "ListFunction", term: "LIST")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "ListFunction", term: "LIST")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(LIST_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(LIST_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-ListFunctions: FormattedResult(LIST_formatted)
-                ListFunctions->>User: Display "<b>LIST (Constructor):</b> See <a href='#list-constructor'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "APPLY"
-                User->>ListFunctions: Select "APPLY"
-                ListFunctions->>+MetaLambdaQueryParser: ParseQuery(term_type: "ListFunction", term: "APPLY")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "ListFunction", term: "APPLY")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "ListFunction", term: "APPLY")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(APPLY_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(APPLY_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-ListFunctions: FormattedResult(APPLY_formatted)
-                ListFunctions->>User: Display "<b>APPLY:</b> See <a href='#apply'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "MAP"
-                User->>ListFunctions: Select "MAP"
-                ListFunctions->>+MetaLambdaQueryParser: ParseQuery(term_type: "ListFunction", term: "MAP")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "ListFunction", term: "MAP")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "ListFunction", term: "MAP")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(MAP_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(MAP_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-ListFunctions: FormattedResult(MAP_formatted)
-                ListFunctions->>User: Display "<b>MAP:</b> See <a href='#map'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "FILTER"
-                User->>ListFunctions: Select "FILTER"
-                ListFunctions->>+MetaLambdaQueryParser: ParseQuery(term_type: "ListFunction", term: "FILTER")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "ListFunction", term: "FILTER")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "ListFunction", term: "FILTER")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(FILTER_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(FILTER_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-ListFunctions: FormattedResult(FILTER_formatted)
-                ListFunctions->>User: Display "<b>FILTER:</b> See <a href='#filter'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "CROSS"
-                User->>ListFunctions: Select "CROSS"
-                ListFunctions->>+MetaLambdaQueryParser: ParseQuery(term_type: "ListFunction", term: "CROSS")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "ListFunction", term: "CROSS")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "ListFunction", term: "CROSS")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(CROSS_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(CROSS_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-ListFunctions: FormattedResult(CROSS_formatted)
-                ListFunctions->>User: Display "<b>CROSS:</b> See <a href='#cross'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "FOLD-LEFT"
-                User->>ListFunctions: Select "FOLD-LEFT"
-                ListFunctions->>+MetaLambdaQueryParser: ParseQuery(term_type: "ListFunction", term: "FOLD-LEFT")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "ListFunction", term: "FOLD-LEFT")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "ListFunction", term: "FOLD-LEFT")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(FOLD_LEFT_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(FOLD_LEFT_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-ListFunctions: FormattedResult(FOLD_LEFT_formatted)
-                ListFunctions->>User: Display "<b>FOLD-LEFT (or REDUCE / ACCUMULATE):</b> See <a href='#fold-left'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "FOLD-RIGHT"
-                User->>ListFunctions: Select "FOLD-RIGHT"
-                ListFunctions->>+MetaLambdaQueryParser: ParseQuery(term_type: "ListFunction", term: "FOLD-RIGHT")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "ListFunction", term: "FOLD-RIGHT")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "ListFunction", term: "FOLD-RIGHT")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(FOLD_RIGHT_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(FOLD_RIGHT_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-ListFunctions: FormattedResult(FOLD_RIGHT_formatted)
-                ListFunctions->>User: Display "<b>FOLD-RIGHT:</b> See <a href='#fold-right'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            end
-            ListFunctions->>-System: List Functions session handled.
-            System->>User: Display "Returning to List Functions main menu. Or choose a new broad topic."
-
-        alt User chooses "Recursion"
-            User->>System: Select "Recursion"
-            System->>+Recursion: Load Recursion_Main
-            Recursion->>User: Display "Recursion: How to define self-referential functions using fixed-point combinators. For full lambda and trinary definitions, see <a href='#recursion'>Detailed Lambda Definitions</a>."
-            Recursion->>User: Display options: [Y Combinator, Z Combinator, Θ Combinator, FACTORIAL (Example), SUM (Example), EQ (Example), Mutual Recursion, Loeb's Combinator, Aleph-N Recursion (Conceptual)]
-
-            alt User chooses "Y Combinator"
-                User->>Recursion: Select "Y Combinator"
-                Recursion->>+MetaLambdaQueryParser: ParseQuery(term_type: "Recursion", term: "Y")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "Recursion", term: "Y")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "Recursion", term: "Y")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(Y_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(Y_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-Recursion: FormattedResult(Y_formatted)
-                Recursion->>User: Display "<b>Y (Fixed-Point Combinator):</b> See <a href='#y-fixed-point-combinator'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "Z Combinator"
-                User->>Recursion: Select "Z Combinator"
-                Recursion->>+MetaLambdaQueryParser: ParseQuery(term_type: "Recursion", term: "Z")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "Recursion", term: "Z")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "Recursion", term: "Z")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(Z_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(Z_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-Recursion: FormattedResult(Z_formatted)
-                Recursion->>User: Display "<b>Z (Applicative-Order Fixed-Point Combinator):</b> See <a href='#z-applicative-order-fixed-point-combinator'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "Θ Combinator"
-                User->>Recursion: Select "Θ Combinator"
-                Recursion->>+MetaLambdaQueryParser: ParseQuery(term_type: "Recursion", term: "Θ")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "Recursion", term: "Θ")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "Recursion", term: "Θ")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(Θ_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(Θ_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-Recursion: FormattedResult(Θ_formatted)
-                Recursion->>User: Display "<b>Θ (Turing Fixed-Point Combinator):</b> See <a href='#turing-fixed-point-combinator'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "FACTORIAL (Example)"
-                User->>Recursion: Select "FACTORIAL (Example)"
-                Recursion->>+MetaLambdaQueryParser: ParseQuery(term_type: "Recursion", term: "FACTORIAL")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "Recursion", term: "FACTORIAL")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "Recursion", term: "FACTORIAL")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(FACTORIAL_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(FACTORIAL_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-Recursion: FormattedResult(FACTORIAL_formatted)
-                Recursion->>User: Display "<b>FACTORIAL:</b> See <a href='#factorial'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "SUM (Example)"
-                User->>Recursion: Select "SUM (Example)"
-                Recursion->>+MetaLambdaQueryParser: ParseQuery(term_type: "Recursion", term: "SUM")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "Recursion", term: "SUM")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "Recursion", term: "SUM")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(SUM_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(SUM_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-Recursion: FormattedResult(SUM_formatted)
-                Recursion->>User: Display "<b>SUM:</b> See <a href='#sum-example'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "EQ (Example)"
-                User->>Recursion: Select "EQ (Example)"
-                Recursion->>+MetaLambdaQueryParser: ParseQuery(term_type: "Recursion", term: "EQ")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_type: "Recursion", term: "EQ")
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_type: "Recursion", term: "EQ")
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(EQ_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(EQ_raw)
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                ResultFormatter-->>-Recursion: FormattedResult(EQ_formatted)
-                Recursion->>User: Display "<b>EQ (Equality):</b> See <a href='#eq-example'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "Mutual Recursion"
-                User->>Recursion: Select "Mutual Recursion"
-                Recursion->>User: Display "Mutual Recursion: When two or more functions call each other recursively. In Lambda Calculus, this is typically achieved by encoding the mutually recursive functions into a single function that returns a tuple (pair) of results, then using a fixed-point combinator like Y.<br><b>Conceptual LC Example (Even/Odd):</b> `EVEN_ODD_PAIR_FN := Y (λp. PAIR (λn. IF (ISZERO n) TRUE (p (CDR p) (PRED n))) (λn. IF (ISZERO n) FALSE (p (CAR p) (PRED n)))).` See <a href='#mutual-recursion'>Detailed Lambda Definitions</a> for more."
-            else alt User chooses "Loeb's Combinator"
-                User->>Recursion: Select "Loeb's Combinator"
-                Recursion->>User: Display "<b>Loeb's Combinator:</b> See <a href='#loebs-combinator'>Detailed Lambda Definitions</a> for full lambda and trinary."
-            else alt User chooses "Aleph-N Recursion (Conceptual)"
-                User->>Recursion: Select "Aleph-N Recursion (Conceptual)"
-                Recursion->>User: Display "Aleph-N Recursion: This refers to advanced theoretical concepts of recursion beyond finite steps (transfinite recursion), often studied in set theory and computability. It explores recursive definitions that can handle infinite structures."
-            end
-            Recursion->>-System: Recursion section handled.
-            System->>User: Display "Returning to Recursion main menu. Or choose a new broad topic."
-
-        alt User chooses "Data Structures"
-            User->>System: Select "Data Structures"
-            System->>+DataStructures: Load DataStructures_Main
-            DataStructures->>User: Display "Data Structures: Beyond simple pairs and lists. How to represent more complex data using Lambda Calculus. For full lambda and trinary definitions, see <a href='#data-structures'>Detailed Lambda Definitions</a>."
-            DataStructures->>User: Display options: [Booleans, Church Numerals, Pairs, Lists, Trees (Conceptual), Algebraic Data Types (Conceptual)]
-
-            alt User chooses "Trees (Conceptual)"
-                User->>DataStructures: Select "Trees (Conceptual)"
-                DataStructures->>User: Display "Trees: Can be represented recursively using pairs or by encoding algebraic data types. For example, a binary tree can be `LEAF val` or `NODE left_tree right_tree`.<br><b>Conceptual LC Representation (Binary Tree):</b> `LEAF := λval.λvisitor. visitor val (λl.λr. (λempty_node. empty_node))`. `NODE := λl.λr.λvisitor. visitor (λval. (λempty_node. empty_node)) l r`. `VISIT_TREE := Y (λvisit.λtree. tree (λval. val) (λl.λr. PAIR (visit l) (visit r)))`. This is a simplified visitor pattern for traversing and collecting values. Full definitions are enormous."
-            end
-            DataStructures->>-System: Data Structures session handled.
-            System->>User: Display "Returning to Data Structures main menu. Or choose a new broad topic."
-
-        alt User chooses "Typed Lambda Calculus"
-            User->>System: Select "Typed Lambda Calculus"
-            System->>+TypedLambda: Load TypedLambda_Main
-            TypedLambda->>User: Display "Typed Lambda Calculus: Adding type systems for safety and reasoning. What aspect interests you?"
-            TypedLambda->>User: Display options: [Simple Types, Polymorphism (System F), Dependent Types, Type Inference, Formal Verification]
-
-            alt User chooses "Formal Verification"
-                User->>TypedLambda: Select "Formal Verification"
-                TypedLambda->>+FormalVerification: Load FormalVerification_Main
-                FormalVerification->>User: Display "Formal Verification: Proving properties of lambda terms. This is a vast field."
-                FormalVerification->>User: Display options: [Type Soundness (Conceptual), Program Equivalence (Conceptual), Logic & Proofs (Conceptual)]
-
-                alt User chooses "Type Soundness (Conceptual)"
-                    User->>FormalVerification: Select "Type Soundness (Conceptual)"
-                    FormalVerification->>User: Display "Type Soundness: A critical property ensuring that well-typed programs 'don't go wrong'. It typically involves two theorems: Progress (a well-typed term is either a value or can take a step) and Preservation (if a well-typed term takes a step, the result is still well-typed).<br><b>Conceptual LC Proof Structure:</b> `PROOF_PROGRESS := λterm.λtype. ...` (demonstrates that if `term` has `type`, it reduces or is a value). `PROOF_PRESERVATION := λterm.λtype. ...` (demonstrates that if `term` has `type` and reduces to `term'`, then `term'` also has `type`). These proofs are abstract logical statements, not executable lambda terms."
-                end
-                FormalVerification->>-TypedLambda: Formal Verification session handled.
-            end
-            TypedLambda->>-System: Typed Lambda Calculus session handled.
-            System->>User: Display "Returning to Typed Lambda Calculus main menu. Or choose a new broad topic."
-
-        alt User chooses "Advanced Topics"
-            User->>System: Select "Advanced Topics"
-            System->>+AdvancedTopics: Load AdvancedTopics_Main
-            AdvancedTopics->>User: Display "Advanced Topics: Beyond the basics. Delve into more complex theoretical or practical aspects."
-            AdvancedTopics->>User: Display options: [Continuations, Delimited Continuations, Control Operators (e.g., call/cc), Denotational Semantics, Operational Semantics, Curry-Howard Correspondence, Linear Logic, Type Theory (Advanced), Domain Theory, Game Semantics, Concurrency in LC, Quantum Lambda Calculus (Speculative), Category Theory & LC]
-
-            alt User chooses "Curry-Howard Correspondence"
-                User->>AdvancedTopics: Select "Curry-Howard Correspondence"
-                AdvancedTopics->>User: Display "The Curry-Howard Correspondence: A deep, profound, and fundamental relationship between logic and computation. It states that propositions correspond to types, and proofs correspond to programs. Every proof in intuitionistic logic can be seen as a lambda term, and every well-typed lambda term corresponds to a proof.<br><b>Conceptual Mapping:</b> `PROPOSITION_AS_TYPE := λProp. (Type_for_Prop)`. `PROOF_AS_PROGRAM := λProof. (LambdaTerm_for_Proof)`. This isn't a single lambda term but a meta-level conceptual mapping. For example, a proof of `A => B` corresponds to a function `f : A -> B`. A proof of `A /\ B` corresponds to a pair `(a, b) : A * B`."
-            end
-            AdvancedTopics->>-System: Advanced Topics session handled.
-            System->>User: Display "Returning to Advanced Topics main menu. Or choose a new broad topic."
-
-        alt User chooses "Applications & Relevance"
-            User->>System: Select "Applications & Relevance"
-            System->>+Applications: Load Applications_Main
-            Applications->>User: Display "Applications & Relevance: Where Lambda Calculus concepts are applied in the real world."
-            Applications->>User: Display options: [Functional Programming Languages, Compiler Design, Type Systems, Logic & Proof Assistants, Theoretical Computer Science, AI & Machine Learning (Conceptual), Formal Methods in Software Engineering]
-
-            alt User chooses "Functional Programming Languages"
-                User->>Applications: Select "Functional Programming Languages"
-                Applications->>User: Display "Functional Programming Languages: Languages like Haskell, Lisp, OCaml, F#, Erlang, Scala, and many others are directly inspired by or rooted in Lambda Calculus. Concepts like higher-order functions, immutability, recursion, and purity come directly from LC.<br><b>Example in Haskell:</b> `map f list` is a direct analogue to the `MAP` lambda we discussed, applying `f` to each element of `list`. The `MAP` lambda's structure is `MAP := Y (λgfx. IF (NULL x) NIL (PAIR (f (CAR x)) (g f (CDR x))))`."
-            end
-            Applications->>-System: Applications & Relevance session handled.
-            System->>User: Display "Returning to Applications & Relevance main menu. Or choose a new broad topic."
-
-        alt User chooses "Advanced Concepts (Speculative)"
-            User->>System: Select "Advanced Concepts (Speculative)"
-            System->>+AdvConcepts: Load AdvConcepts_Main
-            AdvConcepts->>User: Display "Advanced Concepts (Speculative): Pushing the boundaries of Lambda Calculus, including potential future directions or highly abstract ideas."
-            AdvConcepts->>User: Display options: [Quantum Lambda Calculus, Probabilistic Lambda Calculus, Differentiable Lambda Calculus, Lambda Calculus for Biology/Chemistry (Conceptual), Machine Learning & LC (Deep Learning Models as Terms)]
-
-            alt User chooses "Quantum Lambda Calculus"
-                User->>AdvConcepts: Select "Quantum Lambda Calculus"
-                AdvConcepts->>User: Display "Quantum Lambda Calculus: A theoretical extension of Lambda Calculus designed to describe quantum computation. It involves concepts like superposition, entanglement, and measurement within the lambda calculus framework. This is a highly active research area.<br><b>Conceptual LC Extension:</b> Imagine new term constructors like `QUANTUM_LAMBDA (λx.M)` representing a quantum superposition of functions, or `MEASURE M` which collapses a quantum term to a classical one based on probabilities. These require significant extensions to the underlying reduction rules."
-            end
-            AdvConcepts->>-System: Advanced Concepts session handled.
-            System->>User: Display "Returning to Advanced Concepts main menu. Or choose a new broad topic."
-
-        else
-            User->>System: General Query (e.g., "Tell me more about functional programming.")
-            System->>+MetaLambdaQueryParser: ParseQuery(query_string)
-            Note over MetaLambdaQueryParser: `QUERY_PARSE := λraw_query. (EXTRACT_INTENT raw_query)`
-            MetaLambdaQueryParser->>MetaLambdaQueryParser: Determine query type: LLM_GENERATIVE or DIRECT_LOOKUP.
-            alt Query is LLM_GENERATIVE
-                MetaLambdaQueryParser->>+LLMInterface: ForwardQuery(query_string, context)
-                Note over LLMInterface: `LLM_INVOKE := λprompt.λcontext. (API_CALL_TO_GEMINI prompt context)`
-                LLMInterface->>LLMGeminiAPI: API Call (Prompt, Context, History)
-                activate LLMGeminiAPI
-                opt For structured responses
-                    LLMInterface->>LLMGeminiAPI: Generation Config (Schema)
-                end
-                opt For image generation
-                    LLMGeminiAPI->>LLMInterface: Image (Base64)
-                end
-                LLMGeminiAPI-->>-LLMInterface: Response (Raw Text/JSON/Image)
-                deactivate LLMGeminiAPI
-                LLMInterface->>LLMInterface: Process LLM Response (Parse JSON, handle images, error check)
-                opt Error Handling
-                    LLMInterface->>System: Error (API_ERROR, RATE_LIMIT_EXCEEDED)
-                    System->>User: Display "An error occurred while processing your request. Please try again later."
-                end
-                LLMInterface-->>-ResultFormatter: ProcessedLLMResult(text, json_data, image_url)
-                ResultFormatter->>ResultFormatter: Apply final formatting for display.
-                ResultFormatter-->>-System: FormattedLLMResult
-                System->>User: Display FormattedLLMResult
-            else Query is DIRECT_LOOKUP (e.g., "What is K combinator?")
-                MetaLambdaQueryParser->>MetaLambdaMultiplexer: ParsedQuery(term_id, intent)
-                Note over MetaLambdaMultiplexer: `MULTIPLEX := λquery_id.λdata_streams. (COMBINE_STREAMS data_streams query_id)`
-                MetaLambdaMultiplexer->>+FileRoutingIndex: Lookup(term_id, intent)
-                Note over FileRoutingIndex: `FILE_ROUTING_INDEX := λquery. (LOOKUP_TABLE query)`
-                FileRoutingIndex-->>-MetaLambdaMultiplexer: RawData(term_raw)
-                MetaLambdaMultiplexer->>MetaLambdaDemultiplexer: RawData(term_raw)
-                Note over MetaLambdaDemultiplexer: `DEMULTIPLEX := λcombined_stream.λquery_id. (EXTRACT_STREAM combined_stream query_id)`
-                MetaLambdaDemultiplexer->>+ResultFormatter: Format(RawData, format_spec: "trinary/text")
-                Note over ResultFormatter: `FORMAT_RESULT := λraw_data.λformat_spec. (APPLY_FORMAT raw_data format_spec)`
-                ResultFormatter-->>-System: FormattedResult
-                System->>User: Display FormattedResult
-            end
+            
+            formatter-->>-recursion: ℵComplete(recursion_explanation)
+            recursion-->>user: iInteractive(recursion_playground)
+            
+        else iAdvanced(optimization_topics)
+            user->>advanced: iExplore("Advanced lambda calculus")
+            advanced->>+router: ΔRoute(advanced: "TYPED_LC,FORMAL_VERIFICATION")
+            router->>llm: τEnhance(advanced_explanations)
+            llm-->>router: ℵEnhanced(comprehensive_content)
+            router->>+formatter: βProcess(advanced_formatting)
+            formatter-->>-advanced: τComplete(advanced_topics)
+            advanced-->>user: iDisplay(cutting_edge_research)
         end
+        
+        Note over user,advanced: ΩSystem provides contextual suggestions
+        alcs->>user: iSuggest(related_topics, next_steps)
     end
-    Note over System,User: Session concluded. Thank you for using the Adaptive Lambda Calculus System for your exploration!
+    
+    user->>alcs: λTerminate(learning_session)
+    alcs->>storage: ℵSave(user_progress)
+    alcs->>user: βFarewell(session_summary)
+```
+
+## λDefinitions(Core Lambda Calculus Terms)
+
+### ℵCombinators(Fundamental Building Blocks)
+- **I (Identity)**: `λx.x` | Trinary: `010`
+- **K (Kestrel)**: `λxy.x` | Trinary: `0110` 
+- **S (Starling)**: `λxyz.xz(yz)` | Trinary: `01110110`
+- **Y (Fixed-Point)**: `λg.(λx.g(xx))(λx.g(xx))` | Enables recursion
+
+### ΔMathematics(Arithmetic Operations)
+- **SUCC**: `λnfx.f(nfx)` | Successor function
+- **PLUS**: `λmnfx.nf(mfx)` | Addition operation
+- **MULT**: `λmnf.m(nf)` | Multiplication via composition
+- **PRED**: Complex predecessor with zero handling
+
+### βBooleans(Logic System)
+- **TRUE**: `λxy.x` | First argument selector
+- **FALSE**: `λxy.y` | Second argument selector  
+- **AND**: `λpq.pqp` | Logical conjunction
+- **OR**: `λpq.ppq` | Logical disjunction
+
+### ℵStructures(Data Organization)
+- **PAIR**: `λxyf.fxy` | Creates ordered pair
+- **CAR**: `λp.pTRUE` | First element access
+- **CDR**: `λp.pFALSE` | Second element access
+- **NIL**: `λx.TRUE` | Empty list marker
+
+## τOptimizations(Information Density Enhancements)
+
+The PFSUS v2.0.0 standard enables:
+- **λ-notation**: Function-related concepts with enhanced readability
+- **ℵ-notation**: Memory/storage operations with semantic clarity
+- **Δ-notation**: Workflow/process operations with flow indication
+- **τ-notation**: Time/execution operations with temporal context
+- **β-notation**: Validation/testing operations with verification focus
+- **i-notation**: Improvement/optimization operations with enhancement markers
+- **Ω-notation**: System/foundation operations with core emphasis
+
+## ΩFooter(System Metadata)
+{type:SelfReference, file:"Lambda-Super-Reff.MMCP.lamda.sequence.v1.0.0.mmd", version:"1.0.0", 
+ checksum:"sha256:optimized_sequence_diagram", canonical_address:"lambda-super-ref-v1.0", 
+ english_shorthand:true, lambdajson_integration:true, sequence_optimized:true}
+
+@{visual-meta-start}
+author = {Kalxi},
+title = {Lambda-Super-Reff.MMCP.lamda.sequence.v1.0.0},
+version = {1.0.0},
+sequence_syntax = optimized,
+information_density = maximum,
+pfsus_integration = v2.0.0,
+structure = { streamlined_participants, parallel_operations, conditional_flows, loop_constructs, comprehensive_coverage }
+@{visual-meta-end}
+
+%% MMCP-FOOTER: version=1.0.0; timestamp=2025-07-22T20:15:00Z; sequence_optimized=true; author=Kalxi; license=MIT; pfsus_v2=true; max_info_density=true%% Return to START BUS after exploring the entire Primitives category
+    checkout START_BUS
+    checkout Logic
+    commit id: "Logic_Main" tag: "Query: Explore logical operations: NOT, AND, OR, XOR, IMPL, IFF."
+    branch Logic_NOT
+    checkout Logic_NOT
+    commit id: "NOT_Def" tag: "NOT: λp.p FALSE TRUE | Flips truth value."
+    commit id: "Query_NOT_Use" tag: "Query: Investigate how NOT (id: NOT) is essential for complex logical expressions."
+    branch Logic_NOT_Reduction
+    checkout Logic_NOT_Reduction
+    commit id: "NOT_TRUE_Red_Ex" tag: "Reduction Query: Show step-by-step beta-reduction of `NOT TRUE`."
+    checkout Logic_NOT_Reduction
+    commit id: "NOT_FALSE_Red_Ex" tag: "Reduction Query: Show step-by-step beta-reduction of `NOT FALSE`."
+    checkout Logic_NOT
+    checkout Logic %% Route back to main Logic branch after exploring NOT
+    branch Logic_AND
+    checkout Logic_AND
+    commit id: "AND_Def" tag: "AND: λp.λq.p q p | Logical AND."
+    commit id: "Query_AND_Use" tag: "Query: Explore the practical applications of AND (id: AND) in conditional logic."
+    branch Logic_AND_Reduction
+    checkout Logic_AND_Reduction
+    commit id: "AND_TrueTrue_Red_Ex" tag: "Reduction Query: Show step-by-step beta-reduction of `AND TRUE TRUE`."
+    checkout Logic_AND_Reduction
+    commit id: "AND_TrueFalse_Red_Ex" tag: "Reduction Query: Show step-by-step beta-reduction of `AND TRUE FALSE`."
+    checkout Logic_AND
+    commit id: "AND_TruthTable_Ex" tag: "Query: Provide the truth table for the AND function."
+    checkout Logic_AND
+    checkout Logic %% Route back to main Logic branch after exploring AND
+    branch Logic_OR
+    checkout Logic_OR
+    commit id: "OR_Def" tag: "OR: λp.λq.p p q | Logical OR."
+    commit id: "Query_OR_Use" tag: "Query: Understand how OR (id: OR) contributes to Church booleans."
+    branch Logic_OR_Reduction
+    checkout Logic_OR_Reduction
+    commit id: "OR_FalseFalse_Red_Ex" tag: "Reduction Query: Show step-by-step beta-reduction of `OR FALSE FALSE`."
+    checkout Logic_OR_Reduction
+    commit id: "OR_TrueFalse_Red_Ex" tag: "Reduction Query: Show step-by-step beta-reduction of `OR TRUE FALSE`."
+    checkout Logic_OR
+    commit id: "OR_TruthTable_Ex" tag: "Query: Provide the truth table for the OR function."
+    checkout Logic_OR
+    checkout Logic %% Route back to main Logic branch after exploring OR
+    branch Logic_XOR
+    checkout Logic_XOR
+    commit id: "XOR_Def" tag: "XOR: λp.λq.p (NOT q) q | Exclusive OR."
+    commit id: "Query_XOR_Use" tag: "Query: See the derivation of XOR (id: XOR) from basic logical operations."
+    branch Logic_XOR_Reduction
+    checkout Logic_XOR_Reduction
+    commit id: "XOR_TrueFalse_Red_Ex" tag: "Reduction Query: Show step-by-step reduction of `XOR TRUE FALSE`."
+    checkout Logic_XOR
+    commit id: "XOR_Example_Ex" tag: "Query: Provide an example of XOR application with TRUE and FALSE."
+    checkout Logic_XOR
+    checkout Logic %% Route back to main Logic branch after exploring XOR
+    branch Logic_IMPL
+    checkout Logic_IMPL
+    commit id: "IMPL_Def" tag: "IMPL: λp.λq.p q TRUE | Logical implication."
+    commit id: "Query_IMPL_Use" tag: "Query: Understand how IMPL (id: IMPL) is crucial for logical deductions."
+    branch Logic_IMPL_Reduction
+    checkout Logic_IMPL_Reduction
+    commit id: "IMPL_FalseTrue_Red_Ex" tag: "Reduction Query: Show step-by-step reduction of `IMPL FALSE TRUE`."
+    checkout Logic_IMPL
+    commit id: "IMPL_TruthTable_Ex" tag: "Query: Show the truth table for logical implication (IMPL)."
+    checkout Logic_IMPL
+    checkout Logic %% Route back to main Logic branch after exploring IMPL
+    branch Logic_IFF
+    checkout Logic_IFF
+    commit id: "IFF_Def" tag: "IFF: λp.λq.AND (IMPL p q) (IMPL q p) | If and only if (bi-implication)."
+    commit id: "Query_IFF_Use" tag: "Query: Explore scenarios where IFF (id: IFF) is particularly useful in formal logic."
+    branch Logic_IFF_Reduction
+    checkout Logic_IFF_Reduction
+    commit id: "IFF_FalseFalse_Red_Ex" tag: "Reduction Query: Show step-by-step reduction of `IFF FALSE FALSE`."
+    checkout Logic_IFF
+    commit id: "IFF_TruthTable_Ex" tag: "Query: Display the truth table for IFF."
+    checkout Logic_IFF
+    checkout Logic %% Route back to main Logic branch after exploring IFF
+    checkout START_BUS %% Return to START BUS after exploring the entire Logic category
+    checkout START_BUS
+    checkout END_BUS
+    commit id: "END" tag: "End of current exploration path. Return to START for a new query, or choose a new starting point."
+
+%% MMCP-FOOTER: version=1.0.0; timestamp=2025-07-22T20:15:00Z; checksum=sha256:b12345c6789d0def1234567890abcdef1234567890abcdef1234567890abcdef; author=Kalxi; license=MIT; english_shorthand=true; lambdajson_integration=true
+    participant blog as

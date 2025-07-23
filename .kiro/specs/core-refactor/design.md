@@ -11,23 +11,232 @@ This design document outlines the approach for refactoring and improving the MCP
 The refactored MCP system will maintain its brain-inspired architecture while improving consistency and organization. The system will be structured as follows:
 
 ```
-core/
-├── src/
-│   └── mcp/
-│       ├── lobes/                  # Brain-inspired functional modules
-│       ├── neural_network_models/  # Neural network implementations
-│       ├── genetic_trigger_system/ # Genetic algorithm components
-│       ├── visualization/          # Visualization tools
-│       ├── async_processing/       # Async processing framework
-│       └── core modules            # Core system functionality
-├── LOAB/                           # Lobe Architecture Blueprint
-│   ├── memory_lobe/               # Memory management lobe
-│   ├── workflow_lobe/             # Workflow orchestration lobe
-│   ├── context_lobe/              # Context management lobe
-│   └── other specialized lobes    # Additional functional lobes
-├── tests/                          # Comprehensive test suite
-├── cli/                            # Command-line interface tools
-└── docs/                           # Standardized documentation
+graph TD
+    subgraph "Core Infrastructure"
+        A[Core Infrastructure<br/>Handles system initialization]
+        B[Setup Core<br/>Initializes system parameters]
+        C[Stdio Server<br/>Provides JSON-RPC interface]
+        D[Core System<br/>Manages startup and core services]
+    end
+
+    subgraph "Memory Management"
+        E[Memory Management<br/>Multi-tier vector storage]
+        F[Vector Memory<br/>Implements vector storage]
+        G[Three Tier Memory Manager<br/>Orchestrates data movement]
+        H[Enhanced Vector Memory<br/>Sophisticated vector storage]
+        I[Memory Quality Assessment<br/>Evaluates memory health]
+    end
+
+    subgraph "Neural & AI Models"
+        J[Neural Models<br/>Neural network architectures]
+        K[Diffusion Model<br/>Models diffusion processes]
+        L[Brain State Integration<br/>Models brain states]
+        M[Hormone Neural Integration<br/>Regulates hormones]
+        N[Advanced Genetic Evolution<br/>Genetic algorithms]
+    end
+
+    subgraph "Workflow & Task Management"
+        O[Workflow Management<br/>Orchestrates workflows]
+        P[Task Manager<br/>Handles task creation and scheduling]
+        Q[Project Manager<br/>Oversees project lifecycle]
+    end
+
+    subgraph "P2P Networking"
+        R[P2P Networking<br/>Distributed communication]
+        S[P2P Network<br/>Implements message passing]
+        T[P2P Core Integration<br/>Connects core system with P2P]
+        U[P2P Network Bus<br/>Abstracts message bus operations]
+    end
+
+    subgraph "Monitoring & Performance"
+        V[Monitoring System<br/>Collects system metrics]
+        W[Performance Monitor<br/>Tracks performance indicators]
+        X[Monitoring Visualization<br/>Provides visual dashboards]
+        Y[Performance Optimization Engine<br/>Tunes system parameters]
+    end
+
+    subgraph "Web Interface"
+        Z[Web Interface<br/>User-friendly GUI for control]
+        AA[Frontend<br/>React + Tailwind CSS]
+    end
+
+    subgraph "Self-Repair & Self-Improvement"
+        AB[Self-Repair<br/>Autonomous diagnostics]
+        AC[Self-Improve<br/>Enables recursive optimization]
+    end
+
+    subgraph "External Dependencies"
+        AD[LLM APIs<br/>For language model interactions]
+        AE[Vector Databases<br/>Faiss, SQLite for storage]
+        AF[Web Services<br/>Crawling and research data]
+        AG[Messaging & Event Bus<br/>For distributed communication]
+        AH[Database Management<br/>Persistent storage]
+        AI[Monitoring Tools<br/>For health and performance]
+        AJ[Plugin System<br/>For extensibility]
+    end
+
+    subgraph "Adaptive Lambda Calculus System (ALCS)"
+        ALCS_MAIN[Adaptive Lambda Calculus System]
+        subgraph "ALCS Processing Core"
+            ALCS_QUERY_PARSE[Meta-Lambda Query Parser]
+            ALCS_LLM_IF[LLM Interface]
+            ALCS_MULTIPLEX[Meta-Lambda Multiplexer]
+            ALCS_FILE_ROUTE[File Routing Index]
+            ALCS_DEMULTIPLEX[Meta-Lambda Demultiplexer]
+            ALCS_RESULT_FORMAT[Result Formatter]
+            ALCS_LRS[Lambda Representation System (Internal)]
+            ALCS_DYN_REDUCE[Dynamic Reduction Engine]
+        end
+        subgraph "ALCS Knowledge Domains"
+            ALCS_OVERVIEW[Overview Module]
+            ALCS_SYNTAX[Syntax & Semantics Module]
+            ALCS_CHURCH[Church Encoding Module]
+            ALCS_COMBINATORS[Combinators Module]
+            ALCS_MATH_OPS[Mathematical Operators Module]
+            ALCS_BOOLEANS[Booleans Module]
+            ALCS_NUM_COMP[Numeric Comparison Module]
+            ALCS_PAIRS_LISTS[Pairs & Lists Module]
+            ALCS_LIST_FUNCS[List Functions Module]
+            ALCS_OTHER_FUNCS[Other Functions Module]
+            ALCS_RECURSION[Recursion Module]
+            ALCS_DATA_STRUCTS[Data Structures Module]
+            ALCS_TYPED_LC[Typed Lambda Calculus Module]
+            ALCS_FORMAL_VER[Formal Verification Sub-Module]
+            ALCS_ADV_TOPICS[Advanced Topics Module]
+            ALCS_ADV_CONCEPTS[Advanced Concepts Module (Speculative)]
+            ALCS_APPS_REL[Applications & Relevance Module]
+        end
+    end
+
+    User[User (Learner/Researcher)]
+
+    %% Existing connections
+    B --> A
+    C --> A
+    D --> A
+    E --> F
+    E --> G
+    E --> H
+    E --> I
+    J --> K
+    J --> L
+    J --> M
+    J --> N
+    O --> P
+    O --> Q
+    R --> S
+    R --> T
+    R --> U
+    V --> W
+    V --> X
+    V --> Y
+    Z --> AA
+    AB --> AC
+    A --> AD
+    A --> AE
+    A --> AF
+    A --> AG
+    A --> AH
+    A --> AI
+    A --> AJ
+
+    A -->|initializes| B
+    A -->|provides| C
+    A -->|manages| D
+    E -->|stores data| F
+    E -->|orchestrates| G
+    E -->|enhances| H
+    E -->|assesses| I
+    J -->|interfaces with| A
+    O -->|orchestrates| P
+    O -->|oversees| Q
+    R -->|communicates| S
+    R -->|integrates| T
+    R -->|abstracts| U
+    V -->|collects| W
+    V -->|visualizes| X
+    V -->|optimizes| Y
+    Z -->|interacts with| AA
+    AB -->|diagnoses| AC
+    A -->|interfaces with| AD
+    A -->|interfaces with| AE
+    A -->|interfaces with| AF
+    A -->|interfaces with| AG
+    A -->|interfaces with| AH
+    A -->|interfaces with| AI
+    A -->|interfaces with| AJ
+
+    %% New connections for ALCS
+    User --> Z
+    Z --> ALCS_MAIN
+
+    ALCS_MAIN --> ALCS_QUERY_PARSE
+    ALCS_MAIN --> ALCS_LRS
+    ALCS_MAIN --> ALCS_RESULT_FORMAT
+
+    ALCS_QUERY_PARSE --> ALCS_LLM_IF
+    ALCS_QUERY_PARSE --> ALCS_MULTIPLEX
+
+    ALCS_LLM_IF --> AD[LLM APIs]
+    ALCS_LLM_IF --> ALCS_RESULT_FORMAT
+
+    ALCS_MULTIPLEX --> ALCS_FILE_ROUTE
+    ALCS_FILE_ROUTE --> AE[Vector Databases]
+    ALCS_FILE_ROUTE --> AH[Database Management]
+
+    ALCS_MULTIPLEX --> ALCS_DEMULTIPLEX
+    ALCS_DEMULTIPLEX --> ALCS_RESULT_FORMAT
+
+    ALCS_LRS --> ALCS_DYN_REDUCE
+    ALCS_DYN_REDUCE --> ALCS_SYNTAX
+
+    ALCS_RESULT_FORMAT --> Z
+
+    %% Connections from ALCS Processing Core to Knowledge Domains
+    ALCS_MULTIPLEX --> ALCS_OVERVIEW
+    ALCS_MULTIPLEX --> ALCS_SYNTAX
+    ALCS_MULTIPLEX --> ALCS_CHURCH
+    ALCS_MULTIPLEX --> ALCS_COMBINATORS
+    ALCS_MULTIPLEX --> ALCS_MATH_OPS
+    ALCS_MULTIPLEX --> ALCS_BOOLEANS
+    ALCS_MULTIPLEX --> ALCS_NUM_COMP
+    ALCS_MULTIPLEX --> ALCS_PAIRS_LISTS
+    ALCS_MULTIPLEX --> ALCS_LIST_FUNCS
+    ALCS_MULTIPLEX --> ALCS_OTHER_FUNCS
+    ALCS_MULTIPLEX --> ALCS_RECURSION
+    ALCS_MULTIPLEX --> ALCS_DATA_STRUCTS
+    ALCS_MULTIPLEX --> ALCS_TYPED_LC
+    ALCS_MULTIPLEX --> ALCS_FORMAL_VER
+    ALCS_MULTIPLEX --> ALCS_ADV_TOPICS
+    ALCS_MULTIPLEX --> ALCS_ADV_CONCEPTS
+    ALCS_MULTIPLEX --> ALCS_APPS_REL
+
+    %% Knowledge Domains using LRS (Implicitly for parsing/displaying terms)
+    ALCS_SYNTAX --> ALCS_LRS
+    ALCS_CHURCH --> ALCS_LRS
+    ALCS_COMBINATORS --> ALCS_LRS
+    ALCS_MATH_OPS --> ALCS_LRS
+    ALCS_BOOLEANS --> ALCS_LRS
+    ALCS_NUM_COMP --> ALCS_LRS
+    ALCS_PAIRS_LISTS --> ALCS_LRS
+    ALCS_LIST_FUNCS --> ALCS_LRS
+    ALCS_OTHER_FUNCS --> ALCS_LRS
+    ALCS_RECURSION --> ALCS_LRS
+    ALCS_DATA_STRUCTS --> ALCS_LRS
+    ALCS_TYPED_LC --> ALCS_LRS
+    ALCS_FORMAL_VER --> ALCS_LRS
+    ALCS_ADV_TOPICS --> ALCS_LRS
+    ALCS_ADV_CONCEPTS --> ALCS_LRS
+    ALCS_APPS_REL --> ALCS_LRS
+
+    %% Cross-system interactions of ALCS_MAIN
+    ALCS_MAIN --> A[Core Infrastructure]
+    ALCS_MAIN --> E[Memory Management]
+    ALCS_MAIN --> V[Monitoring System]
+    ALCS_MAIN --> O[Workflow Management]
+    ALCS_MAIN --> J[Neural Models]
+    ALCS_MAIN --> AB[Self-Repair]
+    ALCS_MAIN --> AC[Self-Improve]
 ```
 
 ### Modular Design

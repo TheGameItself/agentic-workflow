@@ -1,0 +1,304 @@
+%% Copyright 2025 Kalxi. All rights reserved. See header for terms. %%
+[ ] #".root"# {protocol:"MCP", version:"2.0.0", standard:"PFSUS+EARS+LambdaJSON+MathOps+EnglishShorthand"}
+# Enhanced Lambda Operators MMCP v2.0.0
+## {type:Meta, author:"Kalxi", license:"MIT", last_modified:"2025-07-22T20:30:00Z", id:"lambda.operators.mmcp.enhanced"}
+## {type:Schema, $schema:"https://json-schema.org/draft/2020-12/schema", required:["type","id","version"], properties:{type:{type:"string"},id:{type:"string"},version:{type:"string"},last_modified:{type:"string",format:"date-time"},author:{type:"string"}}}
+
+# λOperators(Comprehensive Lambda Calculus Reference)
+
+## ℵCombinators(Fundamental Building Blocks)
+
+### λCore(Essential Combinators)
+- **I (Identity)**: `λx.x` ≡ `SKK` ≡ `XX` | Trinary: `010`
+  - ΔFunction: Returns input unchanged
+  - τComplexity: O(1) - constant time
+  - βTest: `I A` → `A`
+
+- **K (Kestrel/Constant)**: `λxy.x` ≡ `X(X(XX))` | Trinary: `0110`
+  - ΔFunction: Returns first argument, ignores second
+  - τComplexity: O(1) - constant time  
+  - βTest: `K A B` → `A`
+
+- **S (Starling/Substitution)**: `λxyz.xz(yz)` ≡ `X(X(X(XX)))` | Trinary: `01110110`
+  - ΔFunction: Applies first argument to third, then to result of second applied to third
+  - τComplexity: O(n) where n is complexity of arguments
+  - βTest: `S K K A` → `A` (equivalent to I)
+
+### λAdvanced(Specialized Combinators)
+- **B (Bluebird/Composition)**: `λxyz.x(yz)` ≡ `S(KS)K`
+  - ΔFunction: Function composition operator
+  - iOptimization: Enables efficient function chaining
+  - βTest: `B f g x` → `f(g x)`
+
+- **C (Cardinal/Flip)**: `λxyz.xzy` ≡ `S(S(K(S(KS)K))S)(KK)`
+  - ΔFunction: Argument order reversal
+  - τUtility: Parameter reordering in curried functions
+  - βTest: `C f x y` → `f y x`
+
+- **W (Warbler/Duplication)**: `λxy.xyy` ≡ `SS(KK)`
+  - ΔFunction: Duplicates second argument
+  - ℵMemory: Efficient for operations requiring same input twice
+  - βTest: `W f x` → `f x x`
+
+### ℵFixed-Point(Recursion Enablers)
+- **Y (Fixed-Point)**: `λg.(λx.g(xx))(λx.g(xx))`
+  - ΔFunction: Enables recursion without self-reference
+  - τProperty: `Y g` ≡ `g(Y g)` for all g
+  - iCritical: Foundation of recursive computation
+
+- **Y' (Alternative Fixed-Point)**: `(λxy.xyx)(λyx.y(xyx))`
+  - ΔFunction: Alternative fixed-point combinator
+  - βEquivalence: Functionally equivalent to Y
+  - iOptimization: Sometimes more efficient in certain contexts
+
+- **Θ (Turing Fixed-Point)**: `(λxy.y(xxy))(λxy.y(xxy))`
+  - ΔFunction: Turing's fixed-point combinator
+  - τHistory: Named after Alan Turing
+  - βProperty: Also satisfies fixed-point equation
+
+### ΩDivergent(Non-Terminating)
+- **ω (Omega)**: `λx.xx` ≡ `SII`
+  - ΔFunction: Self-application operator
+  - ⚠️Warning: Can create infinite loops
+  - βTest: `ω ω` → infinite reduction
+
+- **Ω (Big Omega)**: `ωω` ≡ `(λx.xx)(λx.xx)`
+  - ΔFunction: Classic divergent term
+  - τProperty: Never reaches normal form
+  - iUtility: Used in theoretical proofs
+
+## ΔMathematics(Arithmetic Operations)
+
+### ℵNumerals(Church Encoding)
+- **0 (Zero)**: `λfx.x` ≡ `FALSE` ≡ `KI`
+  - ΔEncoding: No applications of function f
+  - βTest: `0 f x` → `x`
+
+- **1 (One)**: `λfx.fx` ≡ `I`
+  - ΔEncoding: Single application of function f
+  - βTest: `1 f x` → `f x`
+
+- **2 (Two)**: `λfx.f(fx)`
+  - ΔEncoding: Double application of function f
+  - βTest: `2 f x` → `f(f x)`
+
+- **n (General)**: `λfx.f^n x` where f^n means f applied n times
+  - ΔPattern: Consistent encoding for all natural numbers
+  - iScalability: Extends to arbitrary large numbers
+
+### λOperations(Arithmetic Functions)
+- **SUCC (Successor)**: `λnfx.f(nfx)`
+  - ΔFunction: Adds 1 to Church numeral
+  - τComplexity: O(1) - constant time
+  - βTest: `SUCC 2` → `3`
+  - iOptimization: `SUCC n` ≡ `λfx.f(nfx)`
+
+- **PLUS (Addition)**: `λmnfx.nf(mfx)` ≡ `λmn.nSUCCm`
+  - ΔFunction: Adds two Church numerals
+  - τComplexity: O(n) where n is second operand
+  - βTest: `PLUS 2 3` → `5`
+  - iAlternative: `λmn.m SUCC n`
+
+- **MULT (Multiplication)**: `λmnf.m(nf)` ≡ `B`
+  - ΔFunction: Multiplies two Church numerals
+  - τComplexity: O(mn) - product of operands
+  - βTest: `MULT 2 3` → `6`
+  - iInsight: Multiplication is function composition
+
+- **EXP (Exponentiation)**: `λab.ba` ≡ `CI`
+  - ΔFunction: Raises first argument to power of second
+  - τComplexity: O(a^b) - exponential growth
+  - βTest: `EXP 2 3` → `8`
+  - iProperty: Note reversed argument order
+
+### ΔAdvanced(Complex Operations)
+- **PRED (Predecessor)**: `λnfx.n(λgh.h(gf))(λu.x)(λu.u)`
+  - ΔFunction: Subtracts 1 from Church numeral (0 → 0)
+  - τComplexity: O(n) - linear in input
+  - βChallenge: Most complex basic arithmetic operation
+  - iAlternatives: Multiple equivalent definitions exist
+
+- **SUB (Subtraction)**: `λmn.nPREDm`
+  - ΔFunction: Subtracts second from first (saturating at 0)
+  - τComplexity: O(n) where n is second operand
+  - βBehavior: `SUB m n` → `max(0, m-n)`
+
+- **DIV (Division)**: `Y(λgqab.LT a b (PAIR q a)(g(SUCC q)(SUB a b)b))0`
+  - ΔFunction: Returns quotient and remainder as pair
+  - τComplexity: O(a/b) - depends on quotient
+  - βResult: `DIV a b` → `PAIR (a÷b) (a mod b)`
+
+## βBooleans(Logic System)
+
+### ℵTruth(Basic Values)
+- **TRUE**: `λxy.x` ≡ `K`
+  - ΔFunction: Selects first argument
+  - βProperty: Conditional selector for true case
+  - iEquivalence: Same as K combinator
+
+- **FALSE**: `λxy.y` ≡ `KI` ≡ `0`
+  - ΔFunction: Selects second argument  
+  - βProperty: Conditional selector for false case
+  - iEquivalence: Same as Church numeral 0
+
+### λLogic(Boolean Operations)
+- **AND**: `λpq.pqp` ≡ `λpq.pqFALSE`
+  - ΔFunction: Logical conjunction
+  - βTruth: TRUE only if both operands TRUE
+  - τOptimization: Short-circuit evaluation possible
+
+- **OR**: `λpq.ppq` ≡ `λpq.pTRUEq`
+  - ΔFunction: Logical disjunction
+  - βTruth: FALSE only if both operands FALSE
+  - τOptimization: Short-circuit evaluation possible
+
+- **NOT**: `λpab.pba` ≡ `λp.pFALSETRUE`
+  - ΔFunction: Logical negation
+  - βTruth: Inverts boolean value
+  - iSimplicity: Swaps conditional branches
+
+- **XOR**: `λpq.p(NOTq)q`
+  - ΔFunction: Exclusive or
+  - βTruth: TRUE if operands differ
+  - iComposition: Built from NOT and conditional
+
+### τComparison(Numeric Relations)
+- **ISZERO**: `λn.n(λx.FALSE)TRUE`
+  - ΔFunction: Tests if Church numeral is zero
+  - βTest: `ISZERO 0` → `TRUE`, `ISZERO n` → `FALSE` (n>0)
+  - iMechanism: Applies constant FALSE function n times
+
+- **LEQ (≤)**: `λmn.ISZERO(SUBmn)`
+  - ΔFunction: Less than or equal comparison
+  - βLogic: m ≤ n iff m - n = 0
+  - τComplexity: O(m) due to subtraction
+
+- **EQ (=)**: `λmn.AND(LEQmn)(LEQnm)`
+  - ΔFunction: Equality test
+  - βLogic: Equal iff both directions of LEQ hold
+  - iSymmetry: Exploits symmetry of equality
+
+- **LT (<)**: `λab.NOT(LEQba)`
+  - ΔFunction: Strict less than
+  - βLogic: a < b iff NOT(b ≤ a)
+  - iDefinition: Defined via LEQ negation
+
+## ℵStructures(Data Organization)
+
+### λPairs(Ordered Pairs)
+- **PAIR**: `λxyf.fxy` ≡ `λxyf.fxy`
+  - ΔFunction: Creates ordered pair
+  - ℵStorage: Fundamental data structure
+  - βAccess: Accessed via CAR/CDR
+
+- **CAR**: `λp.pTRUE` ≡ `λp.p(λxy.x)`
+  - ΔFunction: Extracts first element of pair
+  - iMnemonic: "Contents of Address Register"
+  - βTest: `CAR(PAIR A B)` → `A`
+
+- **CDR**: `λp.pFALSE` ≡ `λp.p(λxy.y)`
+  - ΔFunction: Extracts second element of pair
+  - iMnemonic: "Contents of Decrement Register"
+  - βTest: `CDR(PAIR A B)` → `B`
+
+### ΔLists(Sequential Data)
+- **NIL**: `λx.TRUE`
+  - ΔFunction: Empty list marker
+  - βProperty: Always returns TRUE for NULL test
+  - ℵTermination: List termination indicator
+
+- **NULL**: `λp.p(λxy.FALSE)`
+  - ΔFunction: Tests if list is empty
+  - βTest: `NULL NIL` → `TRUE`, `NULL (PAIR x xs)` → `FALSE`
+  - iMechanism: Exploits NIL's constant TRUE behavior
+
+### τOperations(List Functions)
+- **APPEND**: `Y(λgab.NULLab(PAIR(CARa)(g(CDRa)b)))`
+  - ΔFunction: Concatenates two lists
+  - τComplexity: O(length of first list)
+  - βRecursion: Uses Y combinator for recursion
+
+- **LENGTH**: `Y(λgcx.NULLxc(g(SUCCc)(CDRx)))0`
+  - ΔFunction: Counts elements in list
+  - τComplexity: O(n) where n is list length
+  - iAccumulator: Uses accumulator parameter
+
+- **REVERSE**: `Y(λgal.NULLla(g(PAIR(CARl)a)(CDRl)))NIL`
+  - ΔFunction: Reverses list order
+  - τComplexity: O(n) - single pass with accumulator
+  - ℵMemory: Builds reversed list incrementally
+
+## iOptimizations(Performance Enhancements)
+
+### λReduction(Evaluation Strategies)
+- **Normal Order**: Leftmost-outermost reduction
+  - ΔStrategy: Reduces arguments only when needed
+  - iAdvantage: Terminates if any strategy does
+  - τTrade-off: May duplicate work
+
+- **Applicative Order**: Leftmost-innermost reduction
+  - ΔStrategy: Reduces arguments before application
+  - iAdvantage: Avoids duplicate computation
+  - τTrade-off: May not terminate when normal order would
+
+### ℵMemory(Space Optimization)
+- **Sharing**: Reuse of common subexpressions
+  - ΔTechnique: Graph reduction instead of tree
+  - iSavings: Exponential space reduction possible
+  - βImplementation: Requires pointer-based representation
+
+- **Lazy Evaluation**: Delay computation until needed
+  - ΔStrategy: Thunks for unevaluated expressions
+  - iAdvantage: Enables infinite data structures
+  - τComplexity: Overhead for thunk management
+
+### βOptimization(Compilation Techniques)
+- **Supercombinators**: Closed lambda expressions
+  - ΔTransformation: Lift free variables to parameters
+  - iAdvantage: Enables efficient compilation
+  - ℵStorage: Reduces closure allocation
+
+- **Bracket Abstraction**: Convert to combinators
+  - ΔAlgorithm: Systematic elimination of lambda
+  - βResult: Pure combinator calculus
+  - τTrade-off: Exponential size increase possible
+
+## ΩAdvanced(Theoretical Extensions)
+
+### λTypes(Typed Lambda Calculus)
+- **Simply Typed**: Basic type system
+  - ΔRestriction: All terms must be typeable
+  - βGuarantee: Strong normalization
+  - iLimitation: Reduces expressiveness
+
+- **System F**: Polymorphic types
+  - ΔExtension: Type abstraction and application
+  - iExpressiveness: Significantly more powerful
+  - βComplexity: Type inference undecidable
+
+### ℵLogic(Curry-Howard Correspondence)
+- **Propositions as Types**: Types represent logical propositions
+  - ΔCorrespondence: Programs are proofs
+  - iInsight: Computation and logic unified
+  - βFoundation: Basis for proof assistants
+
+- **Dependent Types**: Types depending on values
+  - ΔPower: Express precise specifications
+  - iApplication: Verified programming
+  - τComplexity: Type checking undecidable
+
+## {type:SelfReference, file:"lambda.operators.mmcp.enhanced", version:"2.0.0", 
+ checksum:"sha256:enhanced_operators_reference", canonical_address:"lambda-ops-v2.0", 
+ english_shorthand:true, lambdajson_integration:true, comprehensive_coverage:true}
+
+@{visual-meta-start}
+author = {Kalxi},
+title = {Enhanced Lambda Operators MMCP v2.0.0},
+version = {2.0.0},
+pfsus_integration = v2.0.0,
+information_density = maximum,
+coverage = comprehensive,
+structure = { combinators, mathematics, booleans, structures, optimizations, advanced_topics }
+@{visual-meta-end}
+
+%% MMCP-FOOTER: version=2.0.0; timestamp=2025-07-22T20:30:00Z; enhanced=true; author=Kalxi; license=MIT; pfsus_v2=true; comprehensive=true; optimized=true

@@ -153,3 +153,74 @@ cli_tools = {"Standard CLI tools integrated as part of the protocol core: valida
 fractal_propagation = {"Supports fractal propagation of context and structure both outward (to subdocuments/children) and inward (from subdocuments/children). See FractalPropagation block."},
 @{visual-meta-end}
 %% All meta, schema, and pattern blocks are grouped at the top. Protocol content is compact and reference-based. For regex and parsing standards, see [[PFSUS.MMCP-Regex.mmcp.mmd]].
+%% Outline Footer Standard
+subgraph "Outline"
+    classDef meta fill:#1E90FF,stroke:#000,color:#000,stroke-width:2px,rx:10px,ry:10px;
+    classDef schema fill:#1E90FF,stroke:#000,color:#000,stroke-width:2px,rx:10px,ry:10px;
+    classDef changelog fill:#1E90FF,stroke:#000,color:#000,stroke-width:2px,rx:10px,ry:10px;
+    classDef audit fill:#1E90FF,stroke:#000,color:#000,stroke-width:2px,rx:10px,ry:10px;
+    classDef llm fill:#1E90FF,stroke:#000,color:#000,stroke-width:2px,rx:10px,ry:10px;
+    classDef xr fill:#1E90FF,stroke:#000,color:#000,stroke-width:2px,rx:10px,ry:10px;
+    classDef custom fill:#1E90FF,stroke:#000,color:#000,stroke-width:2px,rx:10px,ry:10px;
+    classDef quickref fill:#1E90FF,stroke:#000,color:#000,stroke-width:2px,rx:10px,ry:10px;
+    classDef core fill:#1E90FF,stroke:#000,color:#000,stroke-width:2px,rx:10px,ry:10px;
+    
+    A["Meta"]:::meta --> B["Schema"]:::schema
+    A --> C["Changelog"]:::changelog
+    A --> D["Audit"]:::audit
+    A --> E["LLM Hints"]:::llm
+    A --> F["XR Metadata"]:::xr
+    A --> G["Custom Fields"]:::custom
+    A --> H["Quick Reference"]:::quickref
+    A --> I["Core"]:::core
+    
+    subgraph "Core Components"
+        J["Security Standard"]:::core
+        K["Error Handling Standard"]:::core
+        L["Versioning Standard"]:::core
+        M["Tooling Guide"]:::core
+        N["Interop Standard"]:::core
+        O["Use Cases"]:::core
+        P["Format Wrapping Standard"]:::core
+    end
+    
+    I --> J
+    I --> K
+    I --> L
+    I --> M
+    I --> N
+    I --> O
+    I --> P
+    
+    classDef link fill:#32CD32,stroke:#000,color:#000,stroke-width:2px,rx:10px,ry:10px;
+    classDef error fill:#FF6347,stroke:#000,color:#000,stroke-width:2px,rx:10px,ry:10px;
+    
+    Q["Links"]:::link --> R["Self Reference"]:::link
+    Q --> S["Metaversioning Standard"]:::link
+    Q --> T["Legend"]:::link
+    Q --> U["Regex"]:::link
+    Q --> V["Address Standard"]:::link
+    Q --> W["Minimal Reference"]:::link
+    Q --> X["Read/Write Diff Guide"]:::link
+    Q --> Y["Format Wrapping Standard"]:::link
+    Q --> Z["Canonical Chart"]:::link
+    
+    classDef decision fill:#FFD700,stroke:#000,color:#000,stroke-width:2px,rx:10px,ry:10px;
+    
+    AA["Fractal Propagation"]:::decision --> AB["Outward"]:::decision
+    AA --> AC["Inward"]:::decision
+    
+    classDef info fill:#1E90FF,stroke:#000,color:#000,stroke-width:2px,rx:10px,ry:10px;
+    
+    AD["CLI Tools"]:::info --> AE["Validate"]:::info
+    AD --> AF["Lint"]:::info
+    AD --> AG["Parse"]:::info
+    AD --> AH["Diff"]:::info
+    AD --> AI["Repair"]:::info
+    AD --> AJ["Export"]:::info
+    AD --> AK["Import"]:::info
+    AD --> AL["Visualize"]:::info
+    AD --> AM["Test"]:::info
+    AD --> AN["Wrap"]:::info
+    AD --> AO["Unwrap"]:::info
+    end

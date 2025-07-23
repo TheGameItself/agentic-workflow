@@ -173,6 +173,31 @@ This allows integration with IDEs, LLMs, and other tools.
 
 ## Development
 
+### Development Tools
+
+The MCP system includes several development tools to maintain code quality and standards compliance:
+
+#### PFSUS Standards Enforcer
+The PFSUS Standards Enforcer (`core/PFSUS/cli/pfsus_standards_enforcer.py`) provides automated validation and fixing of PFSUS compliance issues:
+
+```bash
+# Scan workspace for compliance issues
+python core/PFSUS/cli/pfsus_standards_enforcer.py --scan --workspace .
+
+# Generate compliance report
+python core/PFSUS/cli/pfsus_standards_enforcer.py --scan --report compliance_report.md
+
+# Auto-fix violations (dry run)
+python core/PFSUS/cli/pfsus_standards_enforcer.py --scan --fix --dry-run
+```
+
+This tool validates:
+- File naming convention compliance
+- Lambda operator usage and semantic consistency
+- MMCP footer and metadata requirements
+- Visual meta block presence
+- Self-reference block formatting
+
 ### Adding a New Lobe
 
 1. Create a new file in `core/src/mcp/lobes/`

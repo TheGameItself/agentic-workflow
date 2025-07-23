@@ -1,10 +1,16 @@
 ```mermaid
 graph TD
-    %% === SYSTEM ARCHITECTURE (Detailed Breakdown) ===
+    %% === MCP SYSTEM ARCHITECTURE (PFSUS-Compliant Detailed Breakdown) ===
     %%
     %% This diagram provides a granular, layered view of the MCP architecture,
-    %% breaking down major components into their functional sub-modules and
-    %% illustrating key interactions and data flows across the system.
+    %% following PFSUS.MMCP-FormatWrapping.Standard.v1.4.0 file naming conventions.
+    %% Components use order-agnostic nested format notation with lambda operators.
+    %%
+    %% File Naming Standards:
+    %% - Core Components: *.core.v<version>.py
+    %% - Lobes: *.lobe.v<version>.py  
+    %% - Managers: *.manager.v<version>.py
+    %% - Lambda Sequences: *.lambda.alef.md.sequence.mmd.py
     %%
 
     %% ======== STYLES ========
@@ -158,3 +164,18 @@ graph TD
     AutoUpdater -- "updates" --> Server
     TaskManager -- "triggers" --> TestSuite
 end 
+```
+
+## λ:self_reference(mcp_mind_map_metadata)
+{type:Diagram, file:"core/MCP-System-Mind-Map.mmd", version:"1.0.0", checksum:"sha256:mcp_mind_map_checksum", canonical_address:"mcp-system-mind-map", pfsus_compliant:true, lambda_operators:true, file_format:"mindmap.system.v1.0.0.mmd"}
+
+@{visual-meta-start}
+author = {MCP Core Team},
+title = {MCP System Mind Map},
+version = {1.0.0},
+file_format = {mindmap.system.v1.0.0.mmd},
+structure = { layer1_ui_integrations, layer2_core_orchestration, layer3_cognitive_reasoning, layer4_foundational_systems, layer5_cross_cutting_concerns },
+file_naming_standards = {pfsus_compliant, order_agnostic, lambda_operators},
+@{visual-meta-end}
+
+%% MMCP-FOOTER: version=1.0.0; timestamp=2025-07-22T00:00:00Z; author=MCP_Core_Team; pfsus_compliant=true; lambda_operators=integrated; file_format=mindmap.system.v1.0.0.mmd

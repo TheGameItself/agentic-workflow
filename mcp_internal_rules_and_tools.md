@@ -175,6 +175,7 @@
 - Mypy: Type checking
 - Isort: Import sorting
 - Pytest: Testing framework
+- PFSUS Standards Enforcer: Automated PFSUS compliance validation and fixing
 
 ### Runtime Tools
 - Performance tracker: Monitor and compare implementations
